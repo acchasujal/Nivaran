@@ -94,7 +94,7 @@ def test_create_issue_success():
         assert data["severity"] == 4
         assert data["description"] == "Large potholes on the main road."
         assert data["credibility_score"] == 0.95
-        assert data["status"] == "classified"
+        assert data["status"] == "clustered"
         assert "photo_url" in data
         assert data["photo_url"].startswith("/static/uploads/")
         

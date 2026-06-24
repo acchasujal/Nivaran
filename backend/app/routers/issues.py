@@ -3,10 +3,14 @@ from typing import Optional, List
 from pydantic import BaseModel
 import os
 import uuid
+import logging
 from app.models.issue import Issue
 from app.db import get_session
 from app.services.agent_1_intake import analyze_issue_photo
+from app.services.agent_2_verification import verify_and_cluster_issue
 from sqlmodel import Session, select
+
+logger = logging.getLogger("civicpulse")
 
 router = APIRouter(prefix="/issues", tags=["issues"])
 
@@ -104,6 +108,15 @@ async def create_issue(
     session.add(db_issue)
     session.commit()
     session.refresh(db_issue)
+
+    try:
+        await verify_and_cluster_issue(db_issue, session)
+    except Exception as e:
+        logger.error(f"agent_2_failed_entirely | error={str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={"error": "ai_unavailable", "retryable": True}
+        )
 
     return db_issue
 
