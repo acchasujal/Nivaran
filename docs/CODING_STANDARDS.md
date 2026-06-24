@@ -35,7 +35,7 @@
 
 ## Testing Rules
 - Minimum: one test per agent verifying schema-conformant output handling and the "reject malformed output" path (see `AI_SYSTEM_DESIGN.md` validation logic per agent).
-- One integration test for the full happy-path pipeline (`POST /issues` → ... → `POST /escalations`) using a mocked Gemini client and a mocked SMTP client.
+- One integration test for the full happy-path pipeline (`POST /issues` → ... → `POST /escalations`) using a mocked Gemini client and a mocked SendGrid email client.
 
 ## Documentation Rules
 - Any new endpoint, table, or agent requires a corresponding update to `API_CONTRACTS.md`, `DATABASE_SCHEMA.md`, or `AI_SYSTEM_DESIGN.md` in the same PR/commit — not after.

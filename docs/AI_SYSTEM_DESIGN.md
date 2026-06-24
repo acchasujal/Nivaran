@@ -19,7 +19,7 @@ Model: Gemini 2.0 Flash, structured (JSON-schema) output mode for Agents 1–4. 
   "issue_type": "road_damage | lighting | water | waste | other",
   "severity": "integer 1-5",
   "description": "string, <= 280 chars",
-  "credibility_score": "float 0.0-1.0",
+  "credibility_score": "float 0.0-1.0", // AI-assessed float representing image quality, clarity, and visual integrity, as well as classification confidence. Strictly evidence-based; never implies personal user credibility.
   "image_flags": ["clear" | "blurry" | "duplicate_visual" | "low_confidence"]
 }
 ```
@@ -50,6 +50,8 @@ Model: Gemini 2.0 Flash, structured (JSON-schema) output mode for Agents 1–4. 
 
 ## Agent 3 — Impact Intelligence
 
+**Timing/Trigger:** Runs asynchronously as a FastAPI `BackgroundTask` ONLY when the cluster's report count crosses the escalation threshold (`cluster.report_count >= ESCALATION_THRESHOLD`).
+
 **Input Schema**
 ```json
 { "cluster": "cluster object", "member_issues": "[issue objects]" }
@@ -72,6 +74,8 @@ Model: Gemini 2.0 Flash, structured (JSON-schema) output mode for Agents 1–4. 
 ---
 
 ## Agent 4 — Action Generator
+
+**Timing/Trigger:** Runs asynchronously as a FastAPI `BackgroundTask` immediately after Agent 3 successfully completes for a cluster that has crossed `ESCALATION_THRESHOLD`.
 
 **Input Schema**
 ```json
@@ -100,14 +104,14 @@ Model: Gemini 2.0 Flash, structured (JSON-schema) output mode for Agents 1–4. 
 { "draft_id": "uuid (status must be 'approved')", "method": "email | pdf_export", "recipient": "string|null" }
 ```
 
-**Logic:** No Gemini call. `method=email` → SMTP send via `email_client.py`; `method=pdf_export` → render `action_drafts.content` to PDF via `pdf_export.py`. This is the one agent in the pipeline that performs a real action outside the analytics/display layer, per Truth 3.
+**Logic:** No Gemini call. `method=email` → SendGrid HTTP API send via `email_client.py`; `method=pdf_export` → render `action_drafts.content` to PDF via `pdf_export.py`. If `method=email` fails and `AGENT5_PDF_FALLBACK=true` is set, it automatically generates a PDF fallback and returns the download link, writing a single escalation record with status `exported` and capturing the email error details. This is the one agent in the pipeline that performs a real action outside the analytics/display layer, per Truth 3.
 
 **Output Schema**
 ```json
 { "status": "sent | failed | exported", "provider_response": "string" }
 ```
 
-**Failure Handling:** SMTP/export errors are captured verbatim in `provider_response` and `status=failed` — never overwritten with an optimistic "sent."
+**Failure Handling:** SendGrid HTTP API/export errors are captured verbatim in `provider_response` and `status=failed` (unless PDF fallback succeeds) — never overwritten with an optimistic "sent."
 
 ---
 

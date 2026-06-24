@@ -5,7 +5,7 @@
 | Service | Responsibility |
 |---|---|
 | `gemini_client.py` | Wraps Gemini API calls for Agents 1–4; enforces structured-output schema validation per `AI_SYSTEM_DESIGN.md`; handles retry-once-then-fail logic |
-| `email_client.py` | SMTP (or SendGrid) wrapper for Agent 5 email sends; returns real provider response, never assumes success |
+| `email_client.py` | SendGrid HTTP API wrapper for Agent 5 email sends; returns real provider response, never assumes success |
 | `pdf_export.py` | Renders `action_drafts.content` to PDF (WeasyPrint/reportlab) |
 | `geo_service.py` | Haversine distance calc for cluster proximity matching |
 
@@ -40,4 +40,7 @@ Thin data-access layer per table (`issue_repo.py`, `cluster_repo.py`, etc.) wrap
 - Centralized FastAPI exception handler maps internal errors to the response shapes defined in `API_CONTRACTS.md`. No endpoint returns a 200 with a silently degraded/fabricated result — failures are always surfaced as non-2xx with a real error code.
 
 ## Background Jobs
-- None required for hackathon MVP — the pipeline runs synchronously within the request/response cycle for demo simplicity and predictability. If latency becomes an issue, move Agent 3/4 to a background task queue post-submission threshold check (documented as a Tier 3 stretch item only, not required for MVP).
+- Agent 1 and Agent 2 run synchronously on `POST /issues` submission to ensure immediate classification and clustering. Once the escalation threshold is reached (`cluster.report_count >= ESCALATION_THRESHOLD`), Agent 3 (Impact Intelligence) and Agent 4 (Action Generator) are executed asynchronously as FastAPI `BackgroundTasks`. This keeps submission latency low without requiring a separate task queue like Celery/RQ.
+
+## Database Concurrency
+- SQLite WAL (Write-Ahead Logging) mode is enabled at database initialization to ensure multiple concurrent requests during the demo do not result in write locks.

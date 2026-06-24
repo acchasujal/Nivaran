@@ -146,11 +146,25 @@ Trigger Agent 5. **Requires the referenced draft to have `status: approved`.** T
 }
 ```
 
+**Success Response (with PDF Fallback) — 201**
+If `method=email` fails but `AGENT5_PDF_FALLBACK=true` is set:
+```json
+{
+  "id": "uuid",
+  "draft_id": "uuid",
+  "method": "pdf_export",
+  "status": "exported",
+  "provider_response": "Email failed: SendGrid API error. Fell back to PDF generation.",
+  "pdf_download_url": "/api/static/downloads/xyz.pdf",
+  "sent_at": "2026-06-23T10:05:00Z"
+}
+```
+
 **Failure Cases**
 | Status | Condition | Body |
 |---|---|---|
 | 403 | draft not approved | `{"error": "draft_not_approved"}` |
-| 502 | SMTP/export failed | `{"error": "escalation_failed", "provider_response": "..."}` — row still written with `status: failed`, never silently treated as sent |
+| 502 | SendGrid/export failed | `{"error": "escalation_failed", "provider_response": "..."}` — row still written with `status: failed`, never silently treated as sent |
 
 ---
 

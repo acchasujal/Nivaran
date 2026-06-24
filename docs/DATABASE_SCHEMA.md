@@ -1,6 +1,6 @@
 # DATABASE_SCHEMA.md
 
-Engine: SQLite (hackathon scope). All timestamps UTC, ISO 8601 strings.
+Engine: SQLite (with WAL mode enabled). All timestamps UTC, ISO 8601 strings.
 
 ## Table: `issues`
 **Purpose:** One row per citizen-submitted report.
@@ -15,7 +15,7 @@ Engine: SQLite (hackathon scope). All timestamps UTC, ISO 8601 strings.
 | `issue_type` | TEXT | NOT NULL | enum: `road_damage`, `lighting`, `water`, `waste`, `other` |
 | `severity` | INTEGER | NOT NULL, 1–5 | from Agent 1 |
 | `description` | TEXT | NOT NULL | Gemini-generated summary |
-| `credibility_score` | REAL | NOT NULL, 0.0–1.0 | from Agent 1, evidence-based (image clarity/consistency), never a claim about the reporter |
+| `credibility_score` | REAL | NOT NULL, 0.0–1.0 | from Agent 1, evidence-based (image clarity, quality, visual integrity, and classification confidence); never represents or implies the personal credibility or trustworthiness of the reporter |
 | `cluster_id` | TEXT (UUID) | FK → `clusters.id`, nullable | set by Agent 2 |
 | `status` | TEXT | NOT NULL | `classified`, `clustered`, `drafted`, `escalated` |
 | `created_at` | TEXT | NOT NULL | |
@@ -54,7 +54,7 @@ Engine: SQLite (hackathon scope). All timestamps UTC, ISO 8601 strings.
 | `id` | TEXT (UUID) | PK | |
 | `cluster_id` | TEXT (UUID) | FK → `clusters.id`, NOT NULL | |
 | `draft_type` | TEXT | NOT NULL | enum: `complaint`, `rti`, `community_summary` |
-| `content` | TEXT | NOT NULL | full document text, must include "AI-generated draft. Review before submission." for `complaint`/`rti` |
+| `content` | TEXT | NOT NULL | full document text, must begin with "AI-generated draft. Review before submission." for `rti` drafts |
 | `status` | TEXT | NOT NULL | `pending_review`, `approved`, `rejected` |
 | `created_at` | TEXT | NOT NULL | |
 | `reviewed_at` | TEXT | nullable | |

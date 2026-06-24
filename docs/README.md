@@ -54,7 +54,7 @@ _Placeholder — add screenshots before submission:_
 | AI | Gemini 2.0 Flash (Vision + text) via Google AI Studio API |
 | Database | SQLite (hackathon scope) |
 | Maps | Google Maps JavaScript API |
-| Email / Escalation | SMTP (or SendGrid) for real outbound send |
+| Email / Escalation | SendGrid HTTP API for real outbound send |
 | PDF Export | WeasyPrint or reportlab |
 | Deployment | Google AI Studio deployment (required) + Render/Railway for FastAPI backend if needed |
 
@@ -64,7 +64,7 @@ _Placeholder — add screenshots before submission:_
 - Python 3.11+
 - Node 18+
 - A Gemini API key (Google AI Studio)
-- SMTP credentials (or SendGrid API key) for the Escalation Agent
+- SendGrid API key and verified sender email for the Escalation Agent
 
 ### Local Development
 
@@ -73,7 +73,7 @@ _Placeholder — add screenshots before submission:_
 cd backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # fill in GEMINI_API_KEY, SMTP_*, DATABASE_URL
+cp .env.example .env   # fill in GEMINI_API_KEY, SENDGRID_API_KEY, SENDGRID_FROM_EMAIL, DATABASE_URL
 uvicorn app.main:app --reload --port 8000
 
 # Frontend
@@ -117,7 +117,7 @@ civicpulse/
 |---|---|---|
 | `GEMINI_API_KEY` | backend | Gemini API access |
 | `DATABASE_URL` | backend | SQLite file path or connection string |
-| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | backend | Escalation Agent real email send |
+| `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL` | backend | SendGrid API key and verified sender email for real outbound send |
 | `GOOGLE_MAPS_KEY` | backend (server-side proxy) | Geocoding if needed |
 | `VITE_API_BASE_URL` | frontend | Backend base URL |
 | `VITE_GOOGLE_MAPS_KEY` | frontend | Map rendering |
