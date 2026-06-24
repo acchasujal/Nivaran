@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest / coverage
+.cache/
+.pytest_cache/
+.coverage
+.coverage.*
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Database files
+*.db
+*.sqlite3
+
+# Local/uploaded static assets
+static/uploads/*
+!static/uploads/.gitkeep
+static/downloads/*
+!static/downloads/.gitkeep
+
+# IDEs
+.idea/
+.vscode/
+*.swp
