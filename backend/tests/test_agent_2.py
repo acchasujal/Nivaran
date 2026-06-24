@@ -24,7 +24,7 @@ def override_get_session():
 def setup_db():
     app.dependency_overrides[get_session] = override_get_session
     if os.path.exists("static/uploads"):
-        shutil.rmtree("static/uploads")
+        shutil.rmtree("static/uploads", ignore_errors=True)
     os.makedirs("static/uploads", exist_ok=True)
     
     SQLModel.metadata.create_all(test_engine)
@@ -38,7 +38,7 @@ def setup_db():
         except Exception:
             pass
     if os.path.exists("static/uploads"):
-        shutil.rmtree("static/uploads")
+        shutil.rmtree("static/uploads", ignore_errors=True)
 
 def test_haversine_distance():
     # E1 Acceptance Criterion: Unit test: two Mumbai coordinates 200m apart returns < 300; two 500m apart returns > 300

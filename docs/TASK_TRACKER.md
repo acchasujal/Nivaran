@@ -72,28 +72,28 @@ These are not code tasks. They are resolved first, on Day 1, before any implemen
 
 ### P0-F: Agent 3
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| F1 | `agent_3_impact.py` — impact intelligence | B1, A4 | 2h | impact_summaries row created with affected_area_description, risk_level, evidence_count matching cluster |
-| F2 | BackgroundTask integration in POST /issues | F1, E2 | 30min | POST /issues returns 201 immediately; if threshold crossed, Agent 3 impact summary appears within 5s |
-| F3 | Output validator (reject fabricated score / named officials) | F1 | 30min | Patched Gemini output containing "Officer Sharma has resolved" → rejected, regenerated, failure logged |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| F1 | `agent_3_impact.py` — impact intelligence | B1, A4 | 2h | impact_summaries row created with affected_area_description, risk_level, evidence_count matching cluster | **Completed** |
+| F2 | BackgroundTask integration in POST /issues | F1, E2 | 30min | POST /issues returns 201 immediately; if threshold crossed, Agent 3 impact summary appears within 5s | **Completed** |
+| F3 | Output validator (reject fabricated score / named officials) | F1 | 30min | Patched Gemini output containing "Officer Sharma has resolved" → rejected, regenerated, failure logged | **Completed** |
 
 ### P0-G: Agent 4
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| G1 | `agent_4_action_generator.py` — 3 draft types | B1, F1 | 2.5h | Three action_drafts rows created (complaint, rti, community_summary) when ESCALATION_THRESHOLD reached |
-| G2 | RTI disclaimer hard gate | G1 | 30min | Patched Gemini output without disclaimer string → rejected, regenerated; if still missing → 502, no row written |
-| G3 | BackgroundTask integration (fires only at threshold) | G1, F2 | 30min | With ESCALATION_THRESHOLD=3: impact summary and drafts appear only after 3rd report; with DEMO_THRESHOLD_OVERRIDE=1: after 1st |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| G1 | `agent_4_action_generator.py` — 3 draft types | B1, F1 | 2.5h | Three action_drafts rows created (complaint, rti, community_summary) when ESCALATION_THRESHOLD reached | **Completed** |
+| G2 | RTI disclaimer hard gate | G1 | 30min | Patched Gemini output without disclaimer string → rejected, regenerated; if still missing → 502, no row written | **Completed** |
+| G3 | BackgroundTask integration (fires only at threshold) | G1, F2 | 30min | With ESCALATION_THRESHOLD=3: impact summary and drafts appear only after 3rd report; with DEMO_THRESHOLD_OVERRIDE=1: after 1st | **Completed** |
 
 ### P0-H: Agent 5
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| H1 | `email_client.py` — SendGrid HTTP API | PRE-2 | 1.5h | A real test email arrives in a real inbox from the SendGrid-configured domain |
-| H2 | `pdf_export.py` — WeasyPrint/reportlab | None | 1.5h | PDF renders, downloads, and opens correctly with full draft content |
-| H3 | `agent_5_escalation.py` — email + PDF, approved-only gate | G1, H1, H2 | 2h | POST /escalations on unapproved draft → 403; on approved draft with method=email → email sent and escalations row written with real provider_response |
-| H4 | Auto PDF fallback on email failure | H1, H2, H3 | 30min | With AGENT5_PDF_FALLBACK=true: if SendGrid returns non-202, PDF export runs automatically; a single escalation row is written with status='exported' |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| H1 | `email_client.py` — SendGrid HTTP API | PRE-2 | 1.5h | A real test email arrives in a real inbox from the SendGrid-configured domain | **Completed** |
+| H2 | `pdf_export.py` — WeasyPrint/reportlab | None | 1.5h | PDF renders, downloads, and opens correctly with full draft content | **Completed** |
+| H3 | `agent_5_escalation.py` — email + PDF, approved-only gate | G1, H1, H2 | 2h | POST /escalations on unapproved draft → 403; on approved draft with method=email → email sent and escalations row written with real provider_response | **Completed** |
+| H4 | Auto PDF fallback on email failure | H1, H2, H3 | 30min | With AGENT5_PDF_FALLBACK=true: if SendGrid returns non-202, PDF export runs automatically; a single escalation row is written with status='exported' | **Completed** |
 
 ### P0-I: Frontend Core
 

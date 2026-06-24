@@ -26,11 +26,11 @@ def setup_db():
     app.dependency_overrides[get_session] = override_get_session
     # Clean and recreate static directories
     if os.path.exists("static/uploads"):
-        shutil.rmtree("static/uploads")
+        shutil.rmtree("static/uploads", ignore_errors=True)
     os.makedirs("static/uploads", exist_ok=True)
     
     if os.path.exists("static/downloads"):
-        shutil.rmtree("static/downloads")
+        shutil.rmtree("static/downloads", ignore_errors=True)
     os.makedirs("static/downloads", exist_ok=True)
 
     # Initialize tables
@@ -48,7 +48,7 @@ def setup_db():
 
     # Clean up static directories after test
     if os.path.exists("static/uploads"):
-        shutil.rmtree("static/uploads")
+        shutil.rmtree("static/uploads", ignore_errors=True)
 
 def test_create_issue_success():
     # D1 Acceptance Criterion: POST /issues with a real pothole photo returns 201 with correct issue_type, severity, description, credibility_score
