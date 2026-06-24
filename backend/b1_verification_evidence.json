@@ -1,0 +1,31 @@
+{
+  "request": {
+    "prompt": "Classify this civic infrastructure issue.",
+    "system_instruction": "You are Agent 1 (Issue Understanding) for CivicPulse. Analyze the provided image of a civic issue. Provide a structured classification. Assess the severity (1-5), describe the issue in <= 280 characters, and calculate a credibility score (0.0-1.0) based strictly on image quality, clarity, and classification confidence.",
+    "image": "civic_issue_pothole.png",
+    "key_index": 1,
+    "model_used": "gemini-2.5-flash"
+  },
+  "raw_response": "{\n  \"issue_type\": \"road_damage\",\n  \"severity\": 4,\n  \"description\": \"Large, deep pothole filled with water on an asphalt road, showing significant cracking and deterioration of the surrounding pavement. Appears to be a significant driving hazard.\",\n  \"credibility_score\": 0.95,\n  \"image_flags\": [\n    \"clear\"\n  ]\n}",
+  "parsed_json": {
+    "issue_type": "road_damage",
+    "severity": 4,
+    "description": "Large, deep pothole filled with water on an asphalt road, showing significant cracking and deterioration of the surrounding pavement. Appears to be a significant driving hazard.",
+    "credibility_score": 0.95,
+    "image_flags": [
+      "clear"
+    ]
+  },
+  "validation": {
+    "success": true,
+    "object": {
+      "issue_type": "road_damage",
+      "severity": 4,
+      "description": "Large, deep pothole filled with water on an asphalt road, showing significant cracking and deterioration of the surrounding pavement. Appears to be a significant driving hazard.",
+      "credibility_score": 0.95,
+      "image_flags": [
+        "clear"
+      ]
+    }
+  }
+}
