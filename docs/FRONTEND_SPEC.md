@@ -20,6 +20,7 @@
 | `DraftCard` | `draft`, `onApprove`, `onReject` | shows disclaimer text prominently for `rti`/`complaint` types |
 | `EscalationButton` | `draftId`, `method` | disabled unless draft.status === 'approved' |
 | `StatusBadge` | `status` | shared across issue/draft/escalation statuses |
+| `AgentProgressTimeline` | `activeAgentNumber` | Displays real-time progress timeline across the 5 agents: Agent 1 (Issue Understanding), Agent 2 (Verification), Agent 3 (Impact Intelligence), Agent 4 (Action Generator), Agent 5 (Escalation) |
 
 ## State
 - No global store. Each page fetches its own data on mount via `src/api/*.ts` wrappers around `fetch`.

@@ -55,8 +55,8 @@ _Placeholder — add screenshots before submission:_
 | Database | SQLite (hackathon scope) |
 | Maps | Google Maps JavaScript API |
 | Email / Escalation | SendGrid HTTP API for real outbound send |
+| Deployment | TBD (Pending organizer clarification on Google AI Studio vs. Render/Cloud Run) |
 | PDF Export | WeasyPrint or reportlab |
-| Deployment | Google AI Studio deployment (required) + Render/Railway for FastAPI backend if needed |
 
 ## Setup Instructions
 
@@ -84,10 +84,16 @@ npm run dev
 ```
 
 ### Deployment
-1. Deploy backend (Render/Railway) with environment variables set.
-2. Deploy/connect via Google AI Studio per `https://ai.google.dev/gemini-api/docs/aistudio-deploying` (mandatory submission requirement).
-3. Point frontend `VITE_API_BASE_URL` at the deployed backend.
-4. Verify the deployed link is publicly accessible before submission.
+
+> [!IMPORTANT]
+> Backend deployment target is unresolved and pending organizer clarification.
+> - **Current Target:** Render/Railway.
+> - **Alternative Target:** Google Cloud Run (if organizers require Google AI Studio Cloud Run deployment integration).
+> - **Frontend Target:** Vercel.
+
+1. Deploy backend to the chosen target with environment variables set.
+2. Point frontend `VITE_API_BASE_URL` at the deployed backend.
+3. Verify the deployed link is publicly accessible before submission.
 
 ## Folder Structure
 

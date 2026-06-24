@@ -30,27 +30,28 @@ These are not code tasks. They are resolved first, on Day 1, before any implemen
 
 ### P0-A: FastAPI Skeleton and Database
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| A1 | FastAPI app skeleton + router wiring | None | 1h | `uvicorn app.main:app --reload` starts with no errors |
-| A2 | SQLite models (5 tables per DATABASE_SCHEMA.md) | A1 | 1.5h | All 5 tables created on startup; schema matches DATABASE_SCHEMA.md exactly |
-| A3 | `PRAGMA journal_mode=WAL` in DB init | A2 | 15min | Verified: `PRAGMA journal_mode` returns `wal` after startup |
-| A4 | Pydantic/SQLModel schemas for all tables | A2 | 1h | All models importable; field names match DATABASE_SCHEMA.md exactly |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| A1 | FastAPI app skeleton + router wiring | None | 1h | `uvicorn app.main:app --reload` starts with no errors | **Completed** |
+| A2 | SQLite models (5 tables per DATABASE_SCHEMA.md) | A1 | 1.5h | All 5 tables created on startup; schema matches DATABASE_SCHEMA.md exactly | **Completed** |
+| A3 | `PRAGMA journal_mode=WAL` in DB init | A2 | 15min | Verified: `PRAGMA journal_mode` returns `wal` after startup | **Completed** |
+| A4 | Pydantic/SQLModel schemas for all tables | A2 | 1h | All models importable; field names match DATABASE_SCHEMA.md exactly | **Completed** |
 
 ### P0-B: Gemini Client
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| B1 | `gemini_client.py` — structured output call | A1 | 2h | One manual test call returns schema-conformant JSON for a real photo |
-| B2 | Retry logic (once then 502) | B1 | 30min | Deliberately malformed Gemini output triggers retry; second failure returns 502 not a default |
-| B3 | Timeout enforcement (15s) | B1 | 30min | Patched Gemini call that sleeps 20s returns 502, not a hanging request |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| B1 | `gemini_client.py` — structured output call | A1 | 2h | One manual test call returns schema-conformant JSON for a real photo | **Completed** |
+| B2 | Retry logic (once then 502) | B1 | 30min | Deliberately malformed Gemini output triggers retry; second failure returns 502 not a default | **Completed** |
+| B3 | Timeout enforcement (15s) | B1 | 30min | Patched Gemini call that sleeps 20s returns 502, not a hanging request | **Completed** |
+
 
 ### P0-C: Demo Seeding Script
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| C1 | `scripts/seed_demo.py` — populates 2 clusters with 3+ issues each | A3, A4 | 2h | Running the script creates 6+ issues across 2 clusters in SQLite; TrackerPage shows populated state |
-| C2 | Demo photo assets (6–8 real civic issue photos) | None | 1h | Photos sourced (real, not stock), labeled by issue_type, stored in `scripts/demo_assets/` |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| C1 | `scripts/seed_demo.py` — populates 2 clusters with 3+ issues each | A3, A4 | 2h | Running the script creates 6+ issues across 2 clusters in SQLite; TrackerPage shows populated state | **Completed** |
+| C2 | Demo photo assets (6–8 real civic issue photos) | None | 1h | Photos sourced (real, not stock), labeled by issue_type, stored in `scripts/demo_assets/` | **Completed** |
 
 ### P0-D: Agent 1
 
@@ -103,6 +104,7 @@ These are not code tasks. They are resolved first, on Day 1, before any implemen
 | I3 | `IssueDetailPage` — evidence + impact + drafts | F1, G1 | 2.5h | Shows impact summary (risk_level, affected_area, evidence_count); shows 3 draft cards; credibility_score displayed with "AI-assessed" label |
 | I4 | `ApprovalModal` — consequential UX | G1 | 1.5h | Modal copy: "You are authorizing a real escalation on behalf of [N] community reports for [area]. This will send an email to [recipient]." Approve button prominent. Approve action calls PATCH /action-drafts/{id}. |
 | I5 | `EscalationButton` — calls POST /escalations | H3, I4 | 1h | Button disabled if draft.status != 'approved'; on click, triggers email then shows PDF download link if email fails |
+| I6 | `AgentProgressTimeline` component | I3 | 1h | Component displays progress timeline of the 5 agents with completion checkmarks/states, integrated on the IssueDetailPage |
 
 ### P0-J: Deployment
 
