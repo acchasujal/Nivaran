@@ -32,11 +32,13 @@ class ImpactSummarySummary(BaseModel):
     risk_level: str
     affected_area_description: str
     evidence_count: int
+    potential_consequences: str
 
 class ActionDraftSummary(BaseModel):
     id: str
     draft_type: str
     status: str
+    content: str
 
 class IssueDetailResponse(BaseModel):
     issue: Issue
@@ -199,7 +201,8 @@ async def get_issue(
                 impact_summary_summary = ImpactSummarySummary(
                     risk_level=impact.risk_level,
                     affected_area_description=impact.affected_area_description,
-                    evidence_count=impact.evidence_count
+                    evidence_count=impact.evidence_count,
+                    potential_consequences=impact.potential_consequences
                 )
             
             # Fetch action drafts
@@ -211,7 +214,8 @@ async def get_issue(
                     ActionDraftSummary(
                         id=draft.id,
                         draft_type=draft.draft_type,
-                        status=draft.status
+                        status=draft.status,
+                        content=draft.content
                     )
                 )
 

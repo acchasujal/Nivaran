@@ -61,8 +61,8 @@ Get a single issue with its cluster, impact summary, and drafts.
 {
   "issue": { "...": "..." },
   "cluster": { "id": "uuid", "area_label": "...", "report_count": 4 },
-  "impact_summary": { "risk_level": "high", "affected_area_description": "...", "evidence_count": 4 },
-  "action_drafts": [ { "id": "uuid", "draft_type": "rti", "status": "pending_review" } ]
+  "impact_summary": { "risk_level": "high", "affected_area_description": "...", "evidence_count": 4, "potential_consequences": "..." },
+  "action_drafts": [ { "id": "uuid", "draft_type": "rti", "status": "pending_review", "content": "..." } ]
 }
 ```
 
