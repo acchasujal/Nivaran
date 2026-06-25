@@ -100,15 +100,15 @@ export const EscalationCard: React.FC<EscalationCardProps> = ({ escalation, clas
 
         {/* Download PDF Control (fallback or direct) */}
         {hasPDF && (
-          <div className="pt-2 border-t border-slate-50 flex items-center justify-end shrink-0">
+          <div className="pt-3 border-t border-slate-100 flex flex-col shrink-0 select-none">
             <a
               href={getStaticUrl(escalation.pdf_download_url)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-small hover:bg-indigo-100 transition-all shadow-sm select-none"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-small shadow transition-all active:scale-[0.99] focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:outline-none"
             >
               <FileDown size={14} />
-              <span>Download Generated PDF</span>
+              <span>Download PDF Brief Package</span>
             </a>
           </div>
         )}

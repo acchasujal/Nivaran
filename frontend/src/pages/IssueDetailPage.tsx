@@ -38,7 +38,7 @@ export const IssueDetailPage: React.FC = () => {
   const [approvalDraftId, setApprovalDraftId] = useState<string | null>(null);
   const [escalateDraftId, setEscalateDraftId] = useState<string | null>(null);
   const [escalateMethod, setEscalateMethod] = useState<'email' | 'pdf_export'>('email');
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | null>(null);
 
   if (isLoading) {
     return <LoadingState variant="page" message="Retrieving report details..." />;
@@ -67,9 +67,9 @@ export const IssueDetailPage: React.FC = () => {
     setApprovalDraftId(draftId);
   };
 
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3000);
+  const showToast = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
   };
 
   const handleRejectClick = async (draftId: string) => {
@@ -93,14 +93,25 @@ export const IssueDetailPage: React.FC = () => {
   const handleEscalateConfirm = async (recipient?: string) => {
     if (!escalateDraftId) return;
     try {
-      await escalateDraftMutation.mutateAsync({
+      const response = await escalateDraftMutation.mutateAsync({
         draftId: escalateDraftId,
         method: escalateMethod,
         recipient,
       });
       setEscalateDraftId(null);
+      if (response.method === 'pdf_export' && escalateMethod === 'email') {
+        showToast('Email dispatch failed. Generated fallback PDF download.', 'warning');
+      } else {
+        showToast(
+          escalateMethod === 'pdf_export'
+            ? 'PDF package generated successfully!'
+            : 'Escalation email dispatched successfully!',
+          'success'
+        );
+      }
+      refetch();
     } catch (e) {
-      // Handled via mutation
+      throw e;
     }
   };
 
@@ -287,8 +298,13 @@ export const IssueDetailPage: React.FC = () => {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-medium shadow-premium text-xs font-semibold animate-fade font-sans select-none">
-          <span>{toast}</span>
+        <div className={cn(
+          "fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 text-white rounded-medium shadow-premium text-xs font-semibold animate-fade font-sans select-none border",
+          toast.type === 'success' && "bg-slate-900 border-slate-800",
+          toast.type === 'warning' && "bg-amber-600 border-amber-500",
+          toast.type === 'error' && "bg-rose-600 border-rose-500"
+        )}>
+          <span>{toast.message}</span>
         </div>
       )}
 

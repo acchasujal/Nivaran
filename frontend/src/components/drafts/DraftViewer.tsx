@@ -175,30 +175,38 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
             )}
 
             {/* Escalation Actions */}
-            {activeDraft.status === 'approved' && (
-              <div className="flex items-center gap-3 ml-auto">
-                <button
-                  type="button"
-                  onClick={() => onEscalate(activeDraft.id, 'email')}
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-small shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-                  title="Dispatch via SendGrid Email"
-                >
-                  <Send size={13} />
-                  <span>Dispatch Email</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onEscalate(activeDraft.id, 'pdf_export')}
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-secondary-border bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold rounded-small shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-                  title="Export to PDF package"
-                >
-                  <FileDown size={13} />
-                  <span>Export PDF</span>
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-3 ml-auto">
+              <button
+                type="button"
+                onClick={() => activeDraft.status === 'approved' && !isSubmitting && onEscalate(activeDraft.id, 'email')}
+                disabled={activeDraft.status !== 'approved' || isSubmitting}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-small shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none cursor-pointer',
+                  activeDraft.status === 'approved'
+                    ? 'bg-primary hover:bg-primary-hover text-white active:scale-[0.98]'
+                    : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
+                )}
+                title={activeDraft.status !== 'approved' ? 'Approve this draft before escalating.' : 'Dispatch via SendGrid Email'}
+              >
+                <Send size={13} />
+                <span>Dispatch Email</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => activeDraft.status === 'approved' && !isSubmitting && onEscalate(activeDraft.id, 'pdf_export')}
+                disabled={activeDraft.status !== 'approved' || isSubmitting}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-small shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none cursor-pointer',
+                  activeDraft.status === 'approved'
+                    ? 'border border-secondary-border bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]'
+                    : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
+                )}
+                title={activeDraft.status !== 'approved' ? 'Approve this draft before escalating.' : 'Export to PDF package'}
+              >
+                <FileDown size={13} />
+                <span>Export PDF</span>
+              </button>
+            </div>
           </div>
         </div>
       ) : (
