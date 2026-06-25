@@ -27,94 +27,89 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ issue, className }) 
   };
 
   return (
-    <div className={cn('border border-secondary-border bg-white rounded-large overflow-hidden shadow-subtle flex flex-col md:flex-row gap-6 p-6', className)}>
-      {/* Evidence Photo */}
-      <div className="w-full md:w-72 shrink-0 h-48 md:h-56 relative rounded-medium overflow-hidden border border-slate-100 bg-slate-50">
+    <div className={cn('border border-slate-100 bg-white rounded-large overflow-hidden transition-all flex flex-col', className)}>
+      {/* Evidence Photo - Large & Hero */}
+      <div className="w-full h-80 md:h-[450px] relative bg-slate-50 overflow-hidden">
         <img
           src={getStaticUrl(issue.photo_url)}
           alt={humanizeIssueType(issue.issue_type)}
-          className="w-full h-full object-cover transition-transform hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.01]"
         />
-        <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-[10px] text-white px-2.5 py-1 rounded-small font-semibold tracking-wide uppercase font-sans">
-          Evidence Photo
-        </div>
       </div>
 
       {/* Details Area */}
-      <div className="flex-1 flex flex-col justify-between py-1 space-y-4">
-        <div className="space-y-3">
-          {/* Header row */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded bg-slate-100 text-slate-700 shrink-0">
-                <Camera size={16} />
-              </span>
-              <h3 className="text-lg font-bold text-secondary-foreground font-sans">
-                {humanizeIssueType(issue.issue_type)}
-              </h3>
-            </div>
-            
-            {/* Severity block indicator */}
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mr-1">
-                Severity
-              </span>
-              {Array.from({ length: 5 }).map((_, idx) => {
-                const step = idx + 1;
-                const isActive = step <= issue.severity;
-                return (
-                  <span
-                    key={step}
-                    className={cn(
-                      'w-5 h-5 rounded-small flex items-center justify-center text-[10px] font-bold border transition-colors select-none',
-                      isActive 
-                        ? getSeverityColor(issue.severity)
-                        : 'bg-slate-50 text-slate-300 border-slate-200'
-                    )}
-                  >
-                    {step}
-                  </span>
-                );
-              })}
-            </div>
+      <div className="p-6 md:p-8 space-y-6">
+        {/* Header row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-50 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded bg-slate-50 text-slate-700 shrink-0">
+              <Camera size={16} />
+            </span>
+            <h3 className="text-xl font-bold text-secondary-foreground font-sans tracking-tight">
+              {humanizeIssueType(issue.issue_type)}
+            </h3>
           </div>
-
-          {/* Description */}
-          <div className="space-y-1">
-            <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              AI Vision Description
-            </h4>
-            <p className="text-sm text-slate-600 font-normal leading-relaxed font-sans">
-              {issue.description}
-            </p>
+          
+          {/* Severity block indicator */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mr-1">
+              Severity
+            </span>
+            {Array.from({ length: 5 }).map((_, idx) => {
+              const step = idx + 1;
+              const isActive = step <= issue.severity;
+              return (
+                <span
+                  key={step}
+                  className={cn(
+                    'w-6 h-6 rounded-small flex items-center justify-center text-xs font-bold border transition-colors select-none',
+                    isActive 
+                      ? getSeverityColor(issue.severity)
+                      : 'bg-slate-50 text-slate-350 border-slate-100'
+                  )}
+                >
+                  {step}
+                </span>
+              );
+            })}
           </div>
-
-          {/* User note if present */}
-          {issue.user_note && (
-            <div className="space-y-1 bg-slate-50/50 p-3 rounded-small border border-slate-100">
-              <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Reporter's Additional Note
-              </h4>
-              <p className="text-xs text-slate-500 font-normal font-sans italic">
-                "{issue.user_note}"
-              </p>
-            </div>
-          )}
         </div>
 
+        {/* Description */}
+        <div className="space-y-1.5">
+          <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            Image Analysis
+          </h4>
+          <p className="text-base text-slate-700 font-normal leading-relaxed font-sans">
+            {issue.description}
+          </p>
+        </div>
+
+        {/* User note if present */}
+        {issue.user_note && (
+          <div className="p-4 bg-slate-50 rounded-medium border border-slate-100/50">
+            <h4 className="text-[10px] font-semibold text-slate-450 uppercase tracking-wider mb-1">
+              Reporter's Additional Note
+            </h4>
+            <p className="text-sm text-slate-650 font-normal font-sans italic leading-relaxed">
+              "{issue.user_note}"
+            </p>
+          </div>
+        )}
+
         {/* Credibility Score Banner (with required disclaimer label) */}
-        <div className="flex items-start gap-2 p-3 bg-slate-50 border border-secondary-border rounded-small select-none animate-fade group">
-          <AlertCircle size={15} className="text-slate-400 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 border border-slate-100 rounded-medium select-none animate-fade group">
+          <AlertCircle size={15} className="text-slate-450 mt-0.5 shrink-0" />
           <div className="space-y-0.5 leading-tight">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Confidence Assessment:
+                Analysis Confidence:
               </span>
               <span className="text-xs font-bold text-primary">
                 {(issue.credibility_score * 100).toFixed(0)}%
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 font-normal leading-snug">
+            <p className="text-[10px] text-slate-450 font-normal leading-snug">
               Image quality and classification confidence (AI-assessed)
             </p>
           </div>

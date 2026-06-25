@@ -45,25 +45,19 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue, reportsCount, class
   return (
     <div
       className={cn(
-        'group border border-secondary-border bg-white rounded-large overflow-hidden hover:shadow-subtle hover:border-slate-300 transition-all duration-200 flex flex-col h-full relative',
+        'group border border-slate-100 bg-white rounded-large overflow-hidden hover:border-slate-200 transition-all duration-200 flex flex-col h-full relative',
         className
       )}
     >
-      {/* Top Banner Tag: Self-Reported */}
-      <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/80 backdrop-blur-sm rounded-small text-[10px] font-bold text-white uppercase tracking-wider select-none">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-        <span>Self-Reported</span>
-      </div>
-
       {/* Photo Preview Container */}
       <div className="h-44 w-full bg-slate-50 relative overflow-hidden border-b border-slate-100 shrink-0">
         <img
           src={getStaticUrl(issue.photo_url)}
           alt={humanizeIssueType(issue.issue_type)}
-          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+          className="w-full h-full object-cover transition-transform duration-300"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent pointer-events-none" />
       </div>
 
       {/* Card Details Content */}

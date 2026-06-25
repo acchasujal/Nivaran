@@ -5,10 +5,9 @@ import { PhotoUploader } from '@/components/issue/PhotoUploader';
 import { PhotoPreview } from '@/components/issue/PhotoPreview';
 import { LocationPicker } from '@/components/issue/LocationPicker';
 import { AgentTimeline } from '@/components/timeline/AgentTimeline';
-import type { TimelineStepData } from '@/components/timeline/AgentTimeline';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useCreateIssue } from '@/api/queries';
-import { AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, FileText, CheckCircle2, Sparkles } from 'lucide-react';
 import axios from 'axios';
 
 export const IntakePage: React.FC = () => {
@@ -19,6 +18,24 @@ export const IntakePage: React.FC = () => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [userNote, setUserNote] = useState<string>('');
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  const handleQuickDemo = async () => {
+    setIsDemoLoading(true);
+    try {
+      const response = await fetch('/demo_pothole.jpg');
+      const blob = await response.blob();
+      const file = new File([blob], 'demo_pothole.jpg', { type: 'image/jpeg' });
+      setPhoto(file);
+      setCoordinates({ lat: 19.0760, lng: 72.8777 });
+      setUserNote('Active road pothole creating severe traffic hazard near intersection.');
+      setFieldErrors({});
+    } catch (err) {
+      console.error('Failed to load demo data', err);
+    } finally {
+      setIsDemoLoading(false);
+    }
+  };
   
   // Submission & Progress states
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -128,81 +145,24 @@ export const IntakePage: React.FC = () => {
     setFieldErrors({});
   };
 
-  // Generate timeline steps dynamically during submission state
-  const getSubmittingTimelineSteps = (): TimelineStepData[] => {
-    // Estimate: Agent 1 runs for ~7 seconds, then Agent 2 runs
-    const isAgent1Done = elapsedSeconds >= 7 || createIssueMutation.isSuccess;
-    
-    return [
-      {
-        number: 1,
-        name: 'Photo Uploaded',
-        agentLabel: 'Intake Captured',
-        description: 'Verified photograph of infrastructure damage has been uploaded.',
-        status: 'completed',
-      },
-      {
-        number: 2,
-        name: 'Issue Classification',
-        agentLabel: 'AI Vision Analyzer',
-        description: 'Analyzing photo clarity, classifying civic issue category, and assessing severity level...',
-        status: createIssueMutation.isSuccess 
-          ? 'completed'
-          : submitError && elapsedSeconds < 7
-          ? 'failed'
-          : isAgent1Done
-          ? 'completed'
-          : 'running',
-      },
-      {
-        number: 3,
-        name: 'Nearby Report Matching',
-        agentLabel: 'Proximity Engine',
-        description: 'Cross-referencing report location with existing reports and checking duplicate entries...',
-        status: createIssueMutation.isSuccess
-          ? 'completed'
-          : submitError && elapsedSeconds >= 7
-          ? 'failed'
-          : isAgent1Done
-          ? 'running'
-          : 'pending',
-      },
-      {
-        number: 4,
-        name: 'Impact Intelligence',
-        agentLabel: 'Impact Risk Analysis',
-        description: 'Evaluating collective risk levels and consequences (triggers when nearby report threshold is met).',
-        status: 'pending',
-      },
-      {
-        number: 5,
-        name: 'Draft Generation',
-        agentLabel: 'AI Document Builder',
-        description: 'Generating official complaint briefs and RTI requests.',
-        status: 'pending',
-      },
-      {
-        number: 6,
-        name: 'Human Review',
-        agentLabel: 'Verification Gate',
-        description: 'Review and approval check for draft briefs before real-world dispatch.',
-        status: 'pending',
-      },
-      {
-        number: 7,
-        name: 'Escalation',
-        agentLabel: 'Action Dispatcher',
-        description: 'Dispatches complaint emails or generates PDF package downloads.',
-        status: 'pending',
-      },
-    ];
-  };
+
 
   return (
     <div className="flex-1 flex flex-col pb-10">
       <PageHeader
         title="Report Civic Issue"
-        subtitle="Observe → Understand → Act. Submit verified photographic evidence of infrastructure issues."
+        subtitle="Submit verified photographic evidence of infrastructure issues."
+        action={
+          <button
+            type="button"
+            onClick={handleQuickDemo}
+            disabled={isDemoLoading}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-small shadow transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 select-none"
+          >
+            <Sparkles size={13} className={isDemoLoading ? 'animate-spin' : ''} />
+            <span>{isDemoLoading ? 'Loading Demo...' : 'Quick Demo'}</span>
+          </button>
+        }
       />
 
       {isSubmitting ? (
@@ -211,24 +171,28 @@ export const IntakePage: React.FC = () => {
           <div className="text-center space-y-2">
             {createIssueMutation.isSuccess ? (
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 mb-2 shrink-0">
-                <CheckCircle2 size={28} className="stroke-[1.5] animate-pulse" />
+                <CheckCircle2 size={28} className="stroke-[1.5]" />
               </div>
             ) : (
               <span className="inline-block w-8 h-8 rounded-full border-4 border-slate-200 border-t-primary animate-spin mb-2" />
             )}
             <h2 className="text-lg font-semibold text-secondary-foreground">
-              {createIssueMutation.isSuccess ? 'Issue Verified successfully!' : 'Analyzing Report...'}
+              {createIssueMutation.isSuccess ? 'Verified successfully!' : 'Verifying details...'}
             </h2>
             <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
               {createIssueMutation.isSuccess 
                 ? 'Redirecting to issue dashboard detail...' 
-                : `Please wait. Handing off to Agent 1 and Agent 2. Elapsed: ${elapsedSeconds}s (takes ~6-15 seconds).`
+                : `Analyzing evidence and scanning nearby reports. Elapsed: ${elapsedSeconds}s (takes ~6-15s).`
               }
             </p>
           </div>
 
           <div className="border border-secondary-border bg-white rounded-large p-6 md:p-8 shadow-subtle">
-            <AgentTimeline steps={getSubmittingTimelineSteps()} />
+            <AgentTimeline
+              isSubmitting={isSubmitting}
+              elapsedSeconds={elapsedSeconds}
+              submitError={submitError}
+            />
           </div>
         </div>
       ) : submitError ? (
@@ -309,7 +273,7 @@ export const IntakePage: React.FC = () => {
             </button>
             
             <p className="text-[10px] text-slate-400 text-center leading-normal">
-              Submitting a report runs Agent 1 (Gemini Vision classification) and Agent 2 (location-based clustering) in real-time.
+              Reports are processed through our verification pipeline to match nearby incidents and assess public impact.
             </p>
           </div>
         </form>

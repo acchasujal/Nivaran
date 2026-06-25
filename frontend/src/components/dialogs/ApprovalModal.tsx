@@ -154,10 +154,10 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({
         {/* Title Block */}
         <div className="space-y-1">
           <h3 id="modal-title" className="text-base font-bold text-secondary-foreground font-sans">
-            Approve Complaint Draft
+            Approve Complaint
           </h3>
           <p id="modal-subtitle" className="text-xs text-slate-500 font-sans">
-            Review before authorizing this complaint.
+            Review details before approving this complaint.
           </p>
         </div>
 
@@ -166,20 +166,20 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({
           <div className="text-slate-400 font-semibold">Area</div>
           <div className="col-span-2 text-slate-800 font-medium truncate">{areaLabel}</div>
 
-          <div className="text-slate-400 font-semibold">Community Reports</div>
+          <div className="text-slate-400 font-semibold">Nearby Reports</div>
           <div className="col-span-2 text-slate-800 font-medium">{reportCount} {reportCount === 1 ? 'report' : 'reports'}</div>
 
           <div className="text-slate-400 font-semibold">Recipient</div>
           <div className="col-span-2 text-slate-800 font-medium break-all">{recipientEmail}</div>
 
-          <div className="text-slate-400 font-semibold">Draft Type</div>
+          <div className="text-slate-400 font-semibold">Document Type</div>
           <div className="col-span-2 text-slate-800 font-medium">{getDraftTypeLabel(draftType)}</div>
         </div>
 
         {/* Primary Notice Panel */}
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-medium text-xs font-sans text-slate-600 space-y-2 select-text leading-relaxed">
           <p>
-            You are authorizing an official complaint on behalf of <strong>{reportCount} community reports</strong> for <strong>{areaLabel}</strong>.
+            You are approving an official complaint representing <strong>{reportCount} reports</strong> for <strong>{areaLabel}</strong>.
           </p>
           <p>
             This complaint will be sent to:

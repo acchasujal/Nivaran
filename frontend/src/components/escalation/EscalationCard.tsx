@@ -42,7 +42,7 @@ export const EscalationCard: React.FC<EscalationCardProps> = ({ escalation, clas
           <span className="p-1.5 rounded bg-emerald-50 text-emerald-700 shrink-0">
             <CheckCircle2 size={16} />
           </span>
-          <span className="text-sm font-semibold text-slate-700 font-sans">Escalation Receipt</span>
+          <span className="text-sm font-semibold text-slate-700 font-sans">Send Receipt</span>
         </div>
         
         {/* Status Badge */}
@@ -59,7 +59,7 @@ export const EscalationCard: React.FC<EscalationCardProps> = ({ escalation, clas
             </span>
             <div className="flex items-center gap-1.5 text-xs text-slate-700 font-medium font-sans">
               {getMethodIcon(escalation.method)}
-              <span className="capitalize">{escalation.method === 'pdf_export' ? 'PDF Export' : 'Email Send'}</span>
+              <span className="capitalize">{escalation.method === 'pdf_export' ? 'Saved PDF' : 'Sent Email'}</span>
             </div>
           </div>
 
@@ -105,10 +105,10 @@ export const EscalationCard: React.FC<EscalationCardProps> = ({ escalation, clas
               href={getStaticUrl(escalation.pdf_download_url)}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-small shadow transition-all active:scale-[0.99] focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:outline-none"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-small shadow transition-all active:scale-[0.99] focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:outline-none"
             >
               <FileDown size={14} />
-              <span>Download PDF Brief Package</span>
+              <span>Download PDF Package</span>
             </a>
           </div>
         )}

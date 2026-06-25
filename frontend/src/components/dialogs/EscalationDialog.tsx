@@ -140,7 +140,7 @@ export const EscalationDialog: React.FC<EscalationDialogProps> = ({
             {method === 'email' ? <Send size={18} /> : <FileDown size={18} />}
           </div>
           <h3 className="text-base font-bold text-secondary-foreground font-sans">
-            {method === 'email' ? 'Dispatch Escalation Email' : 'Export Escalation PDF Package'}
+            {method === 'email' ? 'Send Complaint via Email' : 'Save Complaint as PDF'}
           </h3>
         </div>
 
@@ -149,7 +149,7 @@ export const EscalationDialog: React.FC<EscalationDialogProps> = ({
           {method === 'email' && (
             <div className="space-y-1">
               <label htmlFor="recipientEmail" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Recipient Authority Email
+                Authority Email
               </label>
               <input
                 id="recipientEmail"
@@ -167,8 +167,8 @@ export const EscalationDialog: React.FC<EscalationDialogProps> = ({
           {/* Warning / Explanation note */}
           <p className="text-[11px] text-slate-500 leading-relaxed font-sans select-text">
             {method === 'email'
-              ? 'This will trigger Agent 5 to dispatch the approved escalation brief to the designated authority email address using SendGrid. The real-world response state will be recorded.'
-              : 'This will trigger Agent 5 to compile the approved escalation brief into an official PDF document and output a static download URL.'}
+              ? 'Send the approved complaint to the authority. The delivery status will be logged in real-time.'
+              : 'Compile the approved complaint into an official PDF document for local download.'}
           </p>
 
           {/* Confirmation Checkbox */}
@@ -182,7 +182,7 @@ export const EscalationDialog: React.FC<EscalationDialogProps> = ({
               disabled={isSubmitting}
             />
             <label htmlFor="confirmEscalation" className="text-[11px] text-slate-600 font-medium select-none cursor-pointer leading-tight">
-              I confirm that the draft has been reviewed and is ready for real-world dispatch.
+              I confirm that this complaint is ready to send.
             </label>
           </div>
 
@@ -212,12 +212,12 @@ export const EscalationDialog: React.FC<EscalationDialogProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 size={12} className="animate-spin shrink-0" />
-                  <span>{method === 'email' ? 'Sending...' : 'Exporting...'}</span>
+                  <span>{method === 'email' ? 'Sending...' : 'Saving...'}</span>
                 </>
               ) : (
                 <>
                   {method === 'email' ? <Send size={12} /> : <FileDown size={12} />}
-                  <span>{method === 'email' ? 'Dispatch Email' : 'Generate PDF'}</span>
+                  <span>{method === 'email' ? 'Send Email' : 'Save PDF'}</span>
                 </>
               )}
             </button>

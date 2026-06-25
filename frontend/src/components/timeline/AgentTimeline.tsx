@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Loader2, Circle, AlertCircle } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Issue, Cluster, ImpactSummary, ActionDraft } from '@/api/types';
 
 export type StepState = 'pending' | 'running' | 'completed' | 'failed';
 
@@ -12,209 +12,303 @@ export interface TimelineStepData {
   agentLabel: string;
   description: string;
   status: StepState;
-  timestamp?: string | null;
 }
 
 interface AgentTimelineProps {
+  // Post-upload issue data
+  issue?: Issue;
+  cluster?: Cluster | null;
+  impactSummary?: ImpactSummary | null;
+  actionDrafts?: ActionDraft[];
+
+  // Upload/Submission state
+  isSubmitting?: boolean;
+  elapsedSeconds?: number;
+  submitError?: string | null;
+
+  // Custom steps override
   steps?: TimelineStepData[];
-  issueStatus?: 'classified' | 'clustered' | 'drafted' | 'escalated' | 'pending' | string;
-  hasImpactSummary?: boolean;
-  hasDrafts?: boolean;
-  isDraftApproved?: boolean;
-  escalationStatus?: 'sent' | 'exported' | 'failed' | null;
   className?: string;
+  
+  // Layout mode
+  layout?: 'horizontal' | 'vertical' | 'responsive';
 }
 
-export const AgentTimeline: React.FC<AgentTimelineProps> = ({
+export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
+  issue,
+  cluster,
+  impactSummary,
+  actionDrafts,
+  isSubmitting,
+  elapsedSeconds,
+  submitError,
   steps,
-  issueStatus,
-  hasImpactSummary,
-  hasDrafts,
-  isDraftApproved = false,
-  escalationStatus,
   className,
+  layout = 'responsive',
 }) => {
-  // If steps are not provided, compute them automatically based on status flags
-  const computedSteps: TimelineStepData[] = steps || [
-    {
-      number: 1,
-      name: 'Photo Uploaded',
-      agentLabel: 'Intake Captured',
-      description: 'Verified photograph of infrastructure damage has been uploaded.',
-      status: 'completed',
-    },
-    {
-      number: 2,
-      name: 'Issue Classification',
-      agentLabel: 'AI Vision Analyzer',
-      description: 'Analyzes photo clarity, categories, and estimates severity scale.',
-      status: (() => {
-        if (!issueStatus || issueStatus === 'pending') return 'running';
-        return 'completed';
-      })(),
-    },
-    {
-      number: 3,
-      name: 'Nearby Report Matching',
-      agentLabel: 'Proximity Engine',
-      description: 'Matches report location against other reports in a 300-meter radius.',
-      status: (() => {
-        if (!issueStatus || issueStatus === 'pending') return 'pending';
-        if (issueStatus === 'classified') return 'running';
-        return 'completed';
-      })(),
-    },
-    {
-      number: 4,
-      name: 'Impact Intelligence',
-      agentLabel: 'Impact Risk Analysis',
-      description: 'Evaluates collective public risk levels and potential consequences.',
-      status: (() => {
-        if (!issueStatus || issueStatus === 'pending' || issueStatus === 'classified') return 'pending';
-        if (issueStatus === 'clustered' && !hasImpactSummary) return 'running';
-        if (hasImpactSummary || issueStatus === 'drafted' || issueStatus === 'escalated') return 'completed';
-        return 'running';
-      })(),
-    },
-    {
-      number: 5,
-      name: 'Draft Generation',
-      agentLabel: 'AI Document Builder',
-      description: 'Generates official complaint briefs and RTI requests.',
-      status: (() => {
-        if (!hasImpactSummary && issueStatus !== 'drafted' && issueStatus !== 'escalated') return 'pending';
-        if (hasImpactSummary && !hasDrafts) return 'running';
-        if (hasDrafts || issueStatus === 'drafted' || issueStatus === 'escalated') return 'completed';
-        return 'running';
-      })(),
-    },
-    {
-      number: 6,
-      name: 'Human Review',
-      agentLabel: 'Verification Gate',
-      description: 'Review and approval check for draft briefs before real-world dispatch.',
-      status: (() => {
-        if (hasDrafts || issueStatus === 'drafted' || issueStatus === 'escalated') {
-          return isDraftApproved ? 'completed' : 'running';
-        }
-        return 'pending';
-      })(),
-    },
-    {
-      number: 7,
-      name: 'Escalation',
-      agentLabel: 'Action Dispatcher',
-      description: 'Dispatches complaint emails or generates PDF package downloads.',
-      status: (() => {
-        if (issueStatus === 'escalated') {
-          if (escalationStatus === 'failed') return 'failed';
-          return 'completed';
-        }
-        if (escalationStatus === 'sent' || escalationStatus === 'exported') return 'completed';
-        if (escalationStatus === 'failed') return 'failed';
-        if (isDraftApproved) return 'running';
-        return 'pending';
-      })(),
-    },
-  ];
+  // Memoize derived states of the 5 stages to optimize rendering performance
+  const computedSteps = useMemo(() => {
+    if (steps) return steps;
 
-  const getStepIcon = (status: StepState): { icon: LucideIcon; className: string } => {
-    switch (status) {
-      case 'completed':
-        return { icon: CheckCircle2, className: 'text-emerald-500 bg-emerald-50' };
-      case 'running':
-        return { icon: Loader2, className: 'text-primary bg-blue-50 animate-spin' };
-      case 'failed':
-        return { icon: AlertCircle, className: 'text-rose-500 bg-rose-50' };
-      default:
-        return { icon: Circle, className: 'text-slate-300 bg-slate-50' };
+    // Check if we are in upload/submitting state
+    if (isSubmitting || submitError) {
+      const isAgent1Done = (elapsedSeconds ?? 0) >= 7;
+
+      const stage1Status: StepState = submitError && !isAgent1Done
+        ? 'failed'
+        : isAgent1Done
+        ? 'completed'
+        : 'running';
+
+      const stage2Status: StepState = submitError && isAgent1Done
+        ? 'failed'
+        : isAgent1Done
+        ? 'running'
+        : 'pending';
+
+      return [
+        {
+          number: 1,
+          name: 'Image Verification',
+          agentLabel: 'AI Classifier',
+          description: 'Verifies visual parameters and severity.',
+          status: stage1Status,
+        },
+        {
+          number: 2,
+          name: 'Nearby Incident Match',
+          agentLabel: 'Community Matcher',
+          description: 'Matches incident with reports in the same area.',
+          status: stage2Status,
+        },
+        {
+          number: 3,
+          name: 'Impact Assessment',
+          agentLabel: 'Impact Assessment',
+          description: 'Calculates public safety consequences.',
+          status: 'pending' as StepState,
+        },
+        {
+          number: 4,
+          name: 'Official Draft Preparation',
+          agentLabel: 'Draft Preparer',
+          description: 'Prepares complaints and official briefs.',
+          status: 'pending' as StepState,
+        },
+        {
+          number: 5,
+          name: 'Escalation Dispatch',
+          agentLabel: 'Action Dispatcher',
+          description: 'Dispatches complaints via email or PDF.',
+          status: 'pending' as StepState,
+        },
+      ];
     }
-  };
+
+    const status = issue?.status;
+
+    // 1. Image Verification: Completed if issue exists
+    const stage1Status: StepState = issue ? 'completed' : 'pending';
+
+    // 2. Nearby Incident Match:
+    let stage2Status: StepState = 'pending';
+    if (status === 'classified') {
+      stage2Status = 'running';
+    } else if (status === 'clustered' || status === 'drafted' || status === 'escalated') {
+      stage2Status = 'completed';
+    }
+
+    // 3. Impact Assessment:
+    let stage3Status: StepState = 'pending';
+    if (impactSummary) {
+      stage3Status = 'completed';
+    } else if (status === 'clustered') {
+      stage3Status = 'running';
+    } else if (status === 'drafted' || status === 'escalated') {
+      stage3Status = 'completed';
+    }
+
+    // 4. Official Draft Preparation:
+    let stage4Status: StepState = 'pending';
+    const hasDrafts = actionDrafts && actionDrafts.length > 0;
+    if (hasDrafts || status === 'drafted' || status === 'escalated') {
+      stage4Status = 'completed';
+    } else if (stage3Status === 'completed') {
+      stage4Status = 'running';
+    }
+
+    // 5. Escalation Dispatch:
+    let stage5Status: StepState = 'pending';
+    const activeEscalation = actionDrafts?.find((d) => d.escalation)?.escalation;
+    const hasApprovedDraft = actionDrafts?.some((d) => d.status === 'approved');
+
+    if (activeEscalation) {
+      if (activeEscalation.status === 'failed') {
+        stage5Status = 'failed';
+      } else if (activeEscalation.status === 'sent' || activeEscalation.status === 'exported') {
+        stage5Status = 'completed';
+      } else {
+        stage5Status = 'running';
+      }
+    } else if (status === 'escalated') {
+      stage5Status = 'completed';
+    } else if (hasApprovedDraft) {
+      stage5Status = 'running';
+    }
+
+    return [
+      {
+        number: 1,
+        name: 'Image Verification',
+        agentLabel: 'AI Classifier',
+        description: 'Verifies visual parameters and severity.',
+        status: stage1Status,
+      },
+      {
+        number: 2,
+        name: 'Nearby Incident Match',
+        agentLabel: 'Community Matcher',
+        description: 'Matches incident with reports in the same area.',
+        status: stage2Status,
+      },
+      {
+        number: 3,
+        name: 'Impact Assessment',
+        agentLabel: 'Impact Assessment',
+        description: 'Calculates public safety consequences.',
+        status: stage3Status,
+      },
+      {
+        number: 4,
+        name: 'Official Draft Preparation',
+        agentLabel: 'Draft Preparer',
+        description: 'Prepares complaints and official briefs.',
+        status: stage4Status,
+      },
+      {
+        number: 5,
+        name: 'Escalation Dispatch',
+        agentLabel: 'Action Dispatcher',
+        description: 'Dispatches complaints via email or PDF.',
+        status: stage5Status,
+      },
+    ];
+  }, [
+    steps,
+    issue,
+    cluster,
+    impactSummary,
+    actionDrafts,
+    isSubmitting,
+    elapsedSeconds,
+    submitError,
+  ]);
+
+  const isVertical = layout === 'vertical';
+  const isHorizontal = layout === 'horizontal';
+  const isResponsive = !isVertical && !isHorizontal;
 
   return (
-    <div className={cn('flow-root w-full py-2', className)}>
-      <ul role="list" className="-mb-8">
+    <div className={cn('w-full py-2', className)}>
+      <ul
+        role="list"
+        className={cn(
+          'flex select-none',
+          isVertical ? 'flex-col gap-6' : isHorizontal ? 'flex-row gap-4' : 'flex-col md:flex-row md:gap-0 gap-8 w-full justify-between'
+        )}
+      >
         {computedSteps.map((step, stepIdx) => {
-          const { icon: Icon, className: iconClass } = getStepIcon(step.status);
           const isLast = stepIdx === computedSteps.length - 1;
 
           return (
-            <li key={step.number}>
-              <div className="relative pb-8">
-                {/* Vertical connecting line */}
-                {!isLast && (
+            <li
+              key={step.number}
+              tabIndex={0}
+              aria-label={`Stage ${step.number}: ${step.name}. Status: ${step.status}`}
+              className="relative flex-1 focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none rounded-medium p-1 transition-all"
+            >
+              {/* Connecting line - Mobile (Vertical) or Forced Vertical */}
+              {!isLast && (isVertical || isResponsive) && (
+                <span
+                  className={cn(
+                    'absolute left-[19px] top-[21px] w-[2px] h-[calc(100%+1.5rem)] -z-10 transition-colors duration-300',
+                    isResponsive && 'md:hidden',
+                    step.status === 'completed' ? 'bg-emerald-500' : 'bg-slate-200'
+                  )}
+                  aria-hidden="true"
+                />
+              )}
+
+              {/* Connecting line - Desktop (Horizontal) or Forced Horizontal */}
+              {!isLast && (isHorizontal || isResponsive) && (
+                <span
+                  className={cn(
+                    'absolute top-[21px] left-[50%] w-full h-[2px] -z-10 transition-colors duration-300',
+                    isResponsive && 'hidden md:block',
+                    step.status === 'completed' ? 'bg-emerald-500' : 'bg-slate-200'
+                  )}
+                  aria-hidden="true"
+                />
+              )}
+
+              <div className={cn(
+                'flex items-start gap-4 relative',
+                isVertical ? 'flex-row text-left' : isHorizontal ? 'flex-col items-center text-center' : 'flex-row md:flex-col items-start md:items-center gap-4 md:gap-3 text-left md:text-center'
+              )}>
+                {/* Stage Indicator Circle */}
+                <div className="shrink-0">
                   <span
                     className={cn(
-                      'absolute left-5 top-5 -ml-px h-full w-0.5 bg-slate-200',
-                      step.status === 'completed' && 'bg-emerald-500'
+                      'flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 bg-white',
+                      step.status === 'completed' && 'bg-emerald-50 border-emerald-500 text-emerald-700',
+                      step.status === 'running' && 'bg-teal-50 border-teal-500 text-primary',
+                      step.status === 'failed' && 'bg-rose-50 border-rose-500 text-rose-700',
+                      step.status === 'pending' && 'bg-slate-50 border-slate-200 text-slate-400'
                     )}
-                    aria-hidden="true"
-                  />
-                )}
-                
-                <div className="relative flex items-start space-x-3">
-                  {/* Step status icon wrapper */}
-                  <div className="shrink-0">
-                    <span
-                      className={cn(
-                        'flex h-10 w-10 items-center justify-center rounded-full border border-secondary-border transition-colors duration-200',
-                        iconClass
-                      )}
-                    >
-                      {step.status === 'pending' ? (
-                        <span className="text-xs font-semibold text-slate-400">{step.number}</span>
-                      ) : (
-                        <Icon className="h-5 w-5" />
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Step content block */}
-                  <div className="min-w-0 flex-1 pt-1.5">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h3 className="text-sm font-semibold text-secondary-foreground font-sans">
-                          {step.name}
-                        </h3>
-                        <span className="inline-block text-[11px] font-medium text-slate-400 bg-slate-100 rounded px-1.5 py-0.5 mt-0.5">
-                          {step.agentLabel}
-                        </span>
-                      </div>
-                      
-                      {step.timestamp && (
-                        <span className="text-xs text-slate-400 shrink-0 select-none">
-                          {step.timestamp}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="mt-1 text-xs text-slate-500 leading-relaxed font-normal">
-                      {step.description}
-                    </p>
-
-                    {/* Subtle micro-animation when running */}
+                  >
+                    {step.status === 'completed' && <CheckCircle2 size={18} className="shrink-0" />}
+                    {step.status === 'failed' && <AlertCircle size={18} className="shrink-0" />}
                     {step.status === 'running' && (
                       <motion.div
-                        className="mt-2 h-1.5 w-32 bg-blue-100 rounded-full overflow-hidden"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <motion.div
-                          className="h-full bg-primary rounded-full"
-                          animate={{
-                            x: [-100, 150],
-                          }}
-                          transition={{
-                            repeat: Infinity,
-                            duration: 1.5,
-                            ease: 'easeInOut',
-                          }}
-                          style={{ width: '40%' }}
-                        />
-                      </motion.div>
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+                        className="w-3 h-3 rounded-full bg-primary shrink-0"
+                      />
                     )}
-                  </div>
+                    {step.status === 'pending' && (
+                      <span className="text-xs font-semibold">{step.number}</span>
+                    )}
+                  </span>
+                </div>
+
+                {/* Stage Descriptions */}
+                <div className="space-y-0.5 pt-1 md:pt-0">
+                  <h4 className={cn(
+                    "text-xs font-bold font-sans tracking-tight leading-none",
+                    step.status === 'pending' ? 'text-slate-400' : 'text-secondary-foreground'
+                  )}>
+                    {step.name}
+                  </h4>
+                  <span className={cn(
+                    "inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded leading-none mt-0.5 select-none font-sans",
+                    step.status === 'completed' && 'bg-emerald-50 text-emerald-800',
+                    step.status === 'running' && 'bg-teal-50 text-teal-800',
+                    step.status === 'failed' && 'bg-rose-50 text-rose-800',
+                    step.status === 'pending' && 'bg-slate-100 text-slate-400'
+                  )}>
+                    {step.agentLabel}
+                  </span>
+                  <p className={cn(
+                    "text-[10px] text-slate-450 leading-normal font-sans font-normal pt-1",
+                    isResponsive ? 'hidden md:block' : 'block'
+                  )}>
+                    {step.description}
+                  </p>
+                  {isResponsive && (
+                    <p className="block md:hidden text-[11px] text-slate-450 leading-normal font-sans font-normal">
+                      {step.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </li>
@@ -224,4 +318,6 @@ export const AgentTimeline: React.FC<AgentTimelineProps> = ({
     </div>
   );
 };
+
+export const AgentTimeline = React.memo(AgentTimelineComponent);
 export default AgentTimeline;

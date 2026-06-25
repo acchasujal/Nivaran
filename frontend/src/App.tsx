@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppLayout from './components/layout/AppLayout';
-import IntakePage from './pages/IntakePage';
-import TrackerPage from './pages/TrackerPage';
-import IssueDetailPage from './pages/IssueDetailPage';
+
+const IntakePage = lazy(() => import('./pages/IntakePage'));
+const TrackerPage = lazy(() => import('./pages/TrackerPage'));
+const IssueDetailPage = lazy(() => import('./pages/IssueDetailPage'));
 
 // Initialize the TanStack Query Client with sensible defaults
 const queryClient = new QueryClient({

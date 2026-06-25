@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Map, Plus, AlertCircle, Filter } from 'lucide-react';
+import { Map, Plus, Filter } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingState } from '@/components/feedback/LoadingState';
@@ -72,18 +72,10 @@ export const TrackerPage: React.FC = () => {
         }
       />
 
-      {/* Prominent Self-Reported Warning Banner */}
-      <div className="mt-4 flex items-start gap-2.5 p-3.5 bg-slate-50 border border-secondary-border rounded-medium select-none text-xs text-slate-600 leading-normal animate-fade">
-        <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px] block mb-0.5">
-            Public Disclosure Notice
-          </span>
-          <p className="font-normal font-sans text-slate-500">
-            All data on this tracker is <strong>community self-reported</strong> and verified in real-time through the CivicPulse AI Pipeline. Always verify complaint briefs locally before manual escalation.
-          </p>
-        </div>
-      </div>
+      {/* Disclosure Notice */}
+      <p className="mt-4 text-xs text-slate-400 font-sans">
+        All reports are community-submitted and verified in real-time. Review briefs locally before manual escalation.
+      </p>
 
       {/* Filter Toolbar */}
       {issues.length > 0 && (
@@ -116,11 +108,11 @@ export const TrackerPage: React.FC = () => {
         {filteredIssues.length === 0 ? (
           <EmptyState
             icon={Map}
-            title={selectedType !== 'all' ? "No reports match filter" : "No reports yet"}
+            title={selectedType !== 'all' ? "No matching reports" : "No reports registered"}
             description={
               selectedType !== 'all'
-                ? "No community self-reported evidence matches the selected issue type filter. Try selecting 'All Issues'."
-                : "All community self-reported evidence will appear here. Submit a new report with photographic evidence to trigger the verification and escalation pipeline."
+                ? "No community reports of this specific category have been logged yet. Clear the filter to view all active civic issues."
+                : "The public tracker is currently empty. Submit a new report with photo evidence to trigger the automated verification pipeline."
             }
             action={
               selectedType !== 'all' ? (

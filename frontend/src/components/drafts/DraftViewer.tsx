@@ -26,9 +26,9 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
 
   const getTabLabel = (type: string) => {
     switch (type) {
-      case 'complaint': return 'Official Complaint Draft';
-      case 'rti': return 'RTI Request Draft';
-      case 'community_summary': return 'Community Brief';
+      case 'complaint': return 'Official Complaint';
+      case 'rti': return 'RTI Request';
+      case 'community_summary': return 'Community Summary';
       default: return type;
     }
   };
@@ -55,18 +55,18 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
 
   if (drafts.length === 0) {
     return (
-      <div className="border border-secondary-border bg-white rounded-large p-8 text-center select-none">
+      <div className="border border-slate-100 bg-white rounded-large p-8 text-center select-none">
         <FileText className="mx-auto h-10 w-10 text-slate-300 stroke-[1.5] mb-2" />
         <h4 className="text-sm font-semibold text-secondary-foreground font-sans">Complaint Drafts Pending</h4>
-        <p className="text-xs text-slate-500 mt-1 font-sans">
-          Drafts will be generated once sufficient evidence is collected.
+        <p className="text-xs text-slate-500 mt-1.5 font-sans leading-relaxed max-w-md mx-auto">
+          Official complaint and RTI request drafts will be generated once sufficient neighborhood reports are compiled for this issue. Submit another report for this location, or trigger draft generation manually.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="border border-secondary-border bg-white rounded-large shadow-subtle flex flex-col overflow-hidden w-full">
+    <div className="border border-slate-100 bg-white rounded-large flex flex-col overflow-hidden w-full">
       {/* Dynamic Tab Switchers */}
       <div className="flex border-b border-secondary-border bg-slate-50 overflow-x-auto select-none">
         {drafts.map((draft) => (
@@ -125,10 +125,10 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
               <AlertTriangle size={15} className="shrink-0 mt-0.5" />
               <div className="space-y-0.5">
                 <span className="font-semibold uppercase tracking-wider text-[9px] text-amber-800">
-                  Disclaimer Check
+                  Verification Notice
                 </span>
                 <p className="font-normal opacity-90 leading-snug">
-                  AI-assisted document draft. Please verify all details (dates, names, addresses) for accuracy before submission or print output.
+                  This complaint is prepared from community evidence. Please verify names and dates before sending.
                 </p>
               </div>
             </div>
@@ -151,7 +151,7 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-small shadow transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                 >
                   <ThumbsUp size={13} />
-                  <span>Approve Draft</span>
+                  <span>Approve Complaint</span>
                 </button>
                 <button
                   type="button"
@@ -160,17 +160,17 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
                   className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-50 hover:bg-rose-100/50 text-rose-700 border border-rose-100 text-xs font-semibold rounded-small transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                 >
                   <ThumbsDown size={13} />
-                  <span>Reject Draft</span>
+                  <span>Reject</span>
                 </button>
               </div>
             ) : activeDraft.status === 'rejected' ? (
               <span className="text-xs font-semibold text-rose-600 font-sans">
-                This draft was rejected by a reviewer.
+                This complaint was rejected.
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 font-sans">
                 <CheckCircle2 size={15} />
-                <span>Authorized for Escalation</span>
+                <span>Approved</span>
               </span>
             )}
 
@@ -186,10 +186,10 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
                     ? 'bg-primary hover:bg-primary-hover text-white active:scale-[0.98]'
                     : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
                 )}
-                title={activeDraft.status !== 'approved' ? 'Approve this draft before escalating.' : 'Dispatch via SendGrid Email'}
+                title={activeDraft.status !== 'approved' ? 'Approve this complaint before sending.' : 'Send via Email'}
               >
                 <Send size={13} />
-                <span>Dispatch Email</span>
+                <span>Send Email</span>
               </button>
               <button
                 type="button"
@@ -198,13 +198,13 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
                 className={cn(
                   'inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-small shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none cursor-pointer',
                   activeDraft.status === 'approved'
-                    ? 'border border-secondary-border bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]'
+                    ? 'border border-slate-100 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]'
                     : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
                 )}
-                title={activeDraft.status !== 'approved' ? 'Approve this draft before escalating.' : 'Export to PDF package'}
+                title={activeDraft.status !== 'approved' ? 'Approve this complaint before saving.' : 'Save to PDF'}
               >
                 <FileDown size={13} />
-                <span>Export PDF</span>
+                <span>Save as PDF</span>
               </button>
             </div>
           </div>
