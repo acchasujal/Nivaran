@@ -160,114 +160,110 @@ export const IssueDetailPage: React.FC = () => {
 
       {/* Main Content Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8 items-start">
-        {/* Left Column: Evidence, Cluster, Impact, Drafts */}
+        {/* Left Column: Context & Actions */}
         <div className="lg:col-span-8 space-y-8">
-          {/* 1. Evidence Card */}
-          <Section className="py-0 border-b-0">
-            <EvidenceCard issue={issue} />
+          {/* Section 1: Community Evidence & Verification */}
+          <Section title="Community Evidence & Verification" description="Self-reported incident details verified and mapped against neighboring reports." className="py-0 border-b-0">
+            <div className="space-y-6">
+              <EvidenceCard issue={issue} />
+              {cluster && (
+                <ClusterCard cluster={{
+                  ...cluster,
+                  center_lat: issue.latitude,
+                  center_lng: issue.longitude,
+                  first_reported_at: issue.created_at,
+                  last_reported_at: issue.created_at,
+                }} />
+              )}
+            </div>
           </Section>
 
-          {/* 2. Cluster Mappings */}
-          {cluster && (
-            <Section title="Community Context" description="Aggregate reports identified within a 300-meter verification radius." className="py-0 border-b-0">
-              <ClusterCard cluster={{
-                ...cluster,
-                // Cast to pass other coordinates fields if necessary, or just let card draw it
-                center_lat: issue.latitude,
-                center_lng: issue.longitude,
-                first_reported_at: issue.created_at,
-                last_reported_at: issue.created_at,
-              }} />
-            </Section>
-          )}
-
-          {/* 3. Impact Analysis */}
-          <Section title="Risk & Impact Assessment" description="AI-generated impact scope, risk evaluations, and safety consequences." className="py-0 border-b-0">
-            {impact_summary ? (
-              <ImpactCard impact={{
-                ...impact_summary,
-                id: issue.id,
-                cluster_id: cluster?.id || '',
-                potential_consequences: (impact_summary as any).potential_consequences || 'No consequences documented.',
-                generated_at: issue.created_at
-              }} />
-            ) : (
-              <EmptyState
-                title="Awaiting Impact Assessment"
-                description="Evidence is currently being gathered. The impact summary and legal drafts will trigger automatically when the escalation threshold is reached."
-                icon={AlertTriangle}
-                action={
-                  cluster && (
-                    <button
-                      onClick={handleTriggerImpact}
-                      disabled={triggerImpactMutation.isPending}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-                    >
-                      <Play size={12} className={cn(triggerImpactMutation.isPending && 'animate-spin')} />
-                      <span>{triggerImpactMutation.isPending ? 'Generating...' : 'Trigger Impact (Agent 3)'}</span>
-                    </button>
-                  )
-                }
-              />
-            )}
-          </Section>
-
-          {/* 4. Action Drafts */}
-          <Section title="Accountability Drafts" description="AI-generated formal letters and briefings drafted strictly from aggregate evidence." className="py-0 border-b-0">
-            {action_drafts && action_drafts.length > 0 ? (
-              <div className="space-y-6">
-                <DraftViewer
-                  drafts={action_drafts.map(d => ({
-                    ...d,
-                    cluster_id: cluster?.id || '',
-                    created_at: issue.created_at
-                  }))}
-                  onApprove={handleApproveClick}
-                  onReject={handleRejectClick}
-                  onEscalate={handleEscalateClick}
-                  isSubmitting={approveDraftMutation.isPending || escalateDraftMutation.isPending}
+          {/* Section 2: Neighborhood Impact & Complaint Drafts */}
+          <Section title="Neighborhood Impact & Complaint Drafts" description="AI-generated impact assessments and formal complaint drafts created from matching reports." className="py-0 border-b-0">
+            <div className="space-y-6">
+              {impact_summary ? (
+                <ImpactCard impact={{
+                  ...impact_summary,
+                  id: issue.id,
+                  cluster_id: cluster?.id || '',
+                  potential_consequences: impact_summary.potential_consequences || 'No consequences documented.',
+                  generated_at: issue.created_at
+                }} />
+              ) : (
+                <EmptyState
+                  title="Neighborhood Impact Awaiting Data"
+                  description="Neighborhood Impact analysis will activate automatically after enough nearby reports are received. In the meantime, you can manually trigger the analysis for demo purposes below."
+                  icon={AlertTriangle}
+                  action={
+                    cluster && (
+                      <button
+                        onClick={handleTriggerImpact}
+                        disabled={triggerImpactMutation.isPending}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+                      >
+                        <Play size={12} className={cn(triggerImpactMutation.isPending && 'animate-spin')} />
+                        <span>{triggerImpactMutation.isPending ? 'Generating...' : 'Trigger Neighborhood Impact'}</span>
+                      </button>
+                    )
+                  }
                 />
+              )}
 
-                {/* 5. Escalation Receipt (renders below drafts if sent) */}
-                {activeEscalation && (
-                  <div className="space-y-2 select-none">
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">
-                      Real-World Escalation Logs
-                    </h4>
-                    <EscalationCard escalation={activeEscalation} />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <EmptyState
-                title="No Drafts Generated"
-                description="Complaint letters and RTI filing briefs generate automatically once the impact summary is complete."
-                icon={AlertTriangle}
-                action={
-                  impact_summary && (
-                    <button
-                      onClick={handleTriggerDrafts}
-                      disabled={triggerDraftsMutation.isPending}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-                    >
-                      <Play size={12} className={cn(triggerDraftsMutation.isPending && 'animate-spin')} />
-                      <span>{triggerDraftsMutation.isPending ? 'Generating...' : 'Trigger Drafts (Agent 4)'}</span>
-                    </button>
-                  )
-                }
-              />
-            )}
+              {action_drafts && action_drafts.length > 0 ? (
+                <div className="space-y-6">
+                  <DraftViewer
+                    drafts={action_drafts.map(d => ({
+                      ...d,
+                      cluster_id: cluster?.id || '',
+                      created_at: issue.created_at
+                    }))}
+                    onApprove={handleApproveClick}
+                    onReject={handleRejectClick}
+                    onEscalate={handleEscalateClick}
+                    isSubmitting={approveDraftMutation.isPending || escalateDraftMutation.isPending}
+                  />
+
+                  {/* Escalation Receipt (renders below drafts if sent) */}
+                  {activeEscalation && (
+                    <div className="space-y-2 select-none">
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">
+                        Real-World Escalation Logs
+                      </h4>
+                      <EscalationCard escalation={activeEscalation} />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Complaint Drafts Pending"
+                  description="Drafts will be generated once sufficient evidence is collected and the Neighborhood Impact assessment is complete."
+                  icon={AlertTriangle}
+                  action={
+                    impact_summary && (
+                      <button
+                        onClick={handleTriggerDrafts}
+                        disabled={triggerDraftsMutation.isPending}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+                      >
+                        <Play size={12} className={cn(triggerDraftsMutation.isPending && 'animate-spin')} />
+                        <span>{triggerDraftsMutation.isPending ? 'Generating...' : 'Trigger Complaint Drafts'}</span>
+                      </button>
+                    )
+                  }
+                />
+              )}
+            </div>
           </Section>
         </div>
 
-        {/* Right Column: Agent Timeline Tracker */}
+        {/* Right Column: Verification & Dispatch Pipeline */}
         <div className="lg:col-span-4 border border-secondary-border bg-white rounded-large p-6 space-y-6 shadow-subtle select-none">
           <div className="space-y-1 border-b border-secondary-border pb-3">
             <h3 className="text-sm font-semibold text-secondary-foreground font-sans">
-              Agent Intelligence Timeline
+              Verification & Dispatch Pipeline
             </h3>
             <p className="text-[10px] text-slate-400">
-              Audit the current backend status and pipeline checkmarks.
+              Observe the progress of the automated verification pipeline.
             </p>
           </div>
 
@@ -275,6 +271,7 @@ export const IssueDetailPage: React.FC = () => {
             issueStatus={issue.status}
             hasImpactSummary={!!impact_summary}
             hasDrafts={action_drafts.length > 0}
+            isDraftApproved={action_drafts.some(d => d.status === 'approved')}
             escalationStatus={activeEscalation?.status}
           />
         </div>

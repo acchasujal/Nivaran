@@ -26,8 +26,8 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
 
   const getTabLabel = (type: string) => {
     switch (type) {
-      case 'complaint': return 'Official Complaint';
-      case 'rti': return 'RTI Filing Brief';
+      case 'complaint': return 'Official Complaint Draft';
+      case 'rti': return 'RTI Request Draft';
       case 'community_summary': return 'Community Brief';
       default: return type;
     }
@@ -57,9 +57,9 @@ export const DraftViewer: React.FC<DraftViewerProps> = ({
     return (
       <div className="border border-secondary-border bg-white rounded-large p-8 text-center select-none">
         <FileText className="mx-auto h-10 w-10 text-slate-300 stroke-[1.5] mb-2" />
-        <h4 className="text-sm font-semibold text-secondary-foreground font-sans">No drafts created yet</h4>
+        <h4 className="text-sm font-semibold text-secondary-foreground font-sans">Complaint Drafts Pending</h4>
         <p className="text-xs text-slate-500 mt-1 font-sans">
-          Drafts will generate automatically once the report threshold is reached.
+          Drafts will be generated once sufficient evidence is collected.
         </p>
       </div>
     );

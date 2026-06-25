@@ -48,7 +48,7 @@ export const ImpactCard: React.FC<ImpactCardProps> = ({ impact, className }) => 
           <span className="p-1.5 rounded bg-amber-50 text-amber-700 shrink-0">
             <ShieldAlert size={16} />
           </span>
-          <span className="text-sm font-semibold text-slate-700 font-sans">Impact Intelligence</span>
+          <span className="text-sm font-semibold text-slate-700 font-sans">Neighborhood Impact</span>
         </div>
         
         {/* Risk Badge */}
@@ -81,7 +81,7 @@ export const ImpactCard: React.FC<ImpactCardProps> = ({ impact, className }) => 
         <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-small text-xs text-slate-500 font-sans">
           <FileCheck size={14} className="text-indigo-500 shrink-0" />
           <span>
-            Aggregated from <strong className="text-slate-700">{impact.evidence_count} verified citizen reports</strong> in this cluster.
+            Aggregated from <strong className="text-slate-700">{impact.evidence_count} verified citizen reports</strong> collected nearby.
           </span>
         </div>
       </div>

@@ -18,15 +18,15 @@ interface BadgeConfig {
 const statusConfigs: Record<string, BadgeConfig> = {
   // Issue statuses
   classified: {
-    label: 'Classified',
+    label: 'Intake Analysis',
     className: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   clustered: {
-    label: 'Evidence Clustered',
+    label: 'Reports Matched',
     className: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   },
   drafted: {
-    label: 'Drafts Ready',
+    label: 'Complaints Drafted',
     className: 'bg-purple-50 text-purple-700 border-purple-200',
   },
   approved: {
@@ -34,7 +34,7 @@ const statusConfigs: Record<string, BadgeConfig> = {
     className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   },
   escalated: {
-    label: 'Escalated',
+    label: 'Escalation Dispatched',
     className: 'bg-teal-50 text-teal-700 border-teal-200',
   },
 

@@ -136,8 +136,15 @@ export const IntakePage: React.FC = () => {
     return [
       {
         number: 1,
-        name: 'Agent 1: Issue Understanding',
-        agentLabel: 'Gemini Vision Intake',
+        name: 'Photo Uploaded',
+        agentLabel: 'Intake Captured',
+        description: 'Verified photograph of infrastructure damage has been uploaded.',
+        status: 'completed',
+      },
+      {
+        number: 2,
+        name: 'Issue Classification',
+        agentLabel: 'AI Vision Analyzer',
         description: 'Analyzing photo clarity, classifying civic issue category, and assessing severity level...',
         status: createIssueMutation.isSuccess 
           ? 'completed'
@@ -148,10 +155,10 @@ export const IntakePage: React.FC = () => {
           : 'running',
       },
       {
-        number: 2,
-        name: 'Agent 2: Proximity Verification',
-        agentLabel: 'Deduplication & Clustering',
-        description: 'Cross-referencing report location with existing clusters and checking duplicate entries...',
+        number: 3,
+        name: 'Nearby Report Matching',
+        agentLabel: 'Proximity Engine',
+        description: 'Cross-referencing report location with existing reports and checking duplicate entries...',
         status: createIssueMutation.isSuccess
           ? 'completed'
           : submitError && elapsedSeconds >= 7
@@ -161,24 +168,31 @@ export const IntakePage: React.FC = () => {
           : 'pending',
       },
       {
-        number: 3,
-        name: 'Agent 3: Impact Intelligence',
-        agentLabel: 'Aggregated Impact Analysis',
-        description: 'Evaluating collective risks and consequences (triggers when report threshold is reached).',
-        status: 'pending',
-      },
-      {
         number: 4,
-        name: 'Agent 4: Action Draft Generator',
-        agentLabel: 'Complaint, RTI & Summary Builder',
-        description: 'Generating drafts for complaint escalation and RTI letters.',
+        name: 'Impact Intelligence',
+        agentLabel: 'Impact Risk Analysis',
+        description: 'Evaluating collective risk levels and consequences (triggers when nearby report threshold is met).',
         status: 'pending',
       },
       {
         number: 5,
-        name: 'Agent 5: Accountability Escalator',
-        agentLabel: 'SendGrid Email & PDF Export',
-        description: 'Dispatches finalized escalation requests to relevant municipal offices.',
+        name: 'Draft Generation',
+        agentLabel: 'AI Document Builder',
+        description: 'Generating official complaint briefs and RTI requests.',
+        status: 'pending',
+      },
+      {
+        number: 6,
+        name: 'Human Review',
+        agentLabel: 'Verification Gate',
+        description: 'Review and approval check for draft briefs before real-world dispatch.',
+        status: 'pending',
+      },
+      {
+        number: 7,
+        name: 'Escalation',
+        agentLabel: 'Action Dispatcher',
+        description: 'Dispatches complaint emails or generates PDF package downloads.',
         status: 'pending',
       },
     ];

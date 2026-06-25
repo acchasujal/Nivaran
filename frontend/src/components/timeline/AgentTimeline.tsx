@@ -20,6 +20,7 @@ interface AgentTimelineProps {
   issueStatus?: 'classified' | 'clustered' | 'drafted' | 'escalated' | 'pending' | string;
   hasImpactSummary?: boolean;
   hasDrafts?: boolean;
+  isDraftApproved?: boolean;
   escalationStatus?: 'sent' | 'exported' | 'failed' | null;
   className?: string;
 }
@@ -29,6 +30,7 @@ export const AgentTimeline: React.FC<AgentTimelineProps> = ({
   issueStatus,
   hasImpactSummary,
   hasDrafts,
+  isDraftApproved = false,
   escalationStatus,
   className,
 }) => {
@@ -36,19 +38,26 @@ export const AgentTimeline: React.FC<AgentTimelineProps> = ({
   const computedSteps: TimelineStepData[] = steps || [
     {
       number: 1,
-      name: 'Agent 1: Issue Understanding',
-      agentLabel: 'Gemini Vision Intake',
-      description: 'Analyze image clarity, categorize issue, and assess severity.',
+      name: 'Photo Uploaded',
+      agentLabel: 'Intake Captured',
+      description: 'Verified photograph of infrastructure damage has been uploaded.',
+      status: 'completed',
+    },
+    {
+      number: 2,
+      name: 'Issue Classification',
+      agentLabel: 'AI Vision Analyzer',
+      description: 'Analyzes photo clarity, categories, and estimates severity scale.',
       status: (() => {
         if (!issueStatus || issueStatus === 'pending') return 'running';
         return 'completed';
       })(),
     },
     {
-      number: 2,
-      name: 'Agent 2: Proximity Verification',
-      agentLabel: 'Deduplication & Clustering',
-      description: 'Check proximity to existing reports and cluster semantic matches.',
+      number: 3,
+      name: 'Nearby Report Matching',
+      agentLabel: 'Proximity Engine',
+      description: 'Matches report location against other reports in a 300-meter radius.',
       status: (() => {
         if (!issueStatus || issueStatus === 'pending') return 'pending';
         if (issueStatus === 'classified') return 'running';
@@ -56,41 +65,54 @@ export const AgentTimeline: React.FC<AgentTimelineProps> = ({
       })(),
     },
     {
-      number: 3,
-      name: 'Agent 3: Impact Intelligence',
-      agentLabel: 'Aggregated Impact Analysis',
-      description: 'Evaluate collective risk and outline potential consequences.',
+      number: 4,
+      name: 'Impact Intelligence',
+      agentLabel: 'Impact Risk Analysis',
+      description: 'Evaluates collective public risk levels and potential consequences.',
       status: (() => {
         if (!issueStatus || issueStatus === 'pending' || issueStatus === 'classified') return 'pending';
+        if (issueStatus === 'clustered' && !hasImpactSummary) return 'running';
         if (hasImpactSummary || issueStatus === 'drafted' || issueStatus === 'escalated') return 'completed';
         return 'running';
       })(),
     },
     {
-      number: 4,
-      name: 'Agent 4: Action Draft Generator',
-      agentLabel: 'Complaint, RTI & Summary Builder',
-      description: 'Construct formal accountability complaints, RTI filings, and community briefs.',
+      number: 5,
+      name: 'Draft Generation',
+      agentLabel: 'AI Document Builder',
+      description: 'Generates official complaint briefs and RTI requests.',
       status: (() => {
         if (!hasImpactSummary && issueStatus !== 'drafted' && issueStatus !== 'escalated') return 'pending';
+        if (hasImpactSummary && !hasDrafts) return 'running';
         if (hasDrafts || issueStatus === 'drafted' || issueStatus === 'escalated') return 'completed';
         return 'running';
       })(),
     },
     {
-      number: 5,
-      name: 'Agent 5: Accountability Escalator',
-      agentLabel: 'SendGrid Email & PDF Export',
-      description: 'Perform real external action: dispatch verified briefs to authorities or compile PDFs.',
+      number: 6,
+      name: 'Human Review',
+      agentLabel: 'Verification Gate',
+      description: 'Review and approval check for draft briefs before real-world dispatch.',
       status: (() => {
-        if (!hasDrafts && issueStatus !== 'drafted' && issueStatus !== 'escalated') return 'pending';
+        if (hasDrafts || issueStatus === 'drafted' || issueStatus === 'escalated') {
+          return isDraftApproved ? 'completed' : 'running';
+        }
+        return 'pending';
+      })(),
+    },
+    {
+      number: 7,
+      name: 'Escalation',
+      agentLabel: 'Action Dispatcher',
+      description: 'Dispatches complaint emails or generates PDF package downloads.',
+      status: (() => {
         if (issueStatus === 'escalated') {
           if (escalationStatus === 'failed') return 'failed';
           return 'completed';
         }
         if (escalationStatus === 'sent' || escalationStatus === 'exported') return 'completed';
         if (escalationStatus === 'failed') return 'failed';
-        // If a draft is approved, and we have clicked escalate
+        if (isDraftApproved) return 'running';
         return 'pending';
       })(),
     },

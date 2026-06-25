@@ -32,13 +32,13 @@ export const ClusterCard: React.FC<ClusterCardProps> = ({ cluster, className }) 
           <span className="p-1.5 rounded bg-indigo-50 text-indigo-700 shrink-0">
             <Layers size={16} />
           </span>
-          <span className="text-sm font-semibold text-slate-700 font-sans">Proximity Cluster</span>
+          <span className="text-sm font-semibold text-slate-700 font-sans">Nearby Reports Location</span>
         </div>
         
         {/* Count badge */}
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
           <Hash size={12} />
-          <span>{cluster.report_count} Reports</span>
+          <span>{cluster.report_count} Reports Collected</span>
         </span>
       </div>
 
@@ -81,7 +81,7 @@ export const ClusterCard: React.FC<ClusterCardProps> = ({ cluster, className }) 
 
         {/* Center coordinates */}
         <div className="pt-2 text-[10px] text-slate-400 font-normal leading-none font-mono">
-          Cluster center: {cluster.center_lat.toFixed(5)}, {cluster.center_lng.toFixed(5)}
+          Location center: {cluster.center_lat.toFixed(5)}, {cluster.center_lng.toFixed(5)}
         </div>
       </div>
     </div>
