@@ -4,8 +4,8 @@ from typing import Optional
 from sqlmodel import SQLModel, Field
 from pydantic import field_validator
 
-ALLOWED_ISSUE_TYPES = {"road_damage", "lighting", "water", "waste", "other"}
-ALLOWED_STATUSES = {"classified", "clustered", "drafted", "escalated"}
+ALLOWED_ISSUE_TYPES = {"road_damage", "street_lighting", "garbage", "water", "footpath", "dumping"}
+ALLOWED_STATUSES = {"classified", "clustered", "pending_review", "drafted", "approved", "escalated"}
 
 class Issue(SQLModel, table=True):
     __tablename__ = "issues"

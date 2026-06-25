@@ -18,7 +18,7 @@ interface BadgeConfig {
 const statusConfigs: Record<string, BadgeConfig> = {
   // Issue statuses
   classified: {
-    label: 'Image Verified',
+    label: 'Intake Analysis',
     className: 'bg-slate-50 text-slate-600 border-slate-200',
   },
   clustered: {
@@ -30,17 +30,17 @@ const statusConfigs: Record<string, BadgeConfig> = {
     className: 'bg-slate-50 text-slate-600 border-slate-200',
   },
   approved: {
-    label: 'Approved',
+    label: 'Complaint Prepared',
     className: 'bg-emerald-50 text-emerald-700 border-emerald-250',
   },
   escalated: {
-    label: 'Sent',
+    label: 'Escalated',
     className: 'bg-emerald-100/70 text-emerald-800 border-emerald-200',
   },
 
   // Draft statuses
   pending_review: {
-    label: 'Pending Approval',
+    label: 'Impact Reviewed',
     className: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   rejected: {
@@ -50,11 +50,11 @@ const statusConfigs: Record<string, BadgeConfig> = {
 
   // Escalation statuses
   sent: {
-    label: 'Sent',
+    label: 'Escalated',
     className: 'bg-emerald-50 text-emerald-700 border-emerald-250',
   },
   exported: {
-    label: 'Saved PDF',
+    label: 'Escalated',
     className: 'bg-slate-100 text-slate-700 border-slate-200',
   },
   failed: {

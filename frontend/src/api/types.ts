@@ -1,5 +1,5 @@
-export type IssueType = 'road_damage' | 'lighting' | 'water' | 'waste' | 'other';
-export type IssueStatus = 'classified' | 'clustered' | 'drafted' | 'escalated';
+export type IssueType = 'road_damage' | 'street_lighting' | 'garbage' | 'water' | 'footpath' | 'dumping';
+export type IssueStatus = 'classified' | 'clustered' | 'pending_review' | 'drafted' | 'approved' | 'escalated';
 export type RiskLevel = 'low' | 'moderate' | 'high';
 export type DraftType = 'complaint' | 'rti' | 'community_summary';
 export type DraftStatus = 'pending_review' | 'approved' | 'rejected';

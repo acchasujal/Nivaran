@@ -4,15 +4,27 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { cn } from '@/lib/utils';
 
 interface LocationPickerProps {
+  value?: { lat: number; lng: number } | null;
   onLocate: (coords: { lat: number; lng: number } | null) => void;
   className?: string;
 }
 
-export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocate, className }) => {
+export const LocationPicker: React.FC<LocationPickerProps> = ({ value, onLocate, className }) => {
   const { coordinates, loading, error, locate, setCoordinates } = useGeolocation(true);
   const [manualLat, setManualLat] = useState<string>('');
   const [manualLng, setManualLng] = useState<string>('');
   const [isManualMode, setIsManualMode] = useState<boolean>(false);
+
+  // Sync programmatically set value from parent
+  useEffect(() => {
+    if (value) {
+      if (!coordinates || coordinates.lat !== value.lat || coordinates.lng !== value.lng) {
+        setCoordinates(value);
+        setManualLat(value.lat.toString());
+        setManualLng(value.lng.toString());
+      }
+    }
+  }, [value, setCoordinates]);
 
   // Sync coordinates with parent and local inputs when geolocation updates
   useEffect(() => {

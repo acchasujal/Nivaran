@@ -7,8 +7,10 @@ import { LocationPicker } from '@/components/issue/LocationPicker';
 import { AgentTimeline } from '@/components/timeline/AgentTimeline';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useCreateIssue } from '@/api/queries';
-import { AlertCircle, FileText, CheckCircle2, Sparkles } from 'lucide-react';
+import { AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
+import { demoScenarios } from '@/data/demoScenarios';
+import type { DemoScenario } from '@/data/demoScenarios';
 
 export const IntakePage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,18 +22,29 @@ export const IntakePage: React.FC = () => {
   const [userNote, setUserNote] = useState<string>('');
   const [isDemoLoading, setIsDemoLoading] = useState(false);
 
-  const handleQuickDemo = async () => {
+  const handleSelectDemoScenario = async (scenarioId: string) => {
+    if (!scenarioId) return;
     setIsDemoLoading(true);
     try {
-      const response = await fetch('/demo_pothole.jpg');
+      let scenario: DemoScenario;
+      if (scenarioId === 'random') {
+        const randomIndex = Math.floor(Math.random() * demoScenarios.length);
+        scenario = demoScenarios[randomIndex];
+      } else {
+        const found = demoScenarios.find(s => s.id === scenarioId);
+        if (!found) return;
+        scenario = found;
+      }
+      
+      const response = await fetch(`/${scenario.imagePath}`);
       const blob = await response.blob();
-      const file = new File([blob], 'demo_pothole.jpg', { type: 'image/jpeg' });
+      const file = new File([blob], scenario.imagePath, { type: 'image/jpeg' });
       setPhoto(file);
-      setCoordinates({ lat: 19.0760, lng: 72.8777 });
-      setUserNote('Active road pothole creating severe traffic hazard near intersection.');
+      setCoordinates({ lat: scenario.latitude, lng: scenario.longitude });
+      setUserNote(scenario.description);
       setFieldErrors({});
     } catch (err) {
-      console.error('Failed to load demo data', err);
+      console.error('Failed to load demo scenario', err);
     } finally {
       setIsDemoLoading(false);
     }
@@ -153,15 +166,34 @@ export const IntakePage: React.FC = () => {
         title="Report Civic Issue"
         subtitle="Submit verified photographic evidence of infrastructure issues."
         action={
-          <button
-            type="button"
-            onClick={handleQuickDemo}
-            disabled={isDemoLoading}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-small shadow transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 select-none"
-          >
-            <Sparkles size={13} className={isDemoLoading ? 'animate-spin' : ''} />
-            <span>{isDemoLoading ? 'Loading Demo...' : 'Quick Demo'}</span>
-          </button>
+          <div className="relative inline-block text-left">
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleSelectDemoScenario(e.target.value);
+                }
+              }}
+              disabled={isDemoLoading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-small shadow transition-all cursor-pointer disabled:opacity-50 select-none appearance-none pr-8 relative"
+              style={{
+                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 8px center',
+                backgroundSize: '14px',
+              }}
+            >
+              <option value="" disabled className="text-slate-800 bg-white">
+                {isDemoLoading ? 'Loading Demo...' : 'Quick Demo'}
+              </option>
+              <option value="random" className="text-slate-800 bg-white">Random Scenario</option>
+              {demoScenarios.map((s) => (
+                <option key={s.id} value={s.id} className="text-slate-800 bg-white">
+                  {s.title}
+                </option>
+              ))}
+            </select>
+          </div>
         }
       />
 
@@ -236,7 +268,7 @@ export const IntakePage: React.FC = () => {
 
             {/* Location Picker Container */}
             <div className="space-y-2">
-              <LocationPicker onLocate={handleLocationLocate} />
+              <LocationPicker value={coordinates} onLocate={handleLocationLocate} />
               {fieldErrors.coordinates && (
                 <div className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold px-2 select-none animate-fade">
                   <AlertCircle size={14} />

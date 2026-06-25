@@ -1,7 +1,8 @@
-import React from 'react';
-import { Camera, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Camera, AlertCircle, MapPin } from 'lucide-react';
 import type { Issue } from '@/api/types';
-import { getStaticUrl } from '@/api/client';
+import { getImageUrl } from '@/utils/getImageUrl';
+import { getLocalityName } from '@/utils/getLocalityName';
 import { cn } from '@/lib/utils';
 
 interface EvidenceCardProps {
@@ -10,12 +11,23 @@ interface EvidenceCardProps {
 }
 
 export const EvidenceCard: React.FC<EvidenceCardProps> = ({ issue, className }) => {
-  const humanizeIssueType = (type: string) => {
+  const [loaded, setLoaded] = useState(false);
+  const humanizeIssueType = (type: string, desc = '') => {
+    const d = desc.toLowerCase();
+    if (d.includes('footpath') || d.includes('sidewalk')) return 'Broken Footpath';
+    if (d.includes('dumping') || d.includes('debris') || d.includes('construction debris') || d.includes('illegal dumping')) return 'Illegal Dumping';
+    if (d.includes('pothole') || d.includes('road damage') || d.includes('road surface')) return 'Road Damage';
+    if (d.includes('streetlight') || d.includes('light') || d.includes('outage')) return 'Street Lighting';
+    if (d.includes('leak') || d.includes('pipeline') || d.includes('water supply')) return 'Water Leakage';
+    if (d.includes('garbage') || d.includes('waste') || d.includes('refuse') || d.includes('dump')) return 'Garbage Overflow';
+    
     switch (type) {
       case 'road_damage': return 'Road Damage';
-      case 'lighting': return 'Street Lighting';
-      case 'water': return 'Water Supply / Leakage';
-      case 'waste': return 'Waste / Garbage';
+      case 'street_lighting': return 'Street Lighting';
+      case 'water': return 'Water Leakage';
+      case 'garbage': return 'Garbage Overflow';
+      case 'footpath': return 'Broken Footpath';
+      case 'dumping': return 'Illegal Dumping';
       default: return 'Other Civic Issue';
     }
   };
@@ -29,11 +41,22 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ issue, className }) 
   return (
     <div className={cn('border border-slate-100 bg-white rounded-large overflow-hidden transition-all flex flex-col', className)}>
       {/* Evidence Photo - Large & Hero */}
-      <div className="w-full h-80 md:h-[450px] relative bg-slate-50 overflow-hidden">
+      <div className="w-full h-80 md:h-[450px] relative bg-slate-50 overflow-hidden shrink-0">
+        {!loaded && (
+          <div className="absolute inset-0 bg-slate-200/80 animate-pulse flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-primary animate-spin" />
+          </div>
+        )}
         <img
-          src={getStaticUrl(issue.photo_url)}
-          alt={humanizeIssueType(issue.issue_type)}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.01]"
+          src={getImageUrl(issue.photo_url)}
+          alt={humanizeIssueType(issue.issue_type, issue.description)}
+          className={cn(
+            "w-full h-full object-cover transition-all duration-500 hover:scale-[1.01]",
+            loaded ? "opacity-100" : "opacity-0"
+          )}
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(true)}
+          loading="lazy"
         />
       </div>
 
@@ -46,7 +69,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ issue, className }) 
               <Camera size={16} />
             </span>
             <h3 className="text-xl font-bold text-secondary-foreground font-sans tracking-tight">
-              {humanizeIssueType(issue.issue_type)}
+              {humanizeIssueType(issue.issue_type, issue.description)}
             </h3>
           </div>
           
@@ -73,6 +96,14 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ issue, className }) 
               );
             })}
           </div>
+        </div>
+
+        {/* GPS location and Locality metadata row */}
+        <div className="flex items-center gap-2 py-2 px-3 bg-slate-50 border border-slate-100 rounded-medium text-xs text-slate-500 font-sans">
+          <MapPin size={14} className="text-slate-400 shrink-0" />
+          <span className="font-semibold text-slate-700">{getLocalityName(issue.latitude, issue.longitude)}</span>
+          <span className="text-slate-350 select-none">•</span>
+          <span className="font-mono text-slate-500 font-medium select-all">GPS: {issue.latitude.toFixed(6)}, {issue.longitude.toFixed(6)}</span>
         </div>
 
         {/* Description */}

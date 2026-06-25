@@ -39,7 +39,9 @@ export const TrackerPage: React.FC = () => {
     );
   }
 
-  const issues = data?.issues || [];
+  const issues = [...(data?.issues || [])].sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   // Group reports by cluster_id client-side to compute collective evidence matching counts
   const clusterCounts = issues.reduce((acc, issue) => {
@@ -90,10 +92,11 @@ export const TrackerPage: React.FC = () => {
             >
               <option value="all">All Issues</option>
               <option value="road_damage">Road Damage</option>
-              <option value="lighting">Street Lighting</option>
-              <option value="water">Water Supply / Leakage</option>
-              <option value="waste">Waste / Garbage</option>
-              <option value="other">Other Civic Issue</option>
+              <option value="street_lighting">Street Lighting</option>
+              <option value="garbage">Garbage Overflow</option>
+              <option value="water">Water Leakage</option>
+              <option value="footpath">Broken Footpath</option>
+              <option value="dumping">Illegal Dumping</option>
             </select>
           </div>
           

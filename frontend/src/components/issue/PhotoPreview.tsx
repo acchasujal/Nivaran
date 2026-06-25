@@ -16,6 +16,7 @@ export const PhotoPreview: React.FC<PhotoPreviewProps> = ({
   onReplace,
   className,
 }) => {
+  const [loaded, setLoaded] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
@@ -23,6 +24,7 @@ export const PhotoPreview: React.FC<PhotoPreviewProps> = ({
   useEffect(() => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+    setLoaded(false);
 
     return () => {
       URL.revokeObjectURL(url);
@@ -32,12 +34,22 @@ export const PhotoPreview: React.FC<PhotoPreviewProps> = ({
   if (!previewUrl) return null;
 
   return (
-    <div className={cn('relative w-full rounded-medium border border-secondary-border overflow-hidden bg-slate-50 group select-none', className)}>
+    <div className={cn('relative w-full rounded-medium border border-secondary-border overflow-hidden bg-slate-50 group select-none h-48 md:h-56 shrink-0', className)}>
       {/* Preview Image */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-slate-200/80 animate-pulse flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-primary animate-spin" />
+        </div>
+      )}
       <img
         src={previewUrl}
         alt="Report Evidence Preview"
-        className="w-full h-48 md:h-56 object-cover"
+        className={cn(
+          "w-full h-full object-cover transition-opacity duration-300",
+          loaded ? "opacity-100" : "opacity-0"
+        )}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
       />
 
       {/* Overlay Actions (visible on hover) */}
