@@ -4,7 +4,7 @@ import sys
 from typing import Optional, Literal, List
 from pydantic import BaseModel, Field, model_validator
 from sqlmodel import Session, select
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, AsyncMock
 
 from app.models.cluster import Cluster
@@ -120,7 +120,7 @@ async def generate_merged_impact_and_drafts(
         risk_level = "high"
 
     # Pre-build database metadata/parameters
-    generated_at_str = datetime.utcnow().isoformat() + "Z"
+    generated_at_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     # Prepare prompt data
     issue_type = issues[0].issue_type
@@ -256,7 +256,7 @@ async def generate_merged_impact_and_drafts(
             db_summary.potential_consequences = result.impact.potential_consequences
             db_summary.risk_level = risk_level
             db_summary.evidence_count = evidence_count
-            db_summary.generated_at = datetime.utcnow().isoformat() + "Z"
+            db_summary.generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             session.add(db_summary)
         else:
             db_summary = ImpactSummary(
@@ -265,7 +265,7 @@ async def generate_merged_impact_and_drafts(
                 potential_consequences=result.impact.potential_consequences,
                 risk_level=risk_level,
                 evidence_count=evidence_count,
-                generated_at=datetime.utcnow().isoformat() + "Z"
+                generated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             )
             session.add(db_summary)
 
@@ -282,21 +282,21 @@ async def generate_merged_impact_and_drafts(
                 draft_type="complaint",
                 content=result.drafts.complaint_draft,
                 status="pending_review",
-                created_at=datetime.utcnow().isoformat() + "Z"
+                created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             ),
             ActionDraft(
                 cluster_id=cluster_id,
                 draft_type="rti",
                 content=result.drafts.rti_draft,
                 status="pending_review",
-                created_at=datetime.utcnow().isoformat() + "Z"
+                created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             ),
             ActionDraft(
                 cluster_id=cluster_id,
                 draft_type="community_summary",
                 content=result.drafts.community_summary,
                 status="pending_review",
-                created_at=datetime.utcnow().isoformat() + "Z"
+                created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             )
         ]
 

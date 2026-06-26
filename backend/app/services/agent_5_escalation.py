@@ -3,7 +3,7 @@ import uuid
 import logging
 from typing import Optional
 from sqlmodel import Session, select
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException, status
 
 from app.models.escalation import Escalation
@@ -44,7 +44,7 @@ async def escalate_draft(
 
     # Create new escalation row configuration
     escalation_id = str(uuid.uuid4())
-    now_str = datetime.utcnow().isoformat() + "Z"
+    now_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     escalation = Escalation(
         id=escalation_id,

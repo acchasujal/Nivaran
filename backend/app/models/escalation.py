@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
 from pydantic import field_validator, model_validator
@@ -17,7 +17,7 @@ class Escalation(SQLModel, table=True):
     status: str
     provider_response: Optional[str] = Field(default=None, nullable=True)
     sent_at: Optional[str] = Field(default=None, nullable=True)
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     @field_validator("method")
     @classmethod

@@ -7,7 +7,7 @@ from app.models.impact_summary import ImpactSummary
 from app.db import get_session
 from app.services.agent_4_action_generator import generate_action_drafts
 from sqlmodel import Session, select
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger("civicpulse")
@@ -77,7 +77,7 @@ async def update_draft_status(
     
     # Update status
     draft.status = payload.status
-    draft.reviewed_at = datetime.utcnow().isoformat() + "Z"
+    draft.reviewed_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     
     # Save (in skeleton, we'll write to DB to verify model behavior)
     session.add(draft)

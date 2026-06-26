@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field
 from pydantic import field_validator
 
@@ -14,7 +14,7 @@ class ImpactSummary(SQLModel, table=True):
     potential_consequences: str
     risk_level: str
     evidence_count: int
-    generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    generated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     @field_validator("risk_level")
     @classmethod

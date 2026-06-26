@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field
 
 class Cluster(SQLModel, table=True):
@@ -10,5 +10,5 @@ class Cluster(SQLModel, table=True):
     center_lat: float
     center_lng: float
     report_count: int = Field(default=1)
-    first_reported_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
-    last_reported_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    first_reported_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+    last_reported_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))

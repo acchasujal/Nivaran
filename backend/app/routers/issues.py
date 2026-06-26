@@ -74,11 +74,11 @@ async def run_agent_3_background(cluster_id: str):
 
 @router.post("", response_model=Issue, status_code=status.HTTP_201_CREATED)
 async def create_issue(
+    background_tasks: BackgroundTasks,
     photo: UploadFile = File(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
     user_note: Optional[str] = Form(None),
-    background_tasks: BackgroundTasks = None,
     session: Session = Depends(get_session)
 ):
     # Validate file type

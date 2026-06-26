@@ -3,7 +3,7 @@ import logging
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.issue import Issue
 from app.models.cluster import Cluster
@@ -141,7 +141,7 @@ async def verify_and_cluster_issue(
     if target_cluster:
         # Update existing cluster
         target_cluster.report_count += 1
-        target_cluster.last_reported_at = datetime.utcnow().isoformat() + "Z"
+        target_cluster.last_reported_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         session.add(target_cluster)
         
         issue.cluster_id = target_cluster.id
@@ -158,8 +158,8 @@ async def verify_and_cluster_issue(
             center_lat=issue.latitude,
             center_lng=issue.longitude,
             report_count=1,
-            first_reported_at=datetime.utcnow().isoformat() + "Z",
-            last_reported_at=datetime.utcnow().isoformat() + "Z"
+            first_reported_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            last_reported_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         )
         session.add(new_cluster)
         session.commit()

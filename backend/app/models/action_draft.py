@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
 from pydantic import field_validator, model_validator
@@ -16,7 +16,7 @@ class ActionDraft(SQLModel, table=True):
     draft_type: str
     content: str
     status: str = Field(default="pending_review")
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
     reviewed_at: Optional[str] = Field(default=None, nullable=True)
 
     @field_validator("draft_type")

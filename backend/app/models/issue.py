@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
 from pydantic import field_validator
@@ -21,7 +21,7 @@ class Issue(SQLModel, table=True):
     credibility_score: float
     cluster_id: Optional[str] = Field(default=None, foreign_key="clusters.id", nullable=True)
     status: str = Field(default="classified")
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     @field_validator("issue_type")
     @classmethod
