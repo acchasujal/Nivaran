@@ -86,7 +86,7 @@ def test_agent_2_clustering_success_within_300m():
         # 1. Post first issue at (19.0760, 72.8777)
         photo_1 = ("pothole1.png", io.BytesIO(b"pothole_bytes_1"), "image/png")
         response1 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "First pothole"},
             files={"photo": photo_1}
         )
@@ -131,7 +131,7 @@ def test_agent_2_clustering_success_within_300m():
             photo_2 = ("pothole2.png", io.BytesIO(b"pothole_bytes_2"), "image/png")
             # Submit second issue within 300m (lat = 19.0772, ~133m away)
             response2 = client.post(
-                "/issues",
+                "/api/issues",
                 data={"latitude": 19.0772, "longitude": 72.8777, "user_note": "Second pothole"},
                 files={"photo": photo_2}
             )
@@ -172,7 +172,7 @@ def test_agent_2_no_geographic_proximity():
         # 1. Post first issue at (19.0760, 72.8777)
         photo_1 = ("pothole1.png", io.BytesIO(b"pothole_bytes_1"), "image/png")
         response1 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "First pothole"},
             files={"photo": photo_1}
         )
@@ -183,7 +183,7 @@ def test_agent_2_no_geographic_proximity():
         # 2. Post second issue at (19.0850, 72.8777) - more than 300m away (~1km)
         photo_2 = ("pothole2.png", io.BytesIO(b"pothole_bytes_2"), "image/png")
         response2 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0850, "longitude": 72.8777, "user_note": "Second pothole far away"},
             files={"photo": photo_2}
         )
@@ -221,7 +221,7 @@ def test_agent_2_low_confidence_same_proximity():
         # 1. Post first issue
         photo_1 = ("pothole1.png", io.BytesIO(b"pothole_bytes_1"), "image/png")
         response1 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "First pothole"},
             files={"photo": photo_1}
         )
@@ -253,7 +253,7 @@ def test_agent_2_low_confidence_same_proximity():
         with patch("app.services.gemini_client.GeminiClient.generate_structured_output", side_effect=mock_generate_structured_output):
             photo_2 = ("pothole2.png", io.BytesIO(b"pothole_bytes_2"), "image/png")
             response2 = client.post(
-                "/issues",
+                "/api/issues",
                 data={"latitude": 19.0772, "longitude": 72.8777, "user_note": "Second pothole"},
                 files={"photo": photo_2}
             )
@@ -285,7 +285,7 @@ def test_agent_2_confidence_band_default_to_new():
         # 1. Post first issue
         photo_1 = ("pothole1.png", io.BytesIO(b"pothole_bytes_1"), "image/png")
         response1 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "First pothole"},
             files={"photo": photo_1}
         )
@@ -317,7 +317,7 @@ def test_agent_2_confidence_band_default_to_new():
         with patch("app.services.gemini_client.GeminiClient.generate_structured_output", side_effect=mock_generate_structured_output):
             photo_2 = ("pothole2.png", io.BytesIO(b"pothole_bytes_2"), "image/png")
             response2 = client.post(
-                "/issues",
+                "/api/issues",
                 data={"latitude": 19.0772, "longitude": 72.8777, "user_note": "Second pothole"},
                 files={"photo": photo_2}
             )
@@ -349,7 +349,7 @@ def test_agent_2_gemini_call_failsafe():
         # 1. Post first issue
         photo_1 = ("pothole1.png", io.BytesIO(b"pothole_bytes_1"), "image/png")
         response1 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "First pothole"},
             files={"photo": photo_1}
         )
@@ -377,7 +377,7 @@ def test_agent_2_gemini_call_failsafe():
         with patch("app.services.gemini_client.GeminiClient.generate_structured_output", side_effect=mock_generate_structured_output_fail):
             photo_2 = ("pothole2.png", io.BytesIO(b"pothole_bytes_2"), "image/png")
             response2 = client.post(
-                "/issues",
+                "/api/issues",
                 data={"latitude": 19.0772, "longitude": 72.8777, "user_note": "Second pothole"},
                 files={"photo": photo_2}
             )

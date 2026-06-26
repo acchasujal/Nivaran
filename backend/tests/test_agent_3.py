@@ -131,7 +131,7 @@ def test_agent_3_threshold_reached():
         # 1. Post first issue (report count = 1, threshold = 2)
         photo_1 = ("pothole1.png", io.BytesIO(b"pothole_bytes_1"), "image/png")
         response1 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "Pothole A"},
             files={"photo": photo_1}
         )
@@ -150,7 +150,7 @@ def test_agent_3_threshold_reached():
         # 2. Post second issue within same cluster (report count = 2, threshold = 2 -> met)
         photo_2 = ("pothole2.png", io.BytesIO(b"pothole_bytes_2"), "image/png")
         response2 = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0765, "longitude": 72.8777, "user_note": "Pothole B"},
             files={"photo": photo_2}
         )
@@ -191,7 +191,7 @@ def test_agent_3_threshold_not_reached():
         # Post issue (report count = 1, threshold = 3 -> not met)
         photo = ("pothole.png", io.BytesIO(b"pothole_bytes"), "image/png")
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "Pothole A"},
             files={"photo": photo}
         )
@@ -235,7 +235,7 @@ def test_agent_3_gemini_failure():
         photo = ("pothole.png", io.BytesIO(b"pothole_bytes"), "image/png")
         # Issue submission must succeed even if background task fails (Rule 6)
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "Pothole A"},
             files={"photo": photo}
         )
@@ -300,7 +300,7 @@ def test_agent_3_validation_gate_success():
 
         photo = ("pothole.png", io.BytesIO(b"pothole_bytes"), "image/png")
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "Pothole A"},
             files={"photo": photo}
         )
@@ -359,7 +359,7 @@ def test_agent_3_validation_gate_hard_fail():
 
         photo = ("pothole.png", io.BytesIO(b"pothole_bytes"), "image/png")
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "Pothole A"},
             files={"photo": photo}
         )
@@ -416,7 +416,7 @@ def test_manual_trigger_impact_success():
         client = TestClient(app)
         
         # Trigger manual endpoint
-        response = client.post(f"/clusters/{cluster_id}/impact")
+        response = client.post(f"/api/clusters/{cluster_id}/impact")
         assert response.status_code == 200
         data = response.json()
         assert data["affected_area_description"] == "Manual trigger area"

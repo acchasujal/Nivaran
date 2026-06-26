@@ -99,7 +99,7 @@ def test_get_issue_detail_includes_extended_fields():
 
     # Request API details
     client = TestClient(app)
-    response = client.get(f"/issues/{issue_id}")
+    response = client.get(f"/api/issues/{issue_id}")
     assert response.status_code == 200
     
     data = response.json()

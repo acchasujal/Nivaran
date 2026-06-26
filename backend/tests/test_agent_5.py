@@ -113,7 +113,7 @@ def test_approved_email_success():
         client = TestClient(app)
         
         response = client.post(
-            "/escalations",
+            "/api/escalations",
             json={
                 "draft_id": draft_id,
                 "method": "email",
@@ -165,7 +165,7 @@ def test_unapproved_draft_blocked():
 
     client = TestClient(app)
     response = client.post(
-        "/escalations",
+        "/api/escalations",
         json={
             "draft_id": draft_id,
             "method": "email",
@@ -222,7 +222,7 @@ def test_email_failure_pdf_fallback():
         client = TestClient(app)
         
         response = client.post(
-            "/escalations",
+            "/api/escalations",
             json={
                 "draft_id": draft_id,
                 "method": "email",
@@ -292,7 +292,7 @@ def test_email_failure_no_fallback():
         client = TestClient(app)
         
         response = client.post(
-            "/escalations",
+            "/api/escalations",
             json={
                 "draft_id": draft_id,
                 "method": "email",
@@ -348,7 +348,7 @@ def test_pdf_export_success():
 
     client = TestClient(app)
     response = client.post(
-        "/escalations",
+        "/api/escalations",
         json={
             "draft_id": draft_id,
             "method": "pdf_export"

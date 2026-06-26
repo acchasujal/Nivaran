@@ -77,7 +77,7 @@ def test_create_issue_success():
         )
         
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={
                 "latitude": 19.076,
                 "longitude": 72.8777,
@@ -148,7 +148,7 @@ def test_create_issue_retry_on_invalid_severity_then_success():
         )
         
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={
                 "latitude": 19.076,
                 "longitude": 72.8777,
@@ -195,7 +195,7 @@ def test_create_issue_retry_on_invalid_severity_then_fail_502():
         )
         
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={
                 "latitude": 19.076,
                 "longitude": 72.8777,
@@ -238,7 +238,7 @@ def test_create_issue_gemini_exception_returns_502():
         )
         
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={
                 "latitude": 19.076,
                 "longitude": 72.8777,

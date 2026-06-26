@@ -105,7 +105,7 @@ def test_agent_4_generation_and_persistence():
         client = TestClient(app)
         
         # 3. Hit endpoint to trigger Agent 4 manually
-        response = client.post(f"/clusters/{cluster_id}/generate-drafts")
+        response = client.post(f"/api/clusters/{cluster_id}/generate-drafts")
         assert response.status_code == 201
         
         res_data = response.json()
@@ -190,7 +190,7 @@ def test_agent_4_disclaimer_retry_success():
     with patch("app.services.gemini_client.genai.Client", return_value=mock_client_instance):
         client = TestClient(app)
         
-        response = client.post(f"/clusters/{cluster_id}/generate-drafts")
+        response = client.post(f"/api/clusters/{cluster_id}/generate-drafts")
         assert response.status_code == 201
         
         # Verify drafts were successfully saved with the clean content
@@ -255,7 +255,7 @@ def test_agent_4_disclaimer_retry_hard_fail():
     with patch("app.services.gemini_client.genai.Client", return_value=mock_client_instance):
         client = TestClient(app)
         
-        response = client.post(f"/clusters/{cluster_id}/generate-drafts")
+        response = client.post(f"/api/clusters/{cluster_id}/generate-drafts")
         # Validation gate fails -> returns 502
         assert response.status_code == 502
         
@@ -308,7 +308,7 @@ def test_agent_4_gemini_failure():
     with patch("app.services.gemini_client.genai.Client", return_value=mock_client_instance):
         client = TestClient(app)
         
-        response = client.post(f"/clusters/{cluster_id}/generate-drafts")
+        response = client.post(f"/api/clusters/{cluster_id}/generate-drafts")
         assert response.status_code == 502
 
 def test_agent_4_automatic_trigger_on_issue_creation():
@@ -356,7 +356,7 @@ def test_agent_4_automatic_trigger_on_issue_creation():
 
         photo = ("waste.png", io.BytesIO(b"waste_image_bytes"), "image/png")
         response = client.post(
-            "/issues",
+            "/api/issues",
             data={"latitude": 19.0760, "longitude": 72.8777, "user_note": "Trash buildup"},
             files={"photo": photo}
         )

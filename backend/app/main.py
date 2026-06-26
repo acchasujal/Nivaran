@@ -48,14 +48,50 @@ app.add_middleware(
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/api/static", StaticFiles(directory="static"), name="api_static")
 
-# Wire routers
-app.include_router(issues.router)
-app.include_router(clusters.router)
-app.include_router(impact.router)
-app.include_router(actions.router)
-app.include_router(escalations.router)
+# Wire routers under /api namespace
+app.include_router(issues.router, prefix="/api")
+app.include_router(clusters.router, prefix="/api")
+app.include_router(impact.router, prefix="/api")
+app.include_router(actions.router, prefix="/api")
+app.include_router(escalations.router, prefix="/api")
+
+# Dynamic frontend dist directory resolution
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sibling_dist = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend", "dist"))
+local_dist = os.path.abspath(os.path.join(BASE_DIR, "frontend", "dist"))
+
+if os.path.exists(local_dist):
+    dist_dir = local_dist
+elif os.path.exists(sibling_dist):
+    dist_dir = sibling_dist
+else:
+    dist_dir = os.path.join(BASE_DIR, "frontend", "dist")
+
+assets_dir = os.path.join(dist_dir, "assets")
+
+# Mount assets directory if it exists
+if os.path.exists(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
 @app.get("/health")
 def health_check():
     return {"status": "ok", "message": "CivicPulse API is running"}
+
+# SPA catch-all route to serve the React index.html or other static files in dist
+from fastapi.responses import FileResponse
+
+@app.get("/{catchall:path}")
+async def serve_spa(catchall: str):
+    # Try serving exact file (e.g. favicon.ico, logo.png) from dist root
+    file_path = os.path.join(dist_dir, catchall)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return FileResponse(file_path)
+    
+    # Fallback to SPA index.html
+    index_path = os.path.join(dist_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+        
+    return {"message": "Frontend build assets not found. Run npm run build."}
