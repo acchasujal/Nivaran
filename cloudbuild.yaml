@@ -89,10 +89,7 @@ steps:
       # Set production environment variables
       - '--set-env-vars'
       - 'SENDGRID_FROM_EMAIL=${_SENDGRID_FROM_EMAIL},LOG_LEVEL=${_LOG_LEVEL}'
-      # Configure health probe for container readiness
-      - '--startup-probe-type=http'
-      - '--startup-probe-path=/health'
-      - '--startup-probe-failure-threshold=10'
+      - '--startup-probe="type=http,path=/health,failure-threshold=10"'
     id: 'Deploy'
 
 # Images produced by this build pipeline to be registered in the build tracking
