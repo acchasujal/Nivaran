@@ -33,6 +33,32 @@ async def verify_and_cluster_issue(
     session: Session,
     gemini_client: Optional[GeminiClient] = None
 ) -> None:
+    import time
+    start_time = time.time()
+    try:
+        await _verify_and_cluster_issue_impl(issue, session, gemini_client)
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(json.dumps({
+            "agent": "Agent2",
+            "issue_id": issue.id,
+            "latency_ms": latency_ms,
+            "success": True
+        }))
+    except Exception as e:
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(json.dumps({
+            "agent": "Agent2",
+            "issue_id": issue.id,
+            "latency_ms": latency_ms,
+            "success": False
+        }))
+        raise e
+
+async def _verify_and_cluster_issue_impl(
+    issue: Issue,
+    session: Session,
+    gemini_client: Optional[GeminiClient] = None
+) -> None:
     """
     Agent 2: Issue Verification.
     Checks for duplicate issues/clusters within 300m of the same issue type.

@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+import json
 from typing import Optional
 from sqlmodel import Session, select
 from datetime import datetime, timezone
@@ -16,6 +17,47 @@ from app.config import settings
 logger = logging.getLogger("civicpulse")
 
 async def escalate_draft(
+    draft_id: str,
+    method: str,
+    recipient: Optional[str],
+    session: Session
+) -> Escalation:
+    import time
+    start_time = time.time()
+    issue_id = "N/A"
+    try:
+        # Fetch the draft to retrieve the cluster and get the first issue_id
+        draft = session.get(ActionDraft, draft_id)
+        if draft and draft.cluster_id:
+            issues = session.exec(select(Issue).where(Issue.cluster_id == draft.cluster_id)).all()
+            if issues:
+                issue_id = issues[0].id
+
+        escalation = await _escalate_draft_impl(
+            draft_id=draft_id,
+            method=method,
+            recipient=recipient,
+            session=session
+        )
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(json.dumps({
+            "agent": "Agent5",
+            "issue_id": issue_id,
+            "latency_ms": latency_ms,
+            "success": True
+        }))
+        return escalation
+    except Exception as e:
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(json.dumps({
+            "agent": "Agent5",
+            "issue_id": issue_id,
+            "latency_ms": latency_ms,
+            "success": False
+        }))
+        raise e
+
+async def _escalate_draft_impl(
     draft_id: str,
     method: str,
     recipient: Optional[str],

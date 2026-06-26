@@ -77,7 +77,7 @@ if os.path.exists(assets_dir):
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "message": "CivicPulse API is running"}
+    return {"status": "ok"}
 
 # SPA catch-all route to serve the React index.html or other static files in dist
 from fastapi.responses import FileResponse

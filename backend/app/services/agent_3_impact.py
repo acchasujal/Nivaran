@@ -326,6 +326,44 @@ async def analyze_cluster_impact(
     gemini_client: Optional[GeminiClient] = None,
     force_regenerate: bool = False
 ) -> ImpactSummary:
+    import time
+    start_time = time.time()
+    issue_id = "N/A"
+    try:
+        issues = session.exec(select(Issue).where(Issue.cluster_id == cluster_id)).all()
+        if issues:
+            issue_id = issues[0].id
+
+        summary = await _analyze_cluster_impact_impl(
+            cluster_id=cluster_id,
+            session=session,
+            gemini_client=gemini_client,
+            force_regenerate=force_regenerate
+        )
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(json.dumps({
+            "agent": "Agent3",
+            "issue_id": issue_id,
+            "latency_ms": latency_ms,
+            "success": True
+        }))
+        return summary
+    except Exception as e:
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(json.dumps({
+            "agent": "Agent3",
+            "issue_id": issue_id,
+            "latency_ms": latency_ms,
+            "success": False
+        }))
+        raise e
+
+async def _analyze_cluster_impact_impl(
+    cluster_id: str,
+    session: Session,
+    gemini_client: Optional[GeminiClient] = None,
+    force_regenerate: bool = False
+) -> ImpactSummary:
     """
     Agent 3: Impact Intelligence.
     Synthesizes the community impact of all reports in the cluster.

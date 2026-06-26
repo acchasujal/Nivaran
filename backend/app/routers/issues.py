@@ -4,6 +4,8 @@ from pydantic import BaseModel
 import os
 import uuid
 import logging
+import time
+import json
 from app.models.issue import Issue
 from app.models.cluster import Cluster
 from app.models.impact_summary import ImpactSummary
@@ -111,6 +113,7 @@ async def create_issue(
     with open(photo_path, "wb") as f:
         f.write(photo_bytes)
 
+    start_time = time.time()
     try:
         # Call Agent 1 Intake Analysis
         agent1_result = await analyze_issue_photo(
@@ -125,6 +128,13 @@ async def create_issue(
                 os.remove(photo_path)
             except Exception:
                 pass
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(json.dumps({
+            "agent": "Agent1",
+            "issue_id": "N/A",
+            "latency_ms": latency_ms,
+            "success": False
+        }))
         raise e
 
     # Create and save DB record
@@ -143,6 +153,14 @@ async def create_issue(
     session.add(db_issue)
     session.commit()
     session.refresh(db_issue)
+
+    latency_ms = int((time.time() - start_time) * 1000)
+    logger.info(json.dumps({
+        "agent": "Agent1",
+        "issue_id": db_issue.id,
+        "latency_ms": latency_ms,
+        "success": True
+    }))
 
     try:
         await verify_and_cluster_issue(db_issue, session)

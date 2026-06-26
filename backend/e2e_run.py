@@ -6,6 +6,9 @@ import random
 import uuid
 from sqlmodel import Session, select
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # Adjust sys.path to run from backend directory
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
