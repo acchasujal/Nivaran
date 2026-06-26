@@ -97,22 +97,22 @@ These are not code tasks. They are resolved first, on Day 1, before any implemen
 
 ### P0-I: Frontend Core
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| I1 | `IntakePage` — photo upload + GPS | D1 | 3h | Can submit a real photo with auto-GPS location; shows "Analyzing photo..." during wait; retry button on 502 |
-| I2 | `TrackerPage` — list view (no map required) | E2 | 2h | Shows issues from seeded dataset; each card shows issue_type, severity, evidence_count, escalation status; "self-reported" label visible |
-| I3 | `IssueDetailPage` — evidence + impact + drafts | F1, G1 | 2.5h | Shows impact summary (risk_level, affected_area, evidence_count); shows 3 draft cards; credibility_score displayed with "AI-assessed" label |
-| I4 | `ApprovalModal` — consequential UX | G1 | 1.5h | Modal copy: "You are authorizing a real escalation on behalf of [N] community reports for [area]. This will send an email to [recipient]." Approve button prominent. Approve action calls PATCH /action-drafts/{id}. |
-| I5 | `EscalationButton` — calls POST /escalations | H3, I4 | 1h | Button disabled if draft.status != 'approved'; on click, triggers email then shows PDF download link if email fails |
-| I6 | `AgentProgressTimeline` component | I3 | 1h | Component displays progress timeline of the 5 agents with completion checkmarks/states, integrated on the IssueDetailPage |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| I1 | `IntakePage` — photo upload + GPS | D1 | 3h | Can submit a real photo with auto-GPS location; shows "Analyzing photo..." during wait; retry button on 502 | **Completed** |
+| I2 | `TrackerPage` — list view (no map required) | E2 | 2h | Shows issues from seeded dataset; each card shows issue_type, severity, evidence_count, escalation status; "self-reported" label visible | **Completed** |
+| I3 | `IssueDetailPage` — evidence + impact + drafts | F1, G1 | 2.5h | Shows impact summary (risk_level, affected_area, evidence_count); shows 3 draft cards; credibility_score displayed with "AI-assessed" label | **Completed** |
+| I4 | `ApprovalModal` — consequential UX | G1 | 1.5h | Modal copy: "You are authorizing a real escalation on behalf of [N] community reports for [area]. This will send an email to [recipient]." Approve button prominent. Approve action calls PATCH /action-drafts/{id}. | **Completed** |
+| I5 | `EscalationButton` — calls POST /escalations | H3, I4 | 1h | Button disabled if draft.status != 'approved'; on click, triggers email then shows PDF download link if email fails | **Completed** |
+| I6 | `AgentProgressTimeline` component | I3 | 1h | Component displays progress timeline of the 5 agents with completion checkmarks/states, integrated on the IssueDetailPage | **Completed** |
 
 ### P0-J: Deployment
 
-| # | Task | Depends On | Effort | Acceptance Criterion |
-|---|---|---|---|---|
-| J1 | Backend deployment (target TBD per PRE-1) | All P0 A–H | 3h | Backend accessible at public URL; `GET /issues` returns 200 with seeded data |
-| J2 | Frontend deployment (Vercel) | I1–I5 | 1h | Frontend accessible at public URL; connected to deployed backend |
-| J3 | End-to-end smoke test on deployed URLs | J1, J2 | 1h | Submit real photo via deployed frontend → classified → clustered → impact summary → draft → approve → email sent OR PDF downloaded; all from public URLs |
+| # | Task | Depends On | Effort | Acceptance Criterion | Status |
+|---|---|---|---|---|---|
+| J1 | Backend deployment (target TBD per PRE-1) | All P0 A–H | 3h | Backend accessible at public URL; `GET /issues` returns 200 with seeded data | **Completed** |
+| J2 | Frontend deployment (Vercel) | I1–I5 | 1h | Frontend accessible at public URL; connected to deployed backend | **Completed** |
+| J3 | End-to-end smoke test on deployed URLs | J1, J2 | 1h | Submit real photo via deployed frontend → classified → clustered → impact summary → draft → approve → email sent OR PDF downloaded; all from public URLs | **Completed** |
 
 ---
 
