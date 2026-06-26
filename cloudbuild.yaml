@@ -85,12 +85,10 @@ steps:
       - '1' # SQLite Safety: Process requests sequentially to avoid locks
       - '--timeout'
       - '300'
-      - '--set-secrets="GEMINI_API_KEYS=gemini-api-keys:latest,SENDGRID_API_KEY=sendgrid-api-key:latest"'
+      - '--set-secrets=GEMINI_API_KEYS=gemini-api-keys:latest,SENDGRID_API_KEY=sendgrid-api-key:latest'
       # Set production environment variables
       - '--set-env-vars'
       - 'SENDGRID_FROM_EMAIL=${_SENDGRID_FROM_EMAIL},LOG_LEVEL=${_LOG_LEVEL}'
-      - '--startup-probe-path=/health'
-      - '--startup-probe-failure-threshold=10'
     id: 'Deploy'
 
 # Images produced by this build pipeline to be registered in the build tracking
