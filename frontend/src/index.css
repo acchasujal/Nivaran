@@ -5,11 +5,11 @@
 @tailwind utilities;
 
 :root {
-  /* Color Palette - Calm & Premium Near-White */
+  /* Government-grade Restrained Color Palette */
   --background: #f8fafc;
   --card: #ffffff;
   
-  --primary: #0f766e; /* Deep Emerald */
+  --primary: #0f766e; /* Restrained Deep Emerald */
   --primary-foreground: #ffffff;
   --primary-hover: #115e59;
 
@@ -17,19 +17,19 @@
   --secondary-foreground: #0f172a;
   --secondary-border: #e2e8f0;
 
-  --success: #10b981;
+  --success: #059669;
   --success-foreground: #ffffff;
 
-  --warning: #f59e0b;
+  --warning: #d97706;
   --warning-foreground: #ffffff;
 
-  --danger: #ef4444;
+  --danger: #dc2626;
   --danger-foreground: #ffffff;
 
-  /* Border Radii per COMPONENTS.md */
+  /* Spacing & Border Radii per COMPONENTS.md */
   --radius-small: 6px;   /* Buttons & Inputs */
-  --radius-medium: 12px; /* Cards & Dialogs */
-  --radius-large: 16px;  /* Major containers */
+  --radius-medium: 10px; /* Cards & Dialogs */
+  --radius-large: 14px;  /* Major containers */
 
   font-family: 'Inter', 'Outfit', system-ui, sans-serif;
   background-color: var(--background);
@@ -67,4 +67,44 @@ body {
 *:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Custom premium styles for official documents */
+.official-document-paper {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.02);
+  position: relative;
+}
+
+.official-document-header {
+  border-bottom: 2px double #9ca3af;
+}
+
+.official-seal-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  font-family: 'Outfit', sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: rgba(15, 118, 110, 0.04);
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  pointer-events: none;
+  user-select: none;
+  border: 8px double rgba(15, 118, 110, 0.04);
+  padding: 10px 20px;
+  border-radius: 4px;
+}
+
+/* Stepper vertical narrative track */
+.timeline-track-line {
+  position: absolute;
+  left: 1.5rem;
+  top: 2rem;
+  bottom: -2rem;
+  width: 2px;
+  background-color: #e2e8f0;
 }

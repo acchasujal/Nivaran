@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, AlertTriangle, Play } from 'lucide-react';
+import { ArrowLeft, RefreshCw, AlertTriangle, Play, Sparkles, Network, Scale, ShieldAlert, Landmark, FileCheck } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EvidenceCard } from '@/components/issue/EvidenceCard';
 import { ClusterCard } from '@/components/issue/ClusterCard';
@@ -130,10 +130,8 @@ export const IssueDetailPage: React.FC = () => {
     }
   };
 
-  // Handlers
-
   return (
-    <div className="flex-1 flex flex-col pb-12">
+    <div className="flex-1 flex flex-col pb-12 font-sans">
       {/* Back button */}
       <div className="pt-6 select-none">
         <Link
@@ -141,113 +139,174 @@ export const IssueDetailPage: React.FC = () => {
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
         >
           <ArrowLeft size={14} />
-          <span>Back to Public Tracker</span>
+          <span>Back to Operations Center</span>
         </Link>
       </div>
 
       {/* Page Header */}
       <PageHeader
-        title={`Report Details`}
-        subtitle={`Audit evidence, review AI accountability drafts, and dispatch escalations.`}
+        title="Case Operation File"
+        subtitle={`Audit evidence trail, review impact assessments, and authorize briefs.`}
         action={
           <button
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-secondary-border rounded-small text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-small text-xs font-bold text-slate-650 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer shadow-sm select-none"
           >
             <RefreshCw size={12} className={cn(isRefetching && 'animate-spin')} />
-            <span>{isRefetching ? 'Refreshing...' : 'Refresh Status'}</span>
+            <span>{isRefetching ? 'Refreshing...' : 'Sync Case File'}</span>
           </button>
         }
       />
 
-      {/* Main Content Layout - Centered Vertical Story Flow */}
-      <div className="max-w-3xl mx-auto w-full py-8 space-y-10">
+      {/* Narrative Flow Stepper Layout */}
+      <div className="max-w-4xl mx-auto w-full py-8 relative pl-8 md:pl-16">
         
-        {/* 1. Evidence Photo & Image Analysis */}
-        <div className="space-y-3">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1 select-none">
-            1. Evidence Photo & Analysis
-          </h2>
-          <EvidenceCard issue={issue} />
+        {/* Continuous Vertical Timeline Track Line */}
+        <div className="absolute left-[15px] md:left-[31px] top-10 bottom-10 w-[2px] bg-slate-200/80 pointer-events-none" />
+
+        {/* SECTION 1: Visual Evidence Intake */}
+        <div className="relative pb-12">
+          {/* Timeline Step circle badge */}
+          <div className="absolute -left-[32px] md:-left-[48px] top-0 flex items-center justify-center h-8 w-8 rounded-full border border-slate-350 bg-white text-xs font-bold text-slate-600 shadow-sm select-none">
+            01
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
+              <Landmark size={15} className="text-primary shrink-0" />
+              <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
+                Incident Evidence Intake
+              </h3>
+            </div>
+            
+            <EvidenceCard issue={issue} />
+          </div>
         </div>
 
-        {/* 2. Verification Pipeline */}
-        <div className="space-y-4">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1 select-none">
-            2. Verification Pipeline
-          </h2>
+        {/* SECTION 2: Automated Verification Pipeline */}
+        <div className="relative pb-12">
+          <div className="absolute -left-[32px] md:-left-[48px] top-0 flex items-center justify-center h-8 w-8 rounded-full border border-slate-350 bg-white text-xs font-bold text-slate-600 shadow-sm select-none">
+            02
+          </div>
           
-          <div className="border border-slate-100 bg-white rounded-large p-6 md:p-8">
-            <div className="space-y-1 border-b border-slate-50 pb-3 mb-6 select-none">
-              <h3 className="text-sm font-semibold text-secondary-foreground font-sans">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
+              <Sparkles size={15} className="text-primary shrink-0" />
+              <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
                 Automated Verification Status
               </h3>
-              <p className="text-[10px] text-slate-400">
-                Tracking real-time verification and match pipeline progress.
-              </p>
             </div>
-            <AgentTimeline
-              issue={issue}
-              cluster={cluster}
-              impactSummary={impact_summary}
-              actionDrafts={action_drafts}
-              layout="responsive"
-            />
+            
+            <div className="border border-slate-200 bg-white rounded-medium p-6 md:p-8 shadow-subtle">
+              <div className="space-y-1 border-b border-slate-100 pb-4 mb-6 select-none">
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Verification Pipeline Engine
+                </h4>
+                <p className="text-[10px] text-slate-400">
+                  Tracking active agent checks and safety parameter thresholds.
+                </p>
+              </div>
+              <AgentTimeline
+                issue={issue}
+                cluster={cluster}
+                impactSummary={impact_summary}
+                actionDrafts={action_drafts}
+                layout="responsive"
+              />
+            </div>
           </div>
-
-          {cluster && (
-            <ClusterCard cluster={{
-              ...cluster,
-              center_lat: issue.latitude,
-              center_lng: issue.longitude,
-              first_reported_at: issue.created_at,
-              last_reported_at: issue.created_at,
-            }} />
-          )}
         </div>
 
-        {/* 3. Neighborhood Impact Assessment */}
-        <div className="space-y-3">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1 select-none">
-            3. Neighborhood Impact
-          </h2>
-          {impact_summary ? (
-            <ImpactCard impact={{
-              ...impact_summary,
-              id: issue.id,
-              cluster_id: cluster?.id || '',
-              potential_consequences: impact_summary.potential_consequences || 'No consequences documented.',
-              generated_at: issue.created_at
-            }} />
-          ) : (
-            <EmptyState
-              title="Neighborhood Impact Assessment Pending"
-              description="Neighborhood Impact analysis will activate automatically once more matching reports are submitted for this area. You can trigger the assessment manually for testing."
-              icon={AlertTriangle}
-              action={
-                cluster && (
-                  <button
-                    onClick={handleTriggerImpact}
-                    disabled={triggerImpactMutation.isPending}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-                  >
-                    <Play size={12} className={cn(triggerImpactMutation.isPending && 'animate-spin')} />
-                    <span>{triggerImpactMutation.isPending ? 'Generating...' : 'Trigger Neighborhood Impact'}</span>
-                  </button>
-                )
-              }
-            />
-          )}
+        {/* SECTION 3: Community Corroboration */}
+        <div className="relative pb-12">
+          <div className="absolute -left-[32px] md:-left-[48px] top-0 flex items-center justify-center h-8 w-8 rounded-full border border-slate-350 bg-white text-xs font-bold text-slate-600 shadow-sm select-none">
+            03
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
+              <Network size={15} className="text-primary shrink-0" />
+              <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
+                Spatial Clustering & Deduplication
+              </h3>
+            </div>
+            
+            {cluster ? (
+              <ClusterCard cluster={{
+                ...cluster,
+                center_lat: issue.latitude,
+                center_lng: issue.longitude,
+                first_reported_at: issue.created_at,
+                last_reported_at: issue.created_at,
+              }} />
+            ) : (
+              <div className="border border-slate-200 bg-white rounded-medium p-6 text-center select-none shadow-subtle text-slate-500 text-xs">
+                Searching nearby coordinates... Case file is currently registered as a solitary report.
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* 4. Official Complaint & Dispatch */}
-        <div className="space-y-3">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1 select-none">
-            4. Official Complaint Brief
-          </h2>
-          {action_drafts && action_drafts.length > 0 ? (
-            <div className="space-y-6">
+        {/* SECTION 4: Impact Assessment */}
+        <div className="relative pb-12">
+          <div className="absolute -left-[32px] md:-left-[48px] top-0 flex items-center justify-center h-8 w-8 rounded-full border border-slate-350 bg-white text-xs font-bold text-slate-600 shadow-sm select-none">
+            04
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
+              <ShieldAlert size={15} className="text-primary shrink-0" />
+              <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
+                Neighborhood Impact Intelligence
+              </h3>
+            </div>
+            
+            {impact_summary ? (
+              <ImpactCard impact={{
+                ...impact_summary,
+                id: issue.id,
+                cluster_id: cluster?.id || '',
+                potential_consequences: impact_summary.potential_consequences || 'No consequences documented.',
+                generated_at: issue.created_at
+              }} />
+            ) : (
+              <EmptyState
+                title="Impact Assessment Pending"
+                description="Neighborhood Impact analysis will activate automatically once more matching reports are submitted for this area. You can trigger the assessment manually for testing."
+                icon={AlertTriangle}
+                action={
+                  cluster && (
+                    <button
+                      onClick={handleTriggerImpact}
+                      disabled={triggerImpactMutation.isPending}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-250 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+                    >
+                      <Play size={12} className={cn(triggerImpactMutation.isPending && 'animate-spin')} />
+                      <span>{triggerImpactMutation.isPending ? 'Generating...' : 'Trigger Neighborhood Impact'}</span>
+                    </button>
+                  )
+                }
+              />
+            )}
+          </div>
+        </div>
+
+        {/* SECTION 5: Official Action Drafts */}
+        <div className="relative pb-12">
+          <div className="absolute -left-[32px] md:-left-[48px] top-0 flex items-center justify-center h-8 w-8 rounded-full border border-slate-350 bg-white text-xs font-bold text-slate-600 shadow-sm select-none">
+            05
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
+              <Scale size={15} className="text-primary shrink-0" />
+              <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
+                Accountability Action Drafts
+              </h3>
+            </div>
+            
+            {action_drafts && action_drafts.length > 0 ? (
               <DraftViewer
                 drafts={action_drafts.map(d => ({
                   ...d,
@@ -259,37 +318,57 @@ export const IssueDetailPage: React.FC = () => {
                 onEscalate={handleEscalateClick}
                 isSubmitting={approveDraftMutation.isPending || escalateDraftMutation.isPending}
               />
-
-              {/* Escalation Receipt (renders below drafts if sent) */}
-              {activeEscalation && (
-                <div className="space-y-2 select-none">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">
-                    Real-World Send Logs
-                  </h4>
-                  <EscalationCard escalation={activeEscalation} />
-                </div>
-              )}
-            </div>
-          ) : (
-            <EmptyState
-              title="Complaint Brief Pending"
-              description="Official complaint briefs will be compiled automatically once matching reports are clustered and the impact assessment is processed."
-              icon={AlertTriangle}
-              action={
-                impact_summary && (
-                  <button
-                    onClick={handleTriggerDrafts}
-                    disabled={triggerDraftsMutation.isPending}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-                  >
-                    <Play size={12} className={cn(triggerDraftsMutation.isPending && 'animate-spin')} />
-                    <span>{triggerDraftsMutation.isPending ? 'Generating...' : 'Trigger Complaint Drafts'}</span>
-                  </button>
-                )
-              }
-            />
-          )}
+            ) : (
+              <EmptyState
+                title="Action Briefs Pending"
+                description="Official complaint briefs will be compiled automatically once matching reports are clustered and the impact assessment is processed."
+                icon={AlertTriangle}
+                action={
+                  impact_summary && (
+                    <button
+                      onClick={handleTriggerDrafts}
+                      disabled={triggerDraftsMutation.isPending}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-250 bg-white text-xs font-bold text-slate-700 rounded-small hover:bg-slate-50 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+                    >
+                      <Play size={12} className={cn(triggerDraftsMutation.isPending && 'animate-spin')} />
+                      <span>{triggerDraftsMutation.isPending ? 'Generating...' : 'Trigger Complaint Drafts'}</span>
+                    </button>
+                  )
+                }
+              />
+            )}
+          </div>
         </div>
+
+        {/* SECTION 6: Escalation & Logs */}
+        <div className="relative">
+          <div className="absolute -left-[32px] md:-left-[48px] top-0 flex items-center justify-center h-8 w-8 rounded-full border border-slate-350 bg-white text-xs font-bold text-slate-600 shadow-sm select-none">
+            06
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
+              <FileCheck size={15} className="text-primary shrink-0" />
+              <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
+                Escalation Dispatch & Action logs
+              </h3>
+            </div>
+            
+            {activeEscalation ? (
+              <div className="space-y-2 select-none">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">
+                  Sendgrid HTTP API logs
+                </h4>
+                <EscalationCard escalation={activeEscalation} />
+              </div>
+            ) : (
+              <div className="border border-slate-200 bg-white rounded-medium p-6 text-center select-none shadow-subtle text-slate-500 text-xs">
+                Authorized documents are queued for SendGrid transmission. Approve briefs to dispatch.
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* Confirmation & Dispatch Modals */}
@@ -310,7 +389,7 @@ export const IssueDetailPage: React.FC = () => {
       {/* Toast Notification */}
       {toast && (
         <div className={cn(
-          "fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 text-white rounded-medium shadow-premium text-xs font-semibold animate-fade font-sans select-none border",
+          "fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 text-white rounded-medium shadow-premium text-xs font-bold animate-fade font-sans select-none border",
           toast.type === 'success' && "bg-slate-900 border-slate-800",
           toast.type === 'warning' && "bg-amber-600 border-amber-500",
           toast.type === 'error' && "bg-rose-600 border-rose-500"
@@ -331,4 +410,5 @@ export const IssueDetailPage: React.FC = () => {
     </div>
   );
 };
+
 export default IssueDetailPage;

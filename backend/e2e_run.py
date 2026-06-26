@@ -88,7 +88,7 @@ async def run_e2e():
     print("=================== CivicPulse E2E Execution ===================")
     
     # 1. Load a real photo
-    photo_path = "../scripts/demo_assets/pothole_01.jpg"
+    photo_path = "../scripts/demo_assets/pothole1.jpg"
     if not os.path.exists(photo_path):
         print(f"Error: Photo not found at {photo_path}")
         return

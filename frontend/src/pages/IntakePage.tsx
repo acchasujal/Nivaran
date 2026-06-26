@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { PhotoUploader } from '@/components/issue/PhotoUploader';
@@ -7,20 +7,28 @@ import { LocationPicker } from '@/components/issue/LocationPicker';
 import { AgentTimeline } from '@/components/timeline/AgentTimeline';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useCreateIssue } from '@/api/queries';
-import { AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, FileText, CheckCircle2, ArrowRight, ArrowLeft, Send, Sparkles, MapPin, Landmark } from 'lucide-react';
 import axios from 'axios';
 import { demoScenarios } from '@/data/demoScenarios';
 import type { DemoScenario } from '@/data/demoScenarios';
+import { getLocalityName } from '@/utils/getLocalityName';
+import { cn } from '@/lib/utils';
 
 export const IntakePage: React.FC = () => {
   const navigate = useNavigate();
   const createIssueMutation = useCreateIssue();
+
+  // Stepper state
+  const [currentStep, setCurrentStep] = useState<number>(1);
 
   // Form states
   const [photo, setPhoto] = useState<File | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [userNote, setUserNote] = useState<string>('');
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  // Field validation errors
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSelectDemoScenario = async (scenarioId: string) => {
     if (!scenarioId) return;
@@ -43,6 +51,8 @@ export const IntakePage: React.FC = () => {
       setCoordinates({ lat: scenario.latitude, lng: scenario.longitude });
       setUserNote(scenario.description);
       setFieldErrors({});
+      // Auto-advance to step 3 so the judge sees the compiled case and can submit immediately
+      setCurrentStep(3);
     } catch (err) {
       console.error('Failed to load demo scenario', err);
     } finally {
@@ -54,7 +64,6 @@ export const IntakePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -89,6 +98,30 @@ export const IntakePage: React.FC = () => {
     }
   };
 
+  // Step controls
+  const handleNextStep = () => {
+    setFieldErrors({});
+    if (currentStep === 1) {
+      if (!photo) {
+        setFieldErrors({ photo: 'Photo evidence is required to proceed.' });
+        return;
+      }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      if (!coordinates) {
+        setFieldErrors({ coordinates: 'Geographic location is required to proceed.' });
+        return;
+      }
+      setCurrentStep(3);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
@@ -105,6 +138,9 @@ export const IntakePage: React.FC = () => {
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
+      // Fallback steps
+      if (!photo) setCurrentStep(1);
+      else if (!coordinates) setCurrentStep(2);
       return;
     }
 
@@ -135,7 +171,6 @@ export const IntakePage: React.FC = () => {
       if (axios.isAxiosError(err) && err.response) {
         const data = err.response.data;
         if (err.response.status === 422 && data.error === 'validation_error') {
-          // Surfaced validation fields
           setFieldErrors(data.fields || { general: 'Failed to validate report fields.' });
           setSubmitError('Validation failed. Please check the coordinates and image criteria.');
         } else if (err.response.status === 502 && data.error === 'ai_unavailable') {
@@ -151,20 +186,33 @@ export const IntakePage: React.FC = () => {
 
   const handleReset = () => {
     setPhoto(null);
+    setCoordinates(null);
     setUserNote('');
     setIsSubmitting(false);
     setSubmitError(null);
     setElapsedSeconds(0);
     setFieldErrors({});
+    setCurrentStep(1);
   };
 
+  // Compute live local preview parameters
+  const localityName = useMemo(() => {
+    if (!coordinates) return '';
+    return getLocalityName(coordinates.lat, coordinates.lng);
+  }, [coordinates]);
 
+  // Stepper Header tabs helper
+  const stepsConfig = [
+    { number: 1, label: 'Evidence Media' },
+    { number: 2, label: 'Location Lock' },
+    { number: 3, label: 'Case Context' },
+  ];
 
   return (
-    <div className="flex-1 flex flex-col pb-10">
+    <div className="flex-1 flex flex-col pb-10 font-sans">
       <PageHeader
-        title="Report Civic Issue"
-        subtitle="Submit verified photographic evidence of infrastructure issues."
+        title="Incident Report Intake"
+        subtitle="AI Civic Operations Center: Transform raw photographic evidence of infrastructure failures into verified, sendable legal complaints and RTI briefs."
         action={
           <div className="relative inline-block text-left">
             <select
@@ -175,18 +223,18 @@ export const IntakePage: React.FC = () => {
                 }
               }}
               disabled={isDemoLoading}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-small shadow transition-all cursor-pointer disabled:opacity-50 select-none appearance-none pr-8 relative"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-250 hover:bg-slate-50 text-slate-750 text-xs font-bold rounded-small shadow-sm transition-all cursor-pointer disabled:opacity-50 select-none appearance-none pr-8 relative"
               style={{
-                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
+                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 8px center',
                 backgroundSize: '14px',
               }}
             >
               <option value="" disabled className="text-slate-800 bg-white">
-                {isDemoLoading ? 'Loading Demo...' : 'Quick Demo'}
+                {isDemoLoading ? 'Loading Scenario...' : 'Select Case Demo'}
               </option>
-              <option value="random" className="text-slate-800 bg-white">Random Scenario</option>
+              <option value="random" className="text-slate-800 bg-white">Random Case Scenario</option>
               {demoScenarios.map((s) => (
                 <option key={s.id} value={s.id} className="text-slate-800 bg-white">
                   {s.title}
@@ -199,27 +247,27 @@ export const IntakePage: React.FC = () => {
 
       {isSubmitting ? (
         /* Progress timeline view when uploading/submitting */
-        <div className="max-w-2xl mx-auto w-full py-12 space-y-8 animate-fade">
-          <div className="text-center space-y-2">
+        <div className="max-w-2xl mx-auto w-full py-12 space-y-8 animate-fade select-none">
+          <div className="text-center space-y-3">
             {createIssueMutation.isSuccess ? (
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 mb-2 shrink-0">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 mb-2 shrink-0">
                 <CheckCircle2 size={28} className="stroke-[1.5]" />
               </div>
             ) : (
               <span className="inline-block w-8 h-8 rounded-full border-4 border-slate-200 border-t-primary animate-spin mb-2" />
             )}
-            <h2 className="text-lg font-semibold text-secondary-foreground">
-              {createIssueMutation.isSuccess ? 'Verified successfully!' : 'Verifying details...'}
+            <h2 className="text-lg font-bold text-secondary-foreground font-sans tracking-tight">
+              {createIssueMutation.isSuccess ? 'Evidence Verified & Processed!' : 'Processing Case Evidence...'}
             </h2>
             <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
               {createIssueMutation.isSuccess 
-                ? 'Redirecting to issue dashboard detail...' 
-                : `Analyzing evidence and scanning nearby reports. Elapsed: ${elapsedSeconds}s (takes ~6-15s).`
+                ? 'Incident registered. Navigating to operations narrative detail page...' 
+                : `FastAPI endpoint scanning nearby incident maps. Elapsed: ${elapsedSeconds}s (takes ~6-15s).`
               }
             </p>
           </div>
 
-          <div className="border border-secondary-border bg-white rounded-large p-6 md:p-8 shadow-subtle">
+          <div className="border border-slate-200 bg-white rounded-medium p-6 md:p-8 shadow-subtle">
             <AgentTimeline
               isSubmitting={isSubmitting}
               elapsedSeconds={elapsedSeconds}
@@ -231,86 +279,210 @@ export const IntakePage: React.FC = () => {
         /* Error view when submission fails */
         <div className="max-w-2xl mx-auto w-full py-12 animate-fade">
           <ErrorState
-            title="Analysis Failure"
+            title="Evidence Processing Failure"
             explanation={submitError}
             onRetry={handleReset}
             retryText="Reset & Try Again"
           />
         </div>
       ) : (
-        /* Form intake flow view */
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8 items-start animate-fade">
-          <div className="lg:col-span-7 space-y-6">
-            {/* Photo Upload Container */}
-            <div className="border border-secondary-border bg-white rounded-large p-6 space-y-4">
-              <div className="flex items-center gap-2 text-slate-700 border-b border-secondary-border pb-3">
-                <FileText size={18} className="text-primary shrink-0" />
-                <span className="text-sm font-semibold font-sans">Evidence Media</span>
-              </div>
-
-              {photo ? (
-                <PhotoPreview
-                  file={photo}
-                  onRemove={() => setPhoto(null)}
-                  onReplace={() => setPhoto(null)}
-                />
-              ) : (
-                <PhotoUploader onCapture={handlePhotoCapture} />
-              )}
-
-              {fieldErrors.photo && (
-                <div className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold select-none animate-fade">
-                  <AlertCircle size={14} />
-                  <span>{fieldErrors.photo}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Location Picker Container */}
-            <div className="space-y-2">
-              <LocationPicker value={coordinates} onLocate={handleLocationLocate} />
-              {fieldErrors.coordinates && (
-                <div className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold px-2 select-none animate-fade">
-                  <AlertCircle size={14} />
-                  <span>{fieldErrors.coordinates}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right hand details form column */}
-          <div className="lg:col-span-5 border border-secondary-border bg-white rounded-large p-6 space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-secondary-foreground border-b border-secondary-border pb-3">
-                Report Description
+        /* Form stepper intake flow view */
+        <div className="max-w-3xl mx-auto w-full py-6 space-y-8">
+          {/* Quick value proposition (First 30 seconds check) */}
+          <div className="border border-slate-200 bg-white rounded-medium p-5 shadow-subtle flex items-start gap-4 select-none">
+            <span className="p-2.5 rounded bg-teal-50 text-primary border border-teal-200 shrink-0">
+              <Landmark size={20} />
+            </span>
+            <div className="space-y-1">
+              <h3 className="text-xs font-bold text-slate-800 tracking-tight uppercase">
+                AI Civic Operations Intake Portal
               </h3>
-              <p className="text-xs text-slate-400 font-normal leading-normal">
-                Add optional details about the context (e.g. nearest cross street, duration of the issue, severity context).
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Provide verifiable visual evidence of municipal infrastructure problems. CivicPulse translates citizen reports into compiled audit trails and sendable legal briefs, bypassing administrative delays.
               </p>
-              <textarea
-                rows={4}
-                value={userNote}
-                onChange={(e) => setUserNote(e.target.value)}
-                placeholder="Describe the issue context..."
-                className="w-full text-sm border border-secondary-border rounded-small px-3 py-2 bg-slate-50 focus:bg-white transition-colors resize-none mt-2"
-                maxLength={500}
-              />
             </div>
-
-            <button
-              type="submit"
-              className="w-full inline-flex items-center justify-center px-4 py-3 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-small shadow transition-all active:scale-[0.99] cursor-pointer"
-            >
-              Submit Report
-            </button>
-            
-            <p className="text-[10px] text-slate-400 text-center leading-normal">
-              Reports are processed through our verification pipeline to match nearby incidents and assess public impact.
-            </p>
           </div>
-        </form>
+          {/* Stepper Header Navigation Indicators */}
+          <div className="flex items-center justify-between border border-slate-200 bg-slate-50/50 p-4 rounded-medium select-none" role="navigation" aria-label="Wizard Steps">
+            {stepsConfig.map((step, idx) => {
+              const isActive = currentStep === step.number;
+              const isCompleted = currentStep > step.number;
+              return (
+                <React.Fragment key={step.number}>
+                  <div 
+                    className="flex items-center gap-2"
+                    aria-current={isActive ? 'step' : undefined}
+                    aria-label={`Step ${step.number}: ${step.label}${isCompleted ? ', Completed' : ''}${isActive ? ', Active' : ''}`}
+                  >
+                    <span className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold border transition-colors",
+                      isActive && "bg-primary border-primary text-white shadow-sm",
+                      isCompleted && "bg-emerald-50 border-emerald-250 text-emerald-700",
+                      !isActive && !isCompleted && "bg-white border-slate-200 text-slate-400"
+                    )}>
+                      {isCompleted ? <CheckCircle2 size={14} aria-label="Completed" /> : step.number}
+                    </span>
+                    <span className={cn(
+                      "text-xs font-bold font-sans tracking-tight hidden sm:inline",
+                      isActive ? "text-slate-800" : "text-slate-400"
+                    )}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {idx < stepsConfig.length - 1 && (
+                    <div className="flex-1 h-[1px] bg-slate-200 mx-4 hidden sm:block" aria-hidden="true" />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+
+          {/* Stepper Content Window */}
+          <div className="space-y-6">
+            {currentStep === 1 && (
+              <div className="space-y-4 animate-fade">
+                <div className="border border-slate-200 bg-white rounded-medium p-6 space-y-4 shadow-subtle">
+                  <div className="flex items-center gap-2 text-slate-700 border-b border-slate-100 pb-3">
+                    <FileText size={18} className="text-primary shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Step 1: Evidence Capture</span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-normal">
+                    Upload a clear, unaltered photograph of the infrastructure or municipal failure. The AI pipeline evaluates visual context, detects dupes, and determines incident parameters.
+                  </p>
+
+                  {photo ? (
+                    <PhotoPreview
+                      file={photo}
+                      onRemove={() => setPhoto(null)}
+                      onReplace={() => setPhoto(null)}
+                    />
+                  ) : (
+                    <PhotoUploader onCapture={handlePhotoCapture} />
+                  )}
+
+                  {fieldErrors.photo && (
+                    <div className="flex items-center gap-1.5 text-xs text-rose-700 font-bold select-none mt-2">
+                      <AlertCircle size={14} />
+                      <span>{fieldErrors.photo}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-4 animate-fade">
+                <LocationPicker value={coordinates} onLocate={handleLocationLocate} />
+                {fieldErrors.coordinates && (
+                  <div className="flex items-center gap-1.5 text-xs text-rose-700 font-bold px-2 select-none">
+                    <AlertCircle size={14} />
+                    <span>{fieldErrors.coordinates}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade">
+                {/* Notes Input Area */}
+                <div className="lg:col-span-7 border border-slate-200 bg-white rounded-medium p-6 space-y-4 shadow-subtle">
+                  <div className="flex items-center gap-2 text-slate-700 border-b border-slate-100 pb-3">
+                    <FileText size={18} className="text-primary shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Step 3: Brief Context</span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-normal">
+                    Provide optional details about the context (e.g. duration of outage, specific location landmarks, hazardous risks) to ground the drafted complaint briefs.
+                  </p>
+                  
+                  <textarea
+                    rows={4}
+                    value={userNote}
+                    onChange={(e) => setUserNote(e.target.value)}
+                    placeholder="Describe specific context for official briefs..."
+                    className="w-full text-sm border border-slate-250 rounded-small px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary transition-colors resize-none mt-2"
+                    maxLength={500}
+                  />
+                </div>
+
+                {/* Final Case Review Summary */}
+                <div className="lg:col-span-5 border border-slate-200 bg-white rounded-medium p-6 space-y-6 shadow-subtle">
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
+                    Review Case File
+                  </h3>
+                  
+                  <div className="space-y-4 text-xs">
+                    {/* Media Thumbnail */}
+                    {photo && (
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
+                          <img src={URL.createObjectURL(photo)} alt="Evidence preview" className="h-full w-full object-cover" />
+                        </div>
+                        <div className="leading-tight">
+                          <span className="font-bold text-slate-700 block">Evidence File Loaded</span>
+                          <span className="text-[10px] text-slate-450 mt-0.5 block font-mono">{(photo.size / 1024).toFixed(0)} KB</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Location Summary */}
+                    <div className="flex items-start gap-2.5 pt-3 border-t border-slate-100 text-slate-650">
+                      <MapPin size={15} className="text-slate-400 shrink-0 mt-0.5" />
+                      <div className="leading-tight">
+                        <span className="font-bold text-slate-700 block">{localityName || 'Coordinates Loaded'}</span>
+                        <span className="text-[10px] text-slate-400 block font-mono mt-0.5">
+                          GPS: {coordinates?.lat.toFixed(6)}, {coordinates?.lng.toFixed(6)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Explanatory AI warning */}
+                    <div className="flex gap-2 p-3 bg-teal-50/50 border border-teal-200 rounded-small text-teal-800 leading-tight">
+                      <Sparkles size={14} className="shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-medium font-sans">
+                        Submission triggers Agent 1 (understanding) and Agent 2 (clustering checks) synchronously. Case file details will update instantly.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-small shadow transition-all active:scale-[0.99] cursor-pointer"
+                  >
+                    <Send size={12} />
+                    <span>Submit to Operations Center</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Stepper Navigation Buttons */}
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200 select-none">
+            <button
+              type="button"
+              onClick={handlePrevStep}
+              disabled={currentStep === 1}
+              className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-250 bg-white text-xs font-semibold text-slate-600 rounded-small hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition-colors cursor-pointer"
+            >
+              <ArrowLeft size={13} />
+              <span>Back</span>
+            </button>
+
+            {currentStep < 3 ? (
+              <button
+                type="button"
+                onClick={handleNextStep}
+                className="inline-flex items-center gap-1.5 px-4.5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-small shadow transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <span>Continue</span>
+                <ArrowRight size={13} />
+              </button>
+            ) : null}
+          </div>
+        </div>
       )}
     </div>
   );
 };
+
 export default IntakePage;

@@ -69,37 +69,37 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
       return [
         {
           number: 1,
-          name: 'Image Verification',
-          agentLabel: 'AI Classifier',
-          description: 'Verifies visual parameters and severity.',
+          name: 'Visual Intake & Classification',
+          agentLabel: 'Agent 1: Classifier',
+          description: 'Extracts coordinates, checks clarity, and classifies issue attributes.',
           status: stage1Status,
         },
         {
           number: 2,
-          name: 'Nearby Incident Match',
-          agentLabel: 'Community Matcher',
-          description: 'Matches incident with reports in the same area.',
+          name: 'Spatial Cluster Verification',
+          agentLabel: 'Agent 2: Verification',
+          description: 'Triggers Haversine spatial scanner and runs duplicate matching.',
           status: stage2Status,
         },
         {
           number: 3,
           name: 'Impact Assessment',
-          agentLabel: 'Impact Assessment',
-          description: 'Calculates public safety consequences.',
+          agentLabel: 'Agent 3: Impact Analyst',
+          description: 'Calculates public safety consequences on escalation threshold.',
           status: 'pending' as StepState,
         },
         {
           number: 4,
           name: 'Official Draft Preparation',
-          agentLabel: 'Draft Preparer',
-          description: 'Prepares complaints and official briefs.',
+          agentLabel: 'Agent 4: Action Generator',
+          description: 'Prepares legal complaint briefs and RTI requests from evidence.',
           status: 'pending' as StepState,
         },
         {
           number: 5,
           name: 'Escalation Dispatch',
-          agentLabel: 'Action Dispatcher',
-          description: 'Dispatches complaints via email or PDF.',
+          agentLabel: 'Agent 5: Escalation',
+          description: 'Executes direct external SendGrid dispatch or PDF export.',
           status: 'pending' as StepState,
         },
       ];
@@ -159,37 +159,37 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
     return [
       {
         number: 1,
-        name: 'Image Verification',
-        agentLabel: 'AI Classifier',
-        description: 'Verifies visual parameters and severity.',
+        name: 'Visual Intake & Classification',
+        agentLabel: 'Agent 1: Classifier',
+        description: 'Extracts coordinates, checks clarity, and classifies issue attributes.',
         status: stage1Status,
       },
       {
         number: 2,
-        name: 'Nearby Incident Match',
-        agentLabel: 'Community Matcher',
-        description: 'Matches incident with reports in the same area.',
+        name: 'Spatial Cluster Verification',
+        agentLabel: 'Agent 2: Verification',
+        description: 'Triggers Haversine spatial scanner and runs duplicate matching.',
         status: stage2Status,
       },
       {
         number: 3,
         name: 'Impact Assessment',
-        agentLabel: 'Impact Assessment',
-        description: 'Calculates public safety consequences.',
+        agentLabel: 'Agent 3: Impact Analyst',
+        description: 'Calculates public safety consequences on escalation threshold.',
         status: stage3Status,
       },
       {
         number: 4,
         name: 'Official Draft Preparation',
-        agentLabel: 'Draft Preparer',
-        description: 'Prepares complaints and official briefs.',
+        agentLabel: 'Agent 4: Action Generator',
+        description: 'Prepares legal complaint briefs and RTI requests from evidence.',
         status: stage4Status,
       },
       {
         number: 5,
         name: 'Escalation Dispatch',
-        agentLabel: 'Action Dispatcher',
-        description: 'Dispatches complaints via email or PDF.',
+        agentLabel: 'Agent 5: Escalation',
+        description: 'Executes direct external SendGrid dispatch or PDF export.',
         status: stage5Status,
       },
     ];
@@ -233,7 +233,7 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
                   className={cn(
                     'absolute left-[19px] top-[21px] w-[2px] h-[calc(100%+1.5rem)] -z-10 transition-colors duration-300',
                     isResponsive && 'md:hidden',
-                    step.status === 'completed' ? 'bg-emerald-500' : 'bg-slate-200'
+                    step.status === 'completed' ? 'bg-emerald-600' : 'bg-slate-200'
                   )}
                   aria-hidden="true"
                 />
@@ -245,7 +245,7 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
                   className={cn(
                     'absolute top-[21px] left-[50%] w-full h-[2px] -z-10 transition-colors duration-300',
                     isResponsive && 'hidden md:block',
-                    step.status === 'completed' ? 'bg-emerald-500' : 'bg-slate-200'
+                    step.status === 'completed' ? 'bg-emerald-600' : 'bg-slate-200'
                   )}
                   aria-hidden="true"
                 />
@@ -259,9 +259,9 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
                 <div className="shrink-0">
                   <span
                     className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 bg-white',
-                      step.status === 'completed' && 'bg-emerald-50 border-emerald-500 text-emerald-700',
-                      step.status === 'running' && 'bg-teal-50 border-teal-500 text-primary',
+                      'flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 bg-white shadow-sm',
+                      step.status === 'completed' && 'bg-emerald-50 border-emerald-600 text-emerald-700',
+                      step.status === 'running' && 'bg-teal-50 border-primary text-primary',
                       step.status === 'failed' && 'bg-rose-50 border-rose-500 text-rose-700',
                       step.status === 'pending' && 'bg-slate-50 border-slate-200 text-slate-400'
                     )}
@@ -290,22 +290,22 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
                     {step.name}
                   </h4>
                   <span className={cn(
-                    "inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded leading-none mt-0.5 select-none font-sans",
-                    step.status === 'completed' && 'bg-emerald-50 text-emerald-800',
-                    step.status === 'running' && 'bg-teal-50 text-teal-800',
-                    step.status === 'failed' && 'bg-rose-50 text-rose-800',
-                    step.status === 'pending' && 'bg-slate-100 text-slate-400'
+                    "inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded leading-none mt-1 select-none font-sans border",
+                    step.status === 'completed' && 'bg-emerald-50 border-emerald-200 text-emerald-800',
+                    step.status === 'running' && 'bg-teal-50 border-teal-200 text-teal-800',
+                    step.status === 'failed' && 'bg-rose-50 border-rose-200 text-rose-800',
+                    step.status === 'pending' && 'bg-slate-50 border-slate-200 text-slate-450'
                   )}>
                     {step.agentLabel}
                   </span>
                   <p className={cn(
-                    "text-[10px] text-slate-450 leading-normal font-sans font-normal pt-1",
+                    "text-[10px] text-slate-500 leading-normal font-sans font-normal pt-1.5",
                     isResponsive ? 'hidden md:block' : 'block'
                   )}>
                     {step.description}
                   </p>
                   {isResponsive && (
-                    <p className="block md:hidden text-[11px] text-slate-450 leading-normal font-sans font-normal">
+                    <p className="block md:hidden text-[11px] text-slate-500 leading-normal font-sans font-normal pt-1">
                       {step.description}
                     </p>
                   )}

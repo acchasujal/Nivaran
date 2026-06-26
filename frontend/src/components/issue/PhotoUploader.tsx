@@ -139,6 +139,15 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({ onCapture, classNa
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        tabIndex={0}
+        role="button"
+        aria-label="Upload issue photo. Drag and drop, or press enter to select file."
         className={cn(
           'border-2 border-dashed rounded-medium p-8 flex flex-col items-center justify-center text-center cursor-pointer select-none min-h-[220px] transition-all',
           isDragActive 
