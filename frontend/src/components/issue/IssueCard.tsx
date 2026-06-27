@@ -58,9 +58,12 @@ export const IssueCardComponent: React.FC<IssueCardProps> = ({ issue, reportsCou
             {humanizeIssueType(issue.issue_type, issue.description)}
           </span>
           {issue.credibility_score >= 0.8 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900/90 text-teal-400 border border-teal-500/20 backdrop-blur-sm shadow-sm select-none">
+            <span 
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900/90 text-teal-400 border border-teal-500/20 backdrop-blur-sm shadow-sm select-none"
+              title="Image quality and classification confidence (AI-assessed)"
+            >
               <Sparkles size={9} className="text-teal-400 fill-teal-400" />
-              <span>AI Verified</span>
+              <span>AI Verified ({Math.round(issue.credibility_score * 100)}%)</span>
             </span>
           )}
         </div>

@@ -88,9 +88,22 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ value, onLocate,
       ) : error ? (
         <div className="flex items-start gap-2 p-3 text-xs bg-amber-50 text-amber-700 border border-amber-100 rounded-small select-none animate-fade">
           <AlertTriangle size={14} className="shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
+          <div className="space-y-1.5 w-full">
             <p className="font-semibold">GPS Lock Failed</p>
             <p className="font-normal opacity-90">{error}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setIsManualMode(true);
+                const defaultCoords = { lat: 19.0760, lng: 72.8777 };
+                setCoordinates(defaultCoords);
+                setManualLat(defaultCoords.lat.toString());
+                setManualLng(defaultCoords.lng.toString());
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[10px] font-bold transition-all cursor-pointer shadow-sm"
+            >
+              Use Mumbai Center Default
+            </button>
           </div>
         </div>
       ) : coordinates ? (
@@ -144,9 +157,22 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ value, onLocate,
         </div>
       </div>
 
-      <p className="text-[10px] text-slate-400 leading-normal">
-        GPS values are captured from your device's browser by default. You can manually adjust them above.
-      </p>
+      <div className="text-[10px] text-slate-400 leading-normal flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-slate-100">
+        <span>GPS values are captured from your device's browser by default. You can manually adjust them above.</span>
+        <button
+          type="button"
+          onClick={() => {
+            setIsManualMode(true);
+            const defaultCoords = { lat: 19.0760, lng: 72.8777 };
+            setCoordinates(defaultCoords);
+            setManualLat(defaultCoords.lat.toString());
+            setManualLng(defaultCoords.lng.toString());
+          }}
+          className="text-primary hover:text-primary-hover font-bold hover:underline cursor-pointer"
+        >
+          Use Mumbai Default Location
+        </button>
+      </div>
     </div>
   );
 };

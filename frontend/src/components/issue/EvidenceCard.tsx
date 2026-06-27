@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Camera, MapPin, CheckCircle2, ShieldCheck, AlertCircle, Sparkles } from 'lucide-react';
 import type { Issue } from '@/api/types';
 import { getImageUrl } from '@/utils/getImageUrl';
 import { getLocalityName } from '@/utils/getLocalityName';
@@ -20,7 +20,7 @@ export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({ issue, clas
   // Trust model factors based on actual issue metrics
   const trustFactors = [
     {
-      name: 'Visual Integrity Verification',
+      name: `Visual Integrity Verification (${Math.round(issue.credibility_score * 100)}% Confidence)`,
       description: 'Image clarity and file structure validated by Gemini Vision.',
       status: issue.credibility_score >= 0.7 ? 'passed' : 'warning',
     },
@@ -77,9 +77,20 @@ export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({ issue, clas
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">
                 Visual Evidence
               </span>
-              <h3 className="text-lg font-bold text-secondary-foreground font-sans tracking-tight">
-                {humanizeIssueType(issue.issue_type, issue.description)}
-              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-lg font-bold text-secondary-foreground font-sans tracking-tight">
+                  {humanizeIssueType(issue.issue_type, issue.description)}
+                </h3>
+                {issue.credibility_score >= 0.8 && (
+                  <span 
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-teal-400 border border-teal-500/20 backdrop-blur-sm shadow-sm select-none"
+                    title="Image quality and classification confidence (AI-assessed)"
+                  >
+                    <Sparkles size={9} className="text-teal-400 fill-teal-400" />
+                    <span>AI Verified ({Math.round(issue.credibility_score * 100)}%)</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           

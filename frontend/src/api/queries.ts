@@ -32,6 +32,14 @@ export const useIssueDetail = (id: string) => {
       return response.data;
     },
     enabled: !!id,
+    refetchInterval: (query) => {
+      const data = query.state.data as IssueDetailResponse | undefined;
+      const status = data?.issue?.status;
+      if (status && status !== 'drafted' && status !== 'approved' && status !== 'escalated') {
+        return 2000;
+      }
+      return false;
+    },
   });
 };
 
