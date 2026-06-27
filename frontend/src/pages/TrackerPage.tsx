@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Map, Plus, Filter, Users, ShieldAlert, Landmark, FileCheck, Clock, Activity } from 'lucide-react';
+import { Map, Plus, Filter, Users, ShieldAlert, Landmark, FileCheck, Clock, Activity, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingState } from '@/components/feedback/LoadingState';
@@ -55,6 +55,7 @@ export const TrackerPage: React.FC = () => {
     if (!data?.issues) return {
       issues: [],
       stats: { reports: 0, verified: 0, inProgress: 0, drafted: 0, escalated: 0, citizens: 0 },
+      silenceStats: { awaitingAction: 0, authoritiesNotified: 0, escalated: 0, averageWaitingDays: 0, cumulativeWaitingDays: 0, verifiedReports: 0, citizensImpacted: 0 },
       clusterCounts: {}
     };
 
@@ -71,6 +72,26 @@ export const TrackerPage: React.FC = () => {
       citizens: sortedIssues.length * 25, // Evidence-grounded footprint proxy (25 residents per report area)
     };
 
+    const unresolvedIssues = sortedIssues.filter(i => (i.status as string) !== 'closed' && (i.status as string) !== 'resolved');
+    const now = new Date();
+    const waitingDaysList = unresolvedIssues.map(i => {
+      const created = new Date(i.created_at);
+      const diff = Math.max(0, now.getTime() - created.getTime());
+      return diff / (1000 * 60 * 60 * 24);
+    });
+    const cumulativeWaitingDays = waitingDaysList.reduce((sum, d) => sum + d, 0);
+    const averageWaitingDays = unresolvedIssues.length > 0 ? (cumulativeWaitingDays / unresolvedIssues.length) : 0;
+
+    const silenceStats = {
+      awaitingAction: unresolvedIssues.length,
+      authoritiesNotified: unresolvedIssues.filter(i => i.status === 'escalated').length,
+      escalated: unresolvedIssues.filter(i => i.status === 'escalated').length,
+      averageWaitingDays: Math.round(averageWaitingDays * 10) / 10,
+      cumulativeWaitingDays: Math.round(cumulativeWaitingDays),
+      verifiedReports: unresolvedIssues.filter(i => i.credibility_score >= 0.8).length,
+      citizensImpacted: unresolvedIssues.length * 25,
+    };
+
     const clusterCounts = sortedIssues.reduce((acc, issue) => {
       if (issue.cluster_id) {
         acc[issue.cluster_id] = (acc[issue.cluster_id] || 0) + 1;
@@ -81,6 +102,7 @@ export const TrackerPage: React.FC = () => {
     return {
       issues: sortedIssues,
       stats,
+      silenceStats,
       clusterCounts
     };
   }, [data]);
@@ -98,7 +120,7 @@ export const TrackerPage: React.FC = () => {
     );
   }
 
-  const { issues, stats, clusterCounts } = processedData;
+  const { issues, stats, silenceStats, clusterCounts } = processedData;
 
   // Filter issues client-side based on Category and Risk
   const filteredIssues = issues.filter((issue) => {
@@ -163,7 +185,7 @@ export const TrackerPage: React.FC = () => {
             </div>
             <span className="text-[9px] text-slate-400">Live data • All metrics from verified reports</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y sm:divide-y-0 divide-slate-100">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y sm:divide-y-0 divide-slate-100 border-b border-slate-100">
             {[
               { label: 'Total Reports', value: stats.reports, icon: Users, sub: 'All submissions', color: 'text-slate-700' },
               { label: 'Verified', value: stats.verified, icon: ShieldAlert, sub: 'Credibility ≥ 80%', color: 'text-emerald-700' },
@@ -181,6 +203,37 @@ export const TrackerPage: React.FC = () => {
                 <span className="text-[9px] text-slate-400 block">{sub}</span>
               </div>
             ))}
+          </div>
+
+          {/* Cross-Issue Silence Ledger Sub-Section */}
+          <div className="bg-slate-50/30">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 select-none">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={14} className="text-rose-600" />
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Cross-Issue Silence Ledger</span>
+              </div>
+              <span className="text-[9px] text-slate-400">Accountability summary of verified evidence awaiting action</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-x divide-y lg:divide-y-0 divide-slate-100">
+              {[
+                { label: 'Reports Awaiting Action', value: silenceStats.awaitingAction, icon: AlertCircle, sub: 'Unresolved reports', color: 'text-rose-700 font-extrabold' },
+                { label: 'Authorities Notified', value: silenceStats.authoritiesNotified, icon: Landmark, sub: 'Grievances escalated', color: 'text-amber-700' },
+                { label: 'Escalated', value: silenceStats.escalated, icon: Landmark, sub: 'Awaiting response', color: 'text-rose-700' },
+                { label: 'Average Waiting Days', value: `${silenceStats.averageWaitingDays}d`, icon: Clock, sub: 'Average report age', color: 'text-slate-700 font-mono' },
+                { label: 'Cumulative Waiting Days', value: `${silenceStats.cumulativeWaitingDays}d`, icon: Clock, sub: 'Platform total wait', color: 'text-slate-700 font-mono' },
+                { label: 'Verified Reports', value: silenceStats.verifiedReports, icon: ShieldAlert, sub: 'Confirmed credibility', color: 'text-emerald-700' },
+                { label: 'Citizens Impacted', value: `${silenceStats.citizensImpacted}+`, icon: Users, sub: 'Footprint proxy', color: 'text-slate-700' },
+              ].map(({ label, value, icon: Icon, sub, color }) => (
+                <div key={label} className="px-5 py-4 space-y-1 select-none">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
+                    <Icon size={12} className="text-slate-300" />
+                  </div>
+                  <p className={`text-lg font-bold tracking-tight ${color}`}>{value}</p>
+                  <span className="text-[9px] text-slate-400 block">{sub}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
