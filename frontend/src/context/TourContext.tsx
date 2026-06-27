@@ -33,12 +33,12 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const tourSteps = [
     { step: 1, route: '/' },
-    { step: 2, route: '/tracker' },
+    { step: 2, route: '/' },
     { step: 3, route: '/tracker' },
     { step: 4, route: '/tracker' },
     { step: 5, route: '/tracker' },
     { step: 6, route: '/tracker' },
-    { step: 7, route: '/issue/iss-001' },
+    { step: 7, route: '/tracker' },
     { step: 8, route: '/issue/iss-001' },
     { step: 9, route: '/issue/iss-001' },
     { step: 10, route: '/issue/iss-001' },
@@ -46,6 +46,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     { step: 12, route: '/issue/iss-001' },
     { step: 13, route: '/issue/iss-001' },
     { step: 14, route: '/issue/iss-001' },
+    { step: 15, route: '/issue/iss-001' },
   ];
 
   const handleStepNavigation = (stepNum: number) => {
@@ -63,7 +64,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const nextStep = () => {
-    if (currentStep < 14) {
+    if (currentStep < 15) {
       const next = currentStep + 1;
       setCurrentStep(next);
       handleStepNavigation(next);

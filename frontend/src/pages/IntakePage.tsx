@@ -88,6 +88,16 @@ export const IntakePage: React.FC = () => {
     };
   }, [isSubmitting, submitError]);
 
+  useEffect(() => {
+    const handleTourSelectDefault = () => {
+      if (!photo && !isDemoLoading) {
+        handleSelectDemoScenario(demoScenarios[0]?.id || 'random');
+      }
+    };
+    window.addEventListener('civicpulse-tour-select-default', handleTourSelectDefault);
+    return () => window.removeEventListener('civicpulse-tour-select-default', handleTourSelectDefault);
+  }, [photo, isDemoLoading]);
+
   const handlePhotoCapture = (file: File) => {
     setPhoto(file);
     setFieldErrors((prev) => ({ ...prev, photo: '' }));
@@ -302,6 +312,7 @@ export const IntakePage: React.FC = () => {
         action={
           <div className="relative inline-block text-left">
             <select
+              id="demo-scenario-select"
               value=""
               onChange={(e) => {
                 if (e.target.value) {
@@ -309,7 +320,7 @@ export const IntakePage: React.FC = () => {
                 }
               }}
               disabled={isDemoLoading}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-250 hover:bg-slate-50 text-slate-750 text-xs font-bold rounded-small shadow-sm transition-all cursor-pointer disabled:opacity-50 select-none appearance-none pr-8 relative"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-255 hover:bg-slate-50 text-slate-750 text-xs font-bold rounded-small shadow-sm transition-all cursor-pointer disabled:opacity-50 select-none appearance-none pr-8 relative"
               style={{
                 backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
                 backgroundRepeat: 'no-repeat',
@@ -327,6 +338,9 @@ export const IntakePage: React.FC = () => {
                 </option>
               ))}
             </select>
+            <div className="mt-1.5 text-[9px] text-slate-450 leading-tight max-w-[200px] text-right ml-auto select-none">
+              New here? Choose any demo scenario for a complete guided experience, or upload your own image to analyze a real civic issue.
+            </div>
           </div>
         }
       />
@@ -436,15 +450,17 @@ export const IntakePage: React.FC = () => {
                     Upload a clear, unaltered photograph of the infrastructure or municipal failure. The AI pipeline evaluates visual context, detects dupes, and determines incident parameters.
                   </p>
 
-                  {photo ? (
-                    <PhotoPreview
-                      file={photo}
-                      onRemove={() => setPhoto(null)}
-                      onReplace={() => setPhoto(null)}
-                    />
-                  ) : (
-                    <PhotoUploader onCapture={handlePhotoCapture} />
-                  )}
+                  <div id="photo-uploader-container">
+                    {photo ? (
+                      <PhotoPreview
+                        file={photo}
+                        onRemove={() => setPhoto(null)}
+                        onReplace={() => setPhoto(null)}
+                      />
+                    ) : (
+                      <PhotoUploader onCapture={handlePhotoCapture} />
+                    )}
+                  </div>
 
                   {fieldErrors.photo && (
                     <div className="flex items-center gap-1.5 text-xs text-rose-700 font-bold select-none mt-2">
