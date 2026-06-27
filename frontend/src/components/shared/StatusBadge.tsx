@@ -4,7 +4,8 @@ import { cn } from '@/lib/utils';
 export type BadgeStatusType = 
   | 'classified' | 'clustered' | 'drafted' | 'approved' | 'escalated' // Issue states
   | 'pending_review' | 'rejected' // Draft states
-  | 'sent' | 'exported' | 'failed'; // Escalation states
+  | 'sent' | 'exported' | 'failed' // Escalation states
+  | 'awaiting_response' | 'high_priority' | 'rti_recommended' | 'verified' | 'completed'; // Lifecycle states
 
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   status: BadgeStatusType | string;
@@ -30,7 +31,7 @@ const statusConfigs: Record<string, BadgeConfig> = {
     className: 'bg-slate-50 text-slate-600 border-slate-200',
   },
   approved: {
-    label: 'Complaint Prepared',
+    label: 'Complaint Approved',
     className: 'bg-emerald-50 text-emerald-700 border-emerald-250',
   },
   escalated: {
@@ -40,7 +41,7 @@ const statusConfigs: Record<string, BadgeConfig> = {
 
   // Draft statuses
   pending_review: {
-    label: 'Impact Reviewed',
+    label: 'Awaiting Approval',
     className: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   rejected: {
@@ -50,16 +51,38 @@ const statusConfigs: Record<string, BadgeConfig> = {
 
   // Escalation statuses
   sent: {
-    label: 'Escalated',
+    label: 'Email Dispatched',
     className: 'bg-emerald-50 text-emerald-700 border-emerald-250',
   },
   exported: {
-    label: 'Escalated',
+    label: 'PDF Exported',
     className: 'bg-slate-100 text-slate-700 border-slate-200',
   },
   failed: {
     label: 'Send Failed',
     className: 'bg-rose-50 text-rose-700 border-rose-200',
+  },
+
+  // Lifecycle & semantic badges
+  awaiting_response: {
+    label: 'Awaiting Response',
+    className: 'bg-amber-50 text-amber-700 border-amber-200',
+  },
+  high_priority: {
+    label: 'High Priority',
+    className: 'bg-rose-50 text-rose-700 border-rose-200',
+  },
+  rti_recommended: {
+    label: 'RTI Recommended',
+    className: 'bg-orange-50 text-orange-700 border-orange-200',
+  },
+  verified: {
+    label: 'Verified',
+    className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  },
+  completed: {
+    label: 'Completed',
+    className: 'bg-teal-50 text-teal-700 border-teal-200',
   },
 };
 

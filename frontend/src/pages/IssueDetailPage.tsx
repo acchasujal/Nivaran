@@ -8,7 +8,8 @@ import { ImpactCard } from '@/components/issue/ImpactCard';
 import { DraftViewer } from '@/components/drafts/DraftViewer';
 import { EscalationCard } from '@/components/escalation/EscalationCard';
 import { AgentTimeline } from '@/components/timeline/AgentTimeline';
-import { AccountabilityTimeline } from '@/components/timeline/AccountabilityTimeline';
+import { ComplaintLifecycle } from '@/components/timeline/ComplaintLifecycle';
+import { LatestUpdateCard } from '@/components/issue/LatestUpdateCard';
 import { AiRecommendations } from '@/components/issue/AiRecommendations';
 import { ImpactAnalyticsCard } from '@/components/issue/ImpactAnalyticsCard';
 import { CommunityVerification } from '@/components/issue/CommunityVerification';
@@ -165,8 +166,15 @@ export const IssueDetailPage: React.FC = () => {
       />
 
       {issue && (
-        <div className="max-w-4xl mx-auto w-full px-4 md:px-0 pt-6">
+        <div className="max-w-4xl mx-auto w-full px-4 md:px-0 pt-6 space-y-4">
           <AiRecommendations issue={issue} cluster={cluster} />
+          <LatestUpdateCard
+            issue={issue}
+            actionDrafts={action_drafts}
+            cluster={cluster}
+            onApprove={handleApproveClick}
+            onEscalate={handleEscalateClick}
+          />
         </div>
       )}
 
@@ -260,10 +268,17 @@ export const IssueDetailPage: React.FC = () => {
                 )}
               </div>
               
-              {/* Accountability Timeline */}
+              {/* Complaint Lifecycle */}
               {issue && (
                 <div className="border-t border-slate-100 pt-6">
-                  <AccountabilityTimeline issue={issue} actionDrafts={action_drafts} />
+                  <ComplaintLifecycle
+                    issue={issue}
+                    actionDrafts={action_drafts}
+                    cluster={cluster}
+                    impactSummary={impact_summary}
+                    onApprove={handleApproveClick}
+                    onEscalate={handleEscalateClick}
+                  />
                 </div>
               )}
             </div>
