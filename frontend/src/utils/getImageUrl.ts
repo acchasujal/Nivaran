@@ -31,8 +31,11 @@ export const getImageUrl = (path: string | null | undefined): string => {
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
     resolvedUrl = trimmed;
   } else {
-    // Check legacy seed paths and resolve specific filenames
-    if (trimmed.includes('pothole_01') || trimmed.includes('pothole1')) {
+    if (trimmed.includes('demo_')) {
+      const parts = trimmed.split('/');
+      const filename = parts[parts.length - 1];
+      resolvedUrl = '/' + filename;
+    } else if (trimmed.includes('pothole_01') || trimmed.includes('pothole1')) {
       resolvedUrl = '/demo_pothole1.jpg';
     } else if (trimmed.includes('pothole_02') || trimmed.includes('pothole2')) {
       resolvedUrl = '/demo_pothole2.jpg';
