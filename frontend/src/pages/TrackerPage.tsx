@@ -329,7 +329,7 @@ export const TrackerPage: React.FC = () => {
 
       {/* Public Transparency Dashboard */}
       {isLoading ? (
-        <LoadingState variant="dashboard-stats" className="mt-6" />
+        <LoadingState variant="dashboard" className="mt-6" />
       ) : (
         <div className="mt-6 space-y-6 animate-fade">
           {/* AI Civic Insights Card */}
@@ -546,7 +546,11 @@ export const TrackerPage: React.FC = () => {
       {/* Map & List Split Layout Container: 65% Map First Visual Priority */}
       <div className="py-6 flex-1 flex flex-col lg:flex-row gap-6">
         {/* Map Visualization (Left Column - Prioritized) */}
-        {!isLoading && filteredIssues.length > 0 && (
+        {isLoading ? (
+          <div className="w-full lg:w-[65%] h-[380px] lg:h-[600px] shrink-0">
+            <LoadingState variant="map" />
+          </div>
+        ) : filteredIssues.length > 0 ? (
           <div id="operations-map-container" className="w-full lg:w-[65%] h-[380px] lg:h-[600px] shrink-0 rounded-medium overflow-hidden border border-slate-200/80 shadow-subtle bg-white relative">
             <IssueMap
               issues={filteredIssues}
@@ -555,7 +559,7 @@ export const TrackerPage: React.FC = () => {
               className="w-full h-full"
             />
           </div>
-        )}
+        ) : null}
 
         {/* List of Cards (Right Column - Dynamic Flex-1 takes remaining 35%) */}
         <div className="flex-1 flex flex-col max-h-[600px] lg:overflow-y-auto pr-0 lg:pr-2 scrollbar-thin">

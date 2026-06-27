@@ -112,6 +112,15 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
               <span className="text-xs text-slate-700">Photo evidence noted — upload feature coming soon.</span>
             </motion.div>
           )}
+
+          {!submittedComment && !photoSubmitted && (
+            <div className="border border-dashed border-slate-200 rounded-medium p-4 text-center select-none bg-slate-50/50">
+              <span className="text-xs text-slate-500 block font-semibold mb-1">No community corroborations submitted yet</span>
+              <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto">
+                Be the first to confirm this issue or add your comments to strengthen the verified evidence trail!
+              </p>
+            </div>
+          )}
         </AnimatePresence>
 
         {/* Action Buttons */}

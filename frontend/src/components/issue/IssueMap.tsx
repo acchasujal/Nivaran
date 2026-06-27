@@ -4,6 +4,7 @@ import { getImageUrl } from '@/utils/getImageUrl';
 import { getLocalityName } from '@/utils/getLocalityName';
 import { humanizeIssueType } from '@/utils/issueHelpers';
 import { Loader2, AlertTriangle, Navigation } from 'lucide-react';
+import { loadGoogleMaps } from '@/utils/loadGoogleMaps';
 
 interface IssueMapProps {
   issues: Issue[];
@@ -63,45 +64,20 @@ export const IssueMap: React.FC<IssueMapProps> = ({
     });
   }, [issues]);
 
-  // Load Google Maps Script dynamically
+  // Load Google Maps Script dynamically using bulletproof loading utility
   useEffect(() => {
-    if ((window as any).google && (window as any).google.maps) {
-      setMapsLoaded(true);
-      return;
-    }
-
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-    const callbackName = 'initGoogleMapsCallback';
-    
-    // Set global callback
-    (window as any)[callbackName] = () => {
-      setMapsLoaded(true);
-      delete (window as any)[callbackName];
+    let active = true;
+    loadGoogleMaps()
+      .then(() => {
+        if (active) setMapsLoaded(true);
+      })
+      .catch((err) => {
+        console.error('Failed to load Google Maps script:', err);
+        if (active) setLoadError(true);
+      });
+    return () => {
+      active = false;
     };
-
-    const scriptId = 'google-maps-js-api';
-    let script = document.getElementById(scriptId) as HTMLScriptElement;
-
-    if (!script) {
-      script = document.createElement('script');
-      script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=${callbackName}`;
-      script.async = true;
-      script.defer = true;
-      script.onerror = () => {
-        setLoadError(true);
-      };
-      document.head.appendChild(script);
-    } else {
-      // Script is already injected but callback not triggered yet
-      const checkInterval = setInterval(() => {
-        if ((window as any).google && (window as any).google.maps) {
-          setMapsLoaded(true);
-          clearInterval(checkInterval);
-        }
-      }, 300);
-      return () => clearInterval(checkInterval);
-    }
   }, []);
 
   // Initialize Map
@@ -154,9 +130,13 @@ export const IssueMap: React.FC<IssueMapProps> = ({
     if (!mapInstance || !infoWindowRef.current) return;
 
     const g = (window as any).google;
+    let boundsListener: any = null;
 
-    // Clear existing markers
-    markersRef.current.forEach((marker) => marker.setMap(null));
+    // Clear existing markers and their listeners
+    markersRef.current.forEach((marker) => {
+      g.maps.event.clearInstanceListeners(marker);
+      marker.setMap(null);
+    });
     markersRef.current = [];
 
     if (groupedData.length === 0) {
@@ -258,11 +238,24 @@ export const IssueMap: React.FC<IssueMapProps> = ({
     } else {
       mapInstance.fitBounds(bounds);
       // Avoid excessive zooming on initialization
-      const listener = g.maps.event.addListener(mapInstance, 'bounds_changed', () => {
+      boundsListener = g.maps.event.addListener(mapInstance, 'bounds_changed', () => {
         if (mapInstance.getZoom()! > 16) mapInstance.setZoom(16);
-        g.maps.event.removeListener(listener);
+        if (boundsListener) {
+          g.maps.event.removeListener(boundsListener);
+          boundsListener = null;
+        }
       });
     }
+
+    return () => {
+      if (boundsListener) {
+        g.maps.event.removeListener(boundsListener);
+      }
+      markersRef.current.forEach((marker) => {
+        g.maps.event.clearInstanceListeners(marker);
+        marker.setMap(null);
+      });
+    };
   }, [groupedData, mapInstance]);
 
   // Center Map & Open InfoWindow when selectedIssueId changes from list interaction

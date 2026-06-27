@@ -457,9 +457,11 @@ export const IssueDetailPage: React.FC = () => {
                     <EscalationCard escalation={activeEscalation} />
                   </div>
                 ) : (
-                  <div className="border border-slate-200 bg-white rounded-medium p-6 text-center select-none shadow-subtle text-slate-500 text-xs">
-                    Authorized documents are queued for SendGrid transmission. Approve briefs to dispatch.
-                  </div>
+                  <EmptyState
+                    title="No Escalation Dispatched"
+                    description="Official brief packets have not been dispatched to target authorities yet. Review the compiled briefs in the drafts section and click 'Authorize' to prepare dispatch."
+                    icon={AlertTriangle}
+                  />
                 )}
               </div>
             )}
