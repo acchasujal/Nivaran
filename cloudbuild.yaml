@@ -48,6 +48,8 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      - '--build-arg'
+      - 'VITE_GOOGLE_MAPS_API_KEY=${_GOOGLE_MAPS_API_KEY}'
       - '-t'
       - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${COMMIT_SHA}'
       - '-t'
@@ -105,6 +107,7 @@ substitutions:
   _SERVICE_NAME: 'civicpulse'
   _SENDGRID_FROM_EMAIL: 'noreply@civicpulse.org'
   _LOG_LEVEL: 'info'
+  _GOOGLE_MAPS_API_KEY: ''
 
 options:
   logging: CLOUD_LOGGING_ONLY
