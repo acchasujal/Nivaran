@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Map, Plus, Filter, Users, ShieldAlert, Landmark, FileCheck, Clock, Activity, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -9,6 +9,8 @@ import { IssueCard } from '@/components/issue/IssueCard';
 import { IssueMap } from '@/components/issue/IssueMap';
 import { useIssues } from '@/api/queries';
 import { cn } from '@/lib/utils';
+import { getLocalityAndWard } from '@/utils/getLocalityName';
+import { humanizeIssueType } from '@/utils/issueHelpers';
 
 export const TrackerPage: React.FC = () => {
   const { data, isLoading, error, refetch } = useIssues();
@@ -121,8 +123,71 @@ export const TrackerPage: React.FC = () => {
   }
 
   const { issues, stats, silenceStats, clusterCounts } = processedData;
+  const [selectedWard, setSelectedWard] = useState<string | null>(null);
 
-  // Filter issues client-side based on Category and Risk
+  // Compute Ward Pattern Intelligence dynamically from live data
+  const wardStats = useMemo(() => {
+    const wards: Record<string, {
+      wardName: string;
+      totalReports: number;
+      clusterIds: Set<string>;
+      issueTypes: Record<string, number>;
+      verifiedCount: number;
+      escalatedCount: number;
+    }> = {};
+
+    issues.forEach((issue) => {
+      const { ward } = getLocalityAndWard(issue.latitude, issue.longitude);
+      if (ward === 'Unknown Ward') return;
+
+      if (!wards[ward]) {
+        wards[ward] = {
+          wardName: ward,
+          totalReports: 0,
+          clusterIds: new Set<string>(),
+          issueTypes: {},
+          verifiedCount: 0,
+          escalatedCount: 0,
+        };
+      }
+
+      const w = wards[ward];
+      w.totalReports += 1;
+      if (issue.cluster_id) {
+        w.clusterIds.add(issue.cluster_id);
+      }
+      w.issueTypes[issue.issue_type] = (w.issueTypes[issue.issue_type] || 0) + 1;
+      if (issue.credibility_score >= 0.8) {
+        w.verifiedCount += 1;
+      }
+      if (issue.status === 'escalated') {
+        w.escalatedCount += 1;
+      }
+    });
+
+    return Object.values(wards).map((w) => {
+      let highestCount = 0;
+      let highestRiskCategory = 'N/A';
+      Object.entries(w.issueTypes).forEach(([type, count]) => {
+        if (count > highestCount) {
+          highestCount = count;
+          highestRiskCategory = type;
+        }
+      });
+
+      return {
+        wardName: w.wardName,
+        totalReports: w.totalReports,
+        clusterCount: w.clusterIds.size,
+        issueTypes: w.issueTypes,
+        highestRiskCategory,
+        verifiedCount: w.verifiedCount,
+        escalatedCount: w.escalatedCount,
+      };
+    });
+  }, [issues]);
+
+  // Filter issues client-side based on Category, Risk, and Ward
   const filteredIssues = issues.filter((issue) => {
     const typeMatch = selectedType === 'all' || issue.issue_type === selectedType;
     
@@ -130,13 +195,20 @@ export const TrackerPage: React.FC = () => {
     if (selectedRisk === 'high') riskMatch = issue.severity >= 4;
     else if (selectedRisk === 'moderate') riskMatch = issue.severity === 3;
     else if (selectedRisk === 'low') riskMatch = issue.severity <= 2;
+
+    let wardMatch = true;
+    if (selectedWard) {
+      const { ward } = getLocalityAndWard(issue.latitude, issue.longitude);
+      wardMatch = ward === selectedWard;
+    }
     
-    return typeMatch && riskMatch;
+    return typeMatch && riskMatch && wardMatch;
   });
 
   const clearAllFilters = () => {
     const params = new URLSearchParams();
     setSearchParams(params);
+    setSelectedWard(null);
   };
 
   return (
@@ -235,6 +307,76 @@ export const TrackerPage: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Ward Pattern Intelligence Sub-Section */}
+          <div className="border-t border-slate-100 bg-slate-50/10">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 select-none">
+              <div className="flex items-center gap-2">
+                <Map size={14} className="text-teal-600" />
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Ward Pattern Intelligence</span>
+              </div>
+              <span className="text-[9px] text-slate-400">Click a ward card below to filter the operations map & reports list</span>
+            </div>
+            
+            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {wardStats.map((w) => {
+                const isSelected = selectedWard === w.wardName;
+                return (
+                  <div
+                    key={w.wardName}
+                    onClick={() => setSelectedWard(isSelected ? null : w.wardName)}
+                    className={cn(
+                      "transition-all border rounded-medium p-4 cursor-pointer select-none space-y-3",
+                      isSelected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary shadow-sm"
+                        : "border-slate-200 bg-white hover:border-slate-350 hover:shadow-subtle"
+                    )}
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <span className="text-xs font-bold text-slate-800">{w.wardName}</span>
+                      {isSelected ? (
+                        <span className="text-[8px] font-bold bg-primary text-white px-1.5 py-0.5 rounded uppercase tracking-wider">Active Filter</span>
+                      ) : (
+                        <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-wider">Select Ward</span>
+                      )}
+                    </div>
+
+                    {/* Issue Type Distribution List */}
+                    <div className="space-y-1.5 min-h-[85px] flex flex-col justify-center">
+                      {Object.entries(w.issueTypes).map(([type, count]) => (
+                        <div key={type} className="flex justify-between items-center text-[10px] text-slate-500 font-sans">
+                          <span>{humanizeIssueType(type, '')}</span>
+                          <div className="flex-1 border-b border-dotted border-slate-200 mx-2" />
+                          <span className="font-bold text-slate-700">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-2.5 flex flex-col gap-1 text-[9px] text-slate-450 leading-relaxed">
+                      <div className="flex justify-between">
+                        <span>Total Reports:</span>
+                        <strong className="text-slate-700 font-bold">{w.totalReports}</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Clusters:</span>
+                        <strong className="text-slate-700 font-bold">{w.clusterCount}</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Highest Risk:</span>
+                        <strong className="text-slate-700 font-bold text-rose-700">{humanizeIssueType(w.highestRiskCategory, '')}</strong>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-100/50 pt-1 mt-1">
+                        <span>Verified / Escalated:</span>
+                        <strong className="text-slate-700 font-bold">
+                          {w.verifiedCount} / {w.escalatedCount}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -272,6 +414,19 @@ export const TrackerPage: React.FC = () => {
               <option value="low">Low (Sev 1-2)</option>
             </select>
           </div>
+
+          {selectedWard && (
+            <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary px-2.5 py-1.5 rounded-small text-xs font-bold font-sans">
+              <span>Ward: {selectedWard}</span>
+              <button
+                type="button"
+                onClick={() => setSelectedWard(null)}
+                className="hover:bg-primary/25 rounded p-0.5 ml-1 transition-colors text-primary/80 hover:text-primary cursor-pointer border-none bg-transparent flex items-center justify-center font-bold text-[9px] leading-none"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="text-[10px] font-bold text-slate-450 uppercase tracking-widest font-sans">
