@@ -333,7 +333,7 @@ export const TrackerPage: React.FC = () => {
       ) : (
         <div className="mt-6 space-y-6 animate-fade">
           {/* AI Civic Insights Card */}
-          <div className="border border-slate-200 bg-white rounded-medium shadow-subtle overflow-hidden">
+          <div id="ai-civic-insights-card" className="border border-slate-200 bg-white rounded-medium shadow-subtle overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 select-none">
               <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-primary animate-pulse shrink-0" />
@@ -355,7 +355,7 @@ export const TrackerPage: React.FC = () => {
           </div>
 
           {/* Public Transparency Dashboard Stats Card */}
-          <div className="border border-slate-200 bg-white rounded-medium shadow-subtle overflow-hidden">
+          <div id="transparency-dashboard-stats" className="border border-slate-200 bg-white rounded-medium shadow-subtle overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 select-none">
               <div className="flex items-center gap-2">
                 <Activity size={14} className="text-primary" />
@@ -384,7 +384,7 @@ export const TrackerPage: React.FC = () => {
             </div>
 
             {/* Cross-Issue Silence Ledger Sub-Section */}
-            <div className="bg-slate-50/30">
+            <div id="silence-ledger-container" className="bg-slate-50/30">
               <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 select-none">
                 <div className="flex items-center gap-2">
                   <AlertCircle size={14} className="text-rose-600" />
@@ -416,7 +416,7 @@ export const TrackerPage: React.FC = () => {
             </div>
 
             {/* Ward Pattern Intelligence Sub-Section */}
-            <div className="border-t border-slate-100 bg-slate-50/10">
+            <div id="ward-pattern-container" className="border-t border-slate-100 bg-slate-50/10">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 select-none">
                 <div className="flex items-center gap-2">
                   <Map size={14} className="text-teal-600" />
@@ -547,7 +547,7 @@ export const TrackerPage: React.FC = () => {
       <div className="py-6 flex-1 flex flex-col lg:flex-row gap-6">
         {/* Map Visualization (Left Column - Prioritized) */}
         {!isLoading && filteredIssues.length > 0 && (
-          <div className="w-full lg:w-[65%] h-[380px] lg:h-[600px] shrink-0 rounded-medium overflow-hidden border border-slate-200/80 shadow-subtle bg-white relative">
+          <div id="operations-map-container" className="w-full lg:w-[65%] h-[380px] lg:h-[600px] shrink-0 rounded-medium overflow-hidden border border-slate-200/80 shadow-subtle bg-white relative">
             <IssueMap
               issues={filteredIssues}
               selectedIssueId={selectedIssueId}

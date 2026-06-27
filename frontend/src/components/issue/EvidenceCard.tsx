@@ -92,7 +92,7 @@ export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">
                 Visual Evidence
               </span>
-              <div className="flex flex-wrap items-center gap-2">
+              <div id="evidence-integrity-badge" className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-bold text-secondary-foreground font-sans tracking-tight">
                   {humanizeIssueType(issue.issue_type, issue.description)}
                 </h3>

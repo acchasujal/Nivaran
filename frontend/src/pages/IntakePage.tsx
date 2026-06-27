@@ -373,7 +373,7 @@ export const IntakePage: React.FC = () => {
         </div>
       ) : (
         /* Form stepper intake flow view */
-        <div className="max-w-3xl mx-auto w-full py-6 space-y-8">
+        <div id="intake-form-container" className="max-w-3xl mx-auto w-full py-6 space-y-8">
           {/* Quick value proposition (First 30 seconds check) */}
           <div className="border border-slate-200 bg-white rounded-medium p-5 shadow-subtle flex items-start gap-4 select-none">
             <span className="p-2.5 rounded bg-teal-50 text-primary border border-teal-200 shrink-0">

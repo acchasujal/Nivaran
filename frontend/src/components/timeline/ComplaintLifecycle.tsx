@@ -194,7 +194,7 @@ export const ComplaintLifecycle: React.FC<ComplaintLifecycleProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[9px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded uppercase tracking-wider select-none flex items-center">
+          <span id="government-response-tracker" className="text-[9px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded uppercase tracking-wider select-none flex items-center">
             Response Tracker
             <HelpTooltip text="Tracks expected progress after complaint generation to encourage transparency." />
           </span>

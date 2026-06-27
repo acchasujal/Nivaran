@@ -167,7 +167,9 @@ export const IssueDetailPage: React.FC = () => {
 
       {issue && (
         <div className="max-w-4xl mx-auto w-full px-4 md:px-0 pt-6 space-y-4">
-          <AiRecommendations issue={issue} cluster={cluster} />
+          <div id="ai-recommendations-container">
+            <AiRecommendations issue={issue} cluster={cluster} />
+          </div>
           <LatestUpdateCard
             issue={issue}
             actionDrafts={action_drafts}
@@ -246,7 +248,7 @@ export const IssueDetailPage: React.FC = () => {
             
             <div className="border border-slate-200 bg-white rounded-medium p-6 md:p-8 shadow-subtle space-y-8">
               {/* Technical Pipeline */}
-              <div className="space-y-4">
+              <div id="agent-timeline-container" className="space-y-4">
                 <div className="space-y-1 border-b border-slate-100 pb-4 select-none">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     AI Agent Processing Pipeline
@@ -270,7 +272,7 @@ export const IssueDetailPage: React.FC = () => {
               
               {/* Complaint Lifecycle */}
               {issue && (
-                <div className="border-t border-slate-100 pt-6">
+                <div id="accountability-timeline-container" className="border-t border-slate-100 pt-6">
                   <ComplaintLifecycle
                     issue={issue}
                     actionDrafts={action_drafts}
@@ -389,19 +391,21 @@ export const IssueDetailPage: React.FC = () => {
             {isLoading ? (
               <LoadingState variant="document-viewer" />
             ) : action_drafts && action_drafts.length > 0 && issue ? (
-              <DraftViewer
-                drafts={action_drafts.map(d => ({
-                  ...d,
-                  cluster_id: cluster?.id || '',
-                  created_at: issue.created_at
-                }))}
-                onApprove={handleApproveClick}
-                onReject={handleRejectClick}
-                onEscalate={handleEscalateClick}
-                isSubmitting={approveDraftMutation.isPending || escalateDraftMutation.isPending}
-                issue={issue}
-                issueId={issueId}
-              />
+              <div id="complaint-draft-workspace">
+                <DraftViewer
+                  drafts={action_drafts.map(d => ({
+                    ...d,
+                    cluster_id: cluster?.id || '',
+                    created_at: issue.created_at
+                  }))}
+                  onApprove={handleApproveClick}
+                  onReject={handleRejectClick}
+                  onEscalate={handleEscalateClick}
+                  isSubmitting={approveDraftMutation.isPending || escalateDraftMutation.isPending}
+                  issue={issue}
+                  issueId={issueId}
+                />
+              </div>
             ) : (
               <EmptyState
                 title="Action Briefs Pending"
@@ -443,16 +447,20 @@ export const IssueDetailPage: React.FC = () => {
                 <div className="h-4 bg-slate-200 rounded w-1/3" />
                 <div className="h-8 bg-slate-200 rounded w-24" />
               </div>
-            ) : activeEscalation ? (
-              <div className="space-y-2 select-none">
-                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">
-                  Sendgrid HTTP API logs
-                </h4>
-                <EscalationCard escalation={activeEscalation} />
-              </div>
             ) : (
-              <div className="border border-slate-200 bg-white rounded-medium p-6 text-center select-none shadow-subtle text-slate-500 text-xs">
-                Authorized documents are queued for SendGrid transmission. Approve briefs to dispatch.
+              <div id="pdf-email-actions">
+                {activeEscalation ? (
+                  <div className="space-y-2 select-none">
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">
+                      Sendgrid HTTP API logs
+                    </h4>
+                    <EscalationCard escalation={activeEscalation} />
+                  </div>
+                ) : (
+                  <div className="border border-slate-200 bg-white rounded-medium p-6 text-center select-none shadow-subtle text-slate-500 text-xs">
+                    Authorized documents are queued for SendGrid transmission. Approve briefs to dispatch.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -473,7 +481,9 @@ export const IssueDetailPage: React.FC = () => {
             </div>
 
             {issue && (
-              <CommunityVerification issueId={issueId} />
+              <div id="community-verification-container">
+                <CommunityVerification issueId={issueId} />
+              </div>
             )}
           </div>
         </div>
