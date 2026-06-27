@@ -187,7 +187,14 @@ export const IssueDetailPage: React.FC = () => {
                 <span className="text-xs text-slate-400">Loading visual evidence...</span>
               </div>
             ) : (
-              <EvidenceCard issue={issue} />
+              <EvidenceCard
+                issue={issue}
+                imageIntegrityStatus={data?.image_integrity_status}
+                imageIntegritySimilarity={data?.image_integrity_similarity}
+                verificationSimilarity={data?.verification_similarity}
+                verificationThreshold={data?.verification_threshold}
+                verificationDecision={data?.verification_decision}
+              />
             )}
           </div>
         </div>

@@ -74,6 +74,11 @@ export interface IssueDetailResponse {
   cluster: Cluster | null;
   impact_summary: ImpactSummary | null;
   action_drafts: ActionDraft[];
+  image_integrity_status?: string | null;
+  image_integrity_similarity?: number | null;
+  verification_similarity?: number | null;
+  verification_threshold?: number | null;
+  verification_decision?: string | null;
 }
 
 export interface ClusterDetailResponse {

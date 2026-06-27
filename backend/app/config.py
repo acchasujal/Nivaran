@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     SENDGRID_FROM_EMAIL: str = "noreply@civicpulse.org"
     AGENT5_PDF_FALLBACK: bool = True
+    APP_BASE_URL: str = ""
 
     @property
     def threshold(self) -> int:

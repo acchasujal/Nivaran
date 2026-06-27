@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, CheckCircle2, ShieldCheck, AlertCircle, Sparkles } from 'lucide-react';
+import { Camera, MapPin, CheckCircle2, ShieldCheck, AlertCircle, Sparkles, Network } from 'lucide-react';
 import type { Issue } from '@/api/types';
 import { getImageUrl } from '@/utils/getImageUrl';
 import { getLocalityName } from '@/utils/getLocalityName';
@@ -12,9 +12,22 @@ import { cn } from '@/lib/utils';
 interface EvidenceCardProps {
   issue: Issue;
   className?: string;
+  imageIntegrityStatus?: string | null;
+  imageIntegritySimilarity?: number | null;
+  verificationSimilarity?: number | null;
+  verificationThreshold?: number | null;
+  verificationDecision?: string | null;
 }
 
-export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({ issue, className }) => {
+export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({
+  issue,
+  className,
+  imageIntegrityStatus,
+  imageIntegritySimilarity,
+  verificationSimilarity,
+  verificationThreshold,
+  verificationDecision,
+}) => {
   const [loaded, setLoaded] = useState(false);
 
   // Trust model factors based on actual issue metrics
@@ -83,11 +96,35 @@ export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({ issue, clas
                 </h3>
                 {issue.credibility_score >= 0.8 && (
                   <span 
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-teal-400 border border-teal-500/20 backdrop-blur-sm shadow-sm select-none"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-teal-400 border border-teal-500/20 backdrop-blur-sm shadow-sm select-none"
                     title="Image quality and classification confidence (AI-assessed)"
                   >
                     <Sparkles size={9} className="text-teal-400 fill-teal-400" />
                     <span>AI Verified ({Math.round(issue.credibility_score * 100)}%)</span>
+                  </span>
+                )}
+                {imageIntegrityStatus === "Original Evidence" && (
+                  <span 
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/50 shadow-sm select-none"
+                    title="No visual duplicates detected in public database"
+                  >
+                    <span>✓ Original Evidence</span>
+                  </span>
+                )}
+                {imageIntegrityStatus === "Similar Evidence Detected" && (
+                  <span 
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-250/50 shadow-sm select-none"
+                    title="Perceptual hashing detected similar image structure in database"
+                  >
+                    <span>⚠ Similar Evidence ({imageIntegritySimilarity}%)</span>
+                  </span>
+                )}
+                {imageIntegrityStatus === "Possible Duplicate Evidence" && (
+                  <span 
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/50 shadow-sm select-none"
+                    title="Perceptual hashing detected highly matching image in database"
+                  >
+                    <span>⚠ Possible Duplicate ({imageIntegritySimilarity}%)</span>
                   </span>
                 )}
               </div>
@@ -175,6 +212,46 @@ export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({ issue, clas
               </div>
             ))}
           </div>
+
+          {/* Agent 2 Deduplication Explainer block */}
+          {verificationDecision && (
+            <div className="bg-slate-50/65 p-4 border-t border-slate-200 space-y-2.5">
+              <div className="flex items-center gap-1.5 select-none">
+                <Network size={14} className="text-primary shrink-0" />
+                <span className="text-[10px] font-bold text-slate-750 uppercase tracking-wider">
+                  Agent 2 Deduplication Reasoning
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="bg-white p-2.5 rounded border border-slate-200/60 shadow-sm">
+                  <span className="text-[9px] font-bold text-slate-400 block uppercase leading-none mb-1">
+                    Similarity Score
+                  </span>
+                  <span className="font-bold text-slate-800">
+                    {verificationSimilarity !== undefined && verificationSimilarity !== null && verificationSimilarity > 0
+                      ? `${Math.round(verificationSimilarity * 100)}%` 
+                      : 'N/A (First Report)'}
+                  </span>
+                </div>
+                <div className="bg-white p-2.5 rounded border border-slate-200/60 shadow-sm">
+                  <span className="text-[9px] font-bold text-slate-400 block uppercase leading-none mb-1">
+                    Merge Threshold
+                  </span>
+                  <span className="font-bold text-slate-800">
+                    {verificationThreshold !== undefined && verificationThreshold !== null
+                      ? `${Math.round(verificationThreshold * 100)}%` 
+                      : '60%'}
+                  </span>
+                </div>
+              </div>
+              <div className="text-xs text-slate-600 leading-relaxed bg-white p-3 rounded border border-slate-200/65 shadow-sm font-medium">
+                <span className="font-bold text-slate-850 block text-[9px] uppercase tracking-wider mb-1">
+                  Decision Detail
+                </span>
+                {verificationDecision}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

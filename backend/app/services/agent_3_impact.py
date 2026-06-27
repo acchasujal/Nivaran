@@ -250,10 +250,40 @@ async def generate_merged_impact_and_drafts(
                 system_instruction=system_instruction
             )
 
+        # Define policy notes and ledger sections
+        from app.config import settings
+        policy_impact_note = (
+            " (Note: Under standard public grievance frameworks, municipal authorities are expected to address local safety hazards. "
+            "Unresolved cases are subject to escalation under the Right to Information Act, 2005.)"
+        )
+        policy_complaint_note = (
+            "\n\n---\n"
+            "Public Grievance Redressal Reference:\n"
+            "In accordance with standard government grievance guidelines (Department of Administrative Reforms and Public Grievances - DARPG / CPGRAMS), "
+            "public infrastructure failures must be addressed in a time-bound manner by the responsible municipal authority."
+        )
+        policy_rti_note = (
+            "\n\n---\n"
+            "RTI Act 2005 Policy Note:\n"
+            "Under Section 7(1) of the Right to Information (RTI) Act, 2005, public authorities are statutorily required to respond to "
+            "information requests concerning public infrastructure and maintenance records within 30 days of receipt."
+        )
+        
+        # Public Evidence Ledger Link
+        tracker_url = settings.APP_BASE_URL.rstrip('/') + "/tracker" if getattr(settings, "APP_BASE_URL", "") else ""
+        ledger_section = (
+            "\n\n---\n"
+            "Public Evidence Ledger\n\n"
+            "This complaint is supported by timestamped citizen-submitted evidence processed through CivicPulse's AI verification pipeline."
+        )
+        if tracker_url:
+            ledger_section += f"\n\nTrack updates:\n{tracker_url}"
+
         # Save/Update ImpactSummary
+        potential_consequences_text = result.impact.potential_consequences
         if db_summary:
             db_summary.affected_area_description = result.impact.affected_area_description
-            db_summary.potential_consequences = result.impact.potential_consequences
+            db_summary.potential_consequences = potential_consequences_text
             db_summary.risk_level = risk_level
             db_summary.evidence_count = evidence_count
             db_summary.generated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -262,7 +292,7 @@ async def generate_merged_impact_and_drafts(
             db_summary = ImpactSummary(
                 cluster_id=cluster_id,
                 affected_area_description=result.impact.affected_area_description,
-                potential_consequences=result.impact.potential_consequences,
+                potential_consequences=potential_consequences_text,
                 risk_level=risk_level,
                 evidence_count=evidence_count,
                 generated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -280,14 +310,14 @@ async def generate_merged_impact_and_drafts(
             ActionDraft(
                 cluster_id=cluster_id,
                 draft_type="complaint",
-                content=result.drafts.complaint_draft,
+                content=result.drafts.complaint_draft + policy_complaint_note + ledger_section,
                 status="pending_review",
                 created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             ),
             ActionDraft(
                 cluster_id=cluster_id,
                 draft_type="rti",
-                content=result.drafts.rti_draft,
+                content=result.drafts.rti_draft + policy_rti_note + ledger_section,
                 status="pending_review",
                 created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             ),
