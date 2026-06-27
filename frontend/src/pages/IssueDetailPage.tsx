@@ -355,6 +355,8 @@ export const IssueDetailPage: React.FC = () => {
                 onReject={handleRejectClick}
                 onEscalate={handleEscalateClick}
                 isSubmitting={approveDraftMutation.isPending || escalateDraftMutation.isPending}
+                issue={issue}
+                issueId={issueId}
               />
             ) : (
               <EmptyState

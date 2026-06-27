@@ -83,6 +83,30 @@ export const useApproveDraft = (issueId: string) => {
   });
 };
 
+// Update action draft content and/or status
+export const useUpdateDraft = (issueId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation<ActionDraft, Error, { draftId: string; status?: string; content?: string }>({
+    mutationFn: async ({ draftId, status, content }) => {
+      const response = await apiClient.patch<ActionDraft>(`/action-drafts/${draftId}`, { status, content });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
+    },
+  });
+};
+
+// Improve draft content via Gemini
+export const useImproveDraft = () => {
+  return useMutation<{ refined_text: string }, Error, { draftId: string; content: string; prompt?: string }>({
+    mutationFn: async ({ draftId, content, prompt }) => {
+      const response = await apiClient.post<{ refined_text: string }>(`/action-drafts/${draftId}/improve`, { content, prompt });
+      return response.data;
+    },
+  });
+};
+
 // Trigger escalation (POST /escalations)
 export const useEscalateDraft = (issueId: string) => {
   const queryClient = useQueryClient();
