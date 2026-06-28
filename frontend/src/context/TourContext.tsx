@@ -1,27 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/api/client';
+import { useLocation } from 'react-router-dom';
 import { tourSteps } from '@/data/tourConfig';
 import type { TourStep } from '@/data/tourConfig';
 
-export type TourFsmState =
-  | 'IDLE'
-  | 'CLEANUP'
-  | 'NAVIGATING'
-  | 'WAITING_FOR_ROUTE'
-  | 'WAITING_FOR_SUSPENSE'
-  | 'WAITING_FOR_RENDER'
-  | 'WAITING_FOR_TARGET'
-  | 'SCROLLING'
-  | 'MEASURING'
-  | 'HIGHLIGHTING'
-  | 'TOOLTIP_VISIBLE'
-  | 'COMPLETED'
-  | 'FAILED_RECOVERY';
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-export type TourStatus = 'idle' | 'welcome' | 'loading' | 'active' | 'error';
-export type StepState = 'waiting-route' | 'waiting-target' | 'ready';
+export type TourStatus = 'idle' | 'active' | 'completed';
 
 export interface TourEvent {
   timestamp: string;
@@ -30,30 +14,24 @@ export interface TourEvent {
 }
 
 interface TourContextType {
-  // Granular FSM State
-  fsmState: TourFsmState;
-  
-  // Backward compatibility fields
+  // State
   status: TourStatus;
-  stepState: StepState;
   currentStepIndex: number;
   steps: TourStep[];
   isActive: boolean;
   showWelcome: boolean;
-  
-  // Target registry
+  isValidated: boolean;
+  validationTimedOut: boolean;
+
+  // Target registry (kept for page-level registration)
   registerTourTarget: (id: string, el: HTMLElement | null) => void;
   targetRegistry: React.MutableRefObject<Map<string, HTMLElement>>;
+  getTargetElement: (targetId: string) => HTMLElement | null;
 
-  // Overlay state coordinates & styles
-  highlightStyle: React.CSSProperties | null;
-  toastMessage: string | null;
+  // Spotlight
+  highlightRect: DOMRect | null;
 
-  // Route transition state
-  isTransitioning: boolean;
-  transitionMessage: string | null;
-
-  // Issue dynamic tracking
+  // Issue tracking (passive — read from URL only)
   resolvedIssueId: string | null;
   onIssueSubmitted: (id: string) => void;
 
@@ -64,71 +42,69 @@ interface TourContextType {
   skipTour: () => void;
   dontShowAgain: () => void;
   restartTour: () => void;
-  errorMsg: string | null;
+  jumpToStep: (index: number) => void;
 
-  // Debugging & Observability
+  // Dev debug
   events: TourEvent[];
   addEvent: (type: string, details?: string) => void;
-  retryCount: number;
-  getTargetElement: (targetId: string) => HTMLElement | null;
+
+  // Legacy compat
+  fsmState: string;
+  stepState: 'ready';
+  retryCount: 0;
+  highlightStyle: null;
+  toastMessage: null;
+  isTransitioning: false;
+  transitionMessage: null;
+  errorMsg: null;
   validateTarget: (el: HTMLElement | null) => boolean;
 }
 
+// ─── Context ───────────────────────────────────────────────────────────────────
+
 const TourContext = createContext<TourContextType | undefined>(undefined);
 
-export const stepsConfig = tourSteps; // Backward-compatible export alias
+export const stepsConfig = tourSteps;
+
+// ─── Provider ──────────────────────────────────────────────────────────────────
+
+const SKIP_TIMEOUT_MS = 30_000;
+const VALIDATION_INTERVAL_MS = 500;
 
 export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const queryClient = useQueryClient();
 
-  const [fsmState, setFsmState] = useState<TourFsmState>('IDLE');
+  const [status, setStatus] = useState<TourStatus>('idle');
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [retryCount, setRetryCount] = useState(0);
-  const [highlightStyle, setHighlightStyle] = useState<React.CSSProperties | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+  const [isValidated, setIsValidated] = useState(false);
+  const [validationTimedOut, setValidationTimedOut] = useState(false);
+
+  // Resolved issue ID — read from URL or set via onIssueSubmitted
   const [resolvedIssueId, setResolvedIssueId] = useState<string | null>(null);
-  const [errorMsg] = useState<string | null>(null);
 
-  // Debug event history log
+  // Dev event log
   const eventsRef = useRef<TourEvent[]>([]);
-
-  // Refs for tracking mutable states without re-triggering effects
   const targetRegistry = useRef<Map<string, HTMLElement>>(new Map());
-  const recentlySubmittedIssueIdRef = useRef<string | null>(null);
-  const targetRouteRef = useRef<string>('');
-  const activeAbortControllerRef = useRef<AbortController | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const validationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const skipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const step = tourSteps[currentStepIndex];
 
-  // Helper: check if dismissed on mount
+  // ── Passive URL tracking: extract issue ID from pathname ──────────────────
   useEffect(() => {
-    const dismissed = localStorage.getItem('civicpulse-tour-dismissed');
-    if (dismissed === 'true') {
-      setFsmState('IDLE');
-    } else {
-      setFsmState('IDLE');
-    }
-  }, []);
-
-  // Listen to path changes to automatically capture submitted issue IDs
-  useEffect(() => {
-    const pathMatch = location.pathname.match(/\/issue\/([^/]+)/);
-    if (pathMatch && pathMatch[1] && pathMatch[1] !== ':id') {
-      recentlySubmittedIssueIdRef.current = pathMatch[1];
+    const match = location.pathname.match(/\/issue\/([^/]+)/);
+    if (match && match[1] && match[1] !== ':id') {
+      setResolvedIssueId(match[1]);
     }
   }, [location.pathname]);
 
-  // Expose manual submission callback
   const onIssueSubmitted = useCallback((id: string) => {
-    recentlySubmittedIssueIdRef.current = id;
-    window.dispatchEvent(new CustomEvent('tour-report-submitted', { detail: { id } }));
+    setResolvedIssueId(id);
   }, []);
 
-  // Debug Logger Helper
+  // ── Dev logger ────────────────────────────────────────────────────────────
   const addEvent = useCallback((type: string, details?: string) => {
     if (!import.meta.env.DEV) return;
     const timestamp = new Date().toLocaleTimeString();
@@ -136,641 +112,212 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.dispatchEvent(new CustomEvent('tour-debug-event'));
   }, []);
 
-  // Prune disconnected DOM targets
-  const pruneStaleTargets = useCallback(() => {
-    let prunedAny = false;
-    for (const [id, el] of targetRegistry.current.entries()) {
-      if (!el || !el.isConnected) {
-        targetRegistry.current.delete(id);
-        prunedAny = true;
-        addEvent('TARGET_PRUNED', `Stale ID pruned: ${id}`);
-      }
-    }
-    return prunedAny;
-  }, [addEvent]);
-
-  // Target registration handler
+  // ── Target registration ───────────────────────────────────────────────────
   const registerTourTarget = useCallback((id: string, el: HTMLElement | null) => {
-    const existing = targetRegistry.current.get(id) || null;
-    if (existing === el) {
-      return; // Do nothing if reference hasn't changed to prevent React update loops
-    }
-
-    pruneStaleTargets();
+    const existing = targetRegistry.current.get(id);
+    if (existing === el) return; // No-op if unchanged
     if (el) {
       targetRegistry.current.set(id, el);
-      addEvent('TARGET_REGISTERED', `ID: ${id}`);
+      addEvent('TARGET_REGISTERED', id);
     } else {
       targetRegistry.current.delete(id);
-      addEvent('TARGET_UNREGISTERED', `ID: ${id}`);
     }
-    // Dispatch a custom event so FSM waiting for target reacts instantly
-    window.dispatchEvent(new CustomEvent('tour-target-registered', { detail: { id, element: el } }));
-  }, [pruneStaleTargets, addEvent]);
+    // Signal for spotlight refresh
+    window.dispatchEvent(new CustomEvent('tour-target-registered', { detail: { id } }));
+  }, [addEvent]);
 
-  // Map FSM states to backward compatible fields
-  const status: TourStatus =
-    fsmState === 'IDLE'
-      ? 'idle'
-      : fsmState === 'FAILED_RECOVERY'
-      ? 'error'
-      : fsmState === 'WAITING_FOR_ROUTE' || fsmState === 'NAVIGATING'
-      ? 'loading'
-      : 'active';
+  const getTargetElement = useCallback((targetId: string): HTMLElement | null => {
+    const registered = targetRegistry.current.get(targetId);
+    if (registered && registered.isConnected) return registered;
 
-  const stepState: StepState =
-    fsmState === 'TOOLTIP_VISIBLE'
-      ? 'ready'
-      : fsmState === 'WAITING_FOR_ROUTE'
-      ? 'waiting-route'
-      : 'waiting-target';
-
-  const isActive = fsmState !== 'IDLE' && fsmState !== 'COMPLETED';
-  const showWelcome = fsmState === 'IDLE' && !localStorage.getItem('civicpulse-tour-dismissed');
-
-  // Resolve dynamic route issue parameter using priority fallback chain
-  const resolveDynamicIssueId = async (): Promise<string> => {
-    if (recentlySubmittedIssueIdRef.current) {
-      return recentlySubmittedIssueIdRef.current;
-    }
-    const pathParts = window.location.pathname.match(/\/issue\/([^/]+)/);
-    if (pathParts && pathParts[1] && pathParts[1] !== ':id') {
-      return pathParts[1];
-    }
-    try {
-      const cached = queryClient.getQueryData<any>(['issues', {}]);
-      if (cached && cached.issues && cached.issues.length > 0) {
-        return cached.issues[0].id;
-      }
-    } catch (e) {}
-    try {
-      const res = await apiClient.get<any>('/issues');
-      if (res.data && res.data.issues && res.data.issues.length > 0) {
-        return res.data.issues[0].id;
-      }
-    } catch (e) {}
-    return 'iss-001';
-  };
-
-  const getTargetElement = (targetId: string): HTMLElement | null => {
-    const el = targetRegistry.current.get(targetId);
-    if (el && el.isConnected) {
-      return el;
-    }
-    const currentStep = tourSteps.find(s => s.targetId === targetId);
-    if (currentStep && currentStep.selector) {
-      const elFromSelector = document.querySelector(currentStep.selector) as HTMLElement;
-      if (elFromSelector) {
-        return elFromSelector;
-      }
+    // Fallback to CSS selector from config
+    const stepConfig = tourSteps.find(s => s.targetId === targetId);
+    if (stepConfig?.selector) {
+      const el = document.querySelector(stepConfig.selector) as HTMLElement | null;
+      if (el) return el;
     }
     return null;
-  };
+  }, []);
 
-  const validateTarget = (el: HTMLElement | null): boolean => {
-    if (!el) return false;
-    if (!el.isConnected) return false;
-
+  const validateTarget = useCallback((el: HTMLElement | null): boolean => {
+    if (!el || !el.isConnected) return false;
     const rect = el.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return false;
-
     const style = window.getComputedStyle(el);
-    if (
-      style.display === 'none' ||
-      style.visibility === 'hidden' ||
-      parseFloat(style.opacity || '1') === 0
-    ) {
-      return false;
-    }
-
-    if (el.hasAttribute('data-loading') || el.querySelector('[data-loading]')) {
-      return false;
-    }
-
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
     return true;
-  };
+  }, []);
 
-  const getTransitionMessageForRoute = (route: string): string => {
-    if (route === '/') return 'Opening Incident Report Intake...';
-    if (route === '/tracker') return 'Loading Operations Tracker...';
-    if (route.startsWith('/issue/')) return 'Opening Case Operation File...';
-    return 'Navigating...';
-  };
-
-  const lockScrolling = () => {
-    document.body.style.overflow = 'hidden';
-  };
-
-  const restoreScrolling = () => {
-    document.body.style.overflow = '';
-  };
-
-  // Dev Global API attachment
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      (window as any).__TOUR__ = {
-        state: fsmState,
-        step: tourSteps[currentStepIndex],
-        registry: targetRegistry.current,
-        events: eventsRef.current,
-        next: () => nextStep(),
-        back: () => prevStep(),
-        restart: () => restartTour(),
-        skip: () => skipTour(),
-        highlight: (id: string) => {
-          const el = getTargetElement(id);
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            setHighlightStyle({
-              top: `${rect.top + window.scrollY - 8}px`,
-              left: `${rect.left + window.scrollX - 8}px`,
-              width: `${rect.width + 16}px`,
-              height: `${rect.height + 16}px`,
-              position: 'absolute',
-            });
-          }
-        }
-      };
+  // ── Spotlight: single passive RAF loop, only runs while active ────────────
+  const updateSpotlight = useCallback(() => {
+    if (!step) { setHighlightRect(null); return; }
+    const el = getTargetElement(step.targetId);
+    if (el && el.isConnected) {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setHighlightRect(rect);
+      } else {
+        setHighlightRect(null);
+      }
+    } else {
+      setHighlightRect(null);
     }
-    return () => {
-      if (import.meta.env.DEV) {
-        delete (window as any).__TOUR__;
-      }
-    };
-  }, [fsmState, currentStepIndex]);
+  }, [step, getTargetElement]);
 
-  // Promise-based Synchronization Helpers
-  const waitForRoute = (targetRoute: string, abortSignal: AbortSignal, timeoutMs = 3000): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (location.pathname === targetRoute) {
-        resolve();
-        return;
-      }
-
-      const checkInterval = setInterval(() => {
-        if (abortSignal.aborted) {
-          clearInterval(checkInterval);
-          reject(new Error('Navigation waiting aborted'));
-          return;
-        }
-        if (location.pathname === targetRoute) {
-          clearInterval(checkInterval);
-          resolve();
-        }
-      }, 50);
-
-      const timeoutId = setTimeout(() => {
-        clearInterval(checkInterval);
-        reject(new Error(`Timeout waiting for route match: ${targetRoute}`));
-      }, timeoutMs);
-
-      abortSignal.addEventListener('abort', () => {
-        clearInterval(checkInterval);
-        clearTimeout(timeoutId);
-        reject(new Error('Navigation waiting aborted'));
-      });
-    });
-  };
-
-  const waitForTarget = (targetId: string, abortSignal: AbortSignal, timeoutMs = 3000): Promise<HTMLElement> => {
-    return new Promise((resolve, reject) => {
-      const el = getTargetElement(targetId);
-      const isCustomValid = validateTarget(el) && (!step.validation || step.validation(el));
-
-      if (isCustomValid) {
-        resolve(el!);
-        return;
-      }
-
-      const check = () => {
-        const currentEl = getTargetElement(targetId);
-        const isValid = validateTarget(currentEl) && (!step.validation || step.validation(currentEl));
-        if (isValid) {
-          window.removeEventListener('tour-target-registered', handleRegistered);
-          resolve(currentEl!);
-          return true;
-        }
-        return false;
-      };
-
-      const handleRegistered = (e: Event) => {
-        const detail = (e as CustomEvent).detail;
-        if (detail.id === targetId) {
-          check();
-        }
-      };
-
-      window.addEventListener('tour-target-registered', handleRegistered);
-
-      const checkInterval = setInterval(() => {
-        if (abortSignal.aborted) {
-          clearInterval(checkInterval);
-          window.removeEventListener('tour-target-registered', handleRegistered);
-          reject(new Error('Target waiting aborted'));
-          return;
-        }
-        if (check()) {
-          clearInterval(checkInterval);
-        }
-      }, 100);
-
-      const timeoutId = setTimeout(() => {
-        clearInterval(checkInterval);
-        window.removeEventListener('tour-target-registered', handleRegistered);
-        reject(new Error(`Timeout waiting for target registry element: ${targetId}`));
-      }, timeoutMs);
-
-      abortSignal.addEventListener('abort', () => {
-        clearInterval(checkInterval);
-        clearTimeout(timeoutId);
-        window.removeEventListener('tour-target-registered', handleRegistered);
-        reject(new Error('Target waiting aborted'));
-      });
-    });
-  };
-
-  const waitForLayoutStabilize = (el: HTMLElement, abortSignal: AbortSignal, timeoutMs = 3000): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      let lastRect = el.getBoundingClientRect();
-      let consecutiveFrames = 0;
-      let rafId: number;
-
-      const checkFrame = () => {
-        if (abortSignal.aborted) {
-          reject(new Error('Layout stabilization aborted'));
-          return;
-        }
-
-        const rect = el.getBoundingClientRect();
-        const unchanged = (
-          rect.top === lastRect.top &&
-          rect.left === lastRect.left &&
-          rect.width === lastRect.width &&
-          rect.height === lastRect.height
-        );
-
-        if (unchanged && rect.width > 0 && rect.height > 0) {
-          consecutiveFrames++;
-        } else {
-          consecutiveFrames = 0;
-          lastRect = rect;
-        }
-
-        if (consecutiveFrames >= 2) {
-          resolve();
-        } else {
-          rafId = requestAnimationFrame(checkFrame);
-        }
-      };
-
-      rafId = requestAnimationFrame(checkFrame);
-
-      const timeoutId = setTimeout(() => {
-        cancelAnimationFrame(rafId);
-        resolve(); // Fallback resolve to prevent infinite lock
-      }, timeoutMs);
-
-      abortSignal.addEventListener('abort', () => {
-        cancelAnimationFrame(rafId);
-        clearTimeout(timeoutId);
-        reject(new Error('Layout stabilization aborted'));
-      });
-    });
-  };
-
-  // Main FSM Controller Effect Loop
+  // RAF loop — runs when tour is active
   useEffect(() => {
-    let active = true;
-    let resizeObserver: ResizeObserver | null = null;
+    if (status !== 'active') {
+      setHighlightRect(null);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      return;
+    }
 
-    // Create abort controller for current FSM state execution
-    const abortController = new AbortController();
-    activeAbortControllerRef.current = abortController;
-
-    const transitionTo = (nextState: TourFsmState, reason?: string) => {
-      if (active) {
-        if (import.meta.env.DEV) {
-          const r = reason || 'state transition';
-          const targetEl = getTargetElement(step?.targetId);
-          const found = !!targetEl;
-          const valid = validateTarget(targetEl);
-          console.log(`[Tour FSM] ${fsmState} -> ${nextState} | Reason: ${r} | Route: ${location.pathname} | Step: ${step?.id}`);
-          const timestamp = new Date().toLocaleTimeString();
-          eventsRef.current = [
-            {
-              timestamp,
-              type: 'FSM_TRANSITION',
-              details: `${fsmState} -> ${nextState} | Reason: ${r} | targetFound=${found} | validation=${valid}`
-            },
-            ...eventsRef.current
-          ].slice(0, 100);
-          window.dispatchEvent(new CustomEvent('tour-debug-event'));
-        }
-        setFsmState(nextState);
-      }
+    const loop = () => {
+      updateSpotlight();
+      rafRef.current = requestAnimationFrame(loop);
     };
-
-    const runState = async () => {
-      if (!step || fsmState === 'IDLE') {
-        setHighlightStyle(null);
-        restoreScrolling();
-        return;
-      }
-
-      switch (fsmState) {
-        case 'CLEANUP': {
-          setHighlightStyle(null);
-          // Scroll cancel recovery
-          window.scrollTo({ top: window.scrollY });
-          restoreScrolling();
-
-          let nextRoute = step.route;
-          if (step.route.includes(':id')) {
-            const id = await resolveDynamicIssueId();
-            setResolvedIssueId(id);
-            nextRoute = step.route.replace(':id', id);
-          } else {
-            setResolvedIssueId(null);
-          }
-          targetRouteRef.current = nextRoute;
-          transitionTo('NAVIGATING', 'Dynamic target route resolved: ' + nextRoute);
-          break;
-        }
-
-        case 'NAVIGATING': {
-          const targetRoute = targetRouteRef.current || step.route;
-
-          if (step.beforeEnter) {
-            await step.beforeEnter();
-          }
-
-          if (location.pathname !== targetRoute) {
-            setTransitionMessage(getTransitionMessageForRoute(targetRoute));
-            setIsTransitioning(true);
-            navigate(targetRoute);
-            transitionTo('WAITING_FOR_ROUTE', 'Triggered route change');
-          } else {
-            transitionTo('WAITING_FOR_SUSPENSE', 'Already on target route');
-          }
-          break;
-        }
-
-        case 'WAITING_FOR_ROUTE': {
-          const targetRoute = targetRouteRef.current || step.route;
-          try {
-            await waitForRoute(targetRoute, abortController.signal, 3000);
-            setIsTransitioning(false);
-            setTransitionMessage(null);
-            transitionTo('WAITING_FOR_SUSPENSE', 'Route matched');
-          } catch (e: any) {
-            if (active && !abortController.signal.aborted) {
-              console.warn(e.message);
-              transitionTo('FAILED_RECOVERY', 'Route mismatch recovery');
-            }
-          }
-          break;
-        }
-
-        case 'WAITING_FOR_SUSPENSE': {
-          const isSuspenseLoading = !!document.querySelector('[data-loading="page"]');
-          if (!isSuspenseLoading) {
-            transitionTo('WAITING_FOR_RENDER', 'Suspense loaded');
-          } else {
-            const checkInterval = setInterval(() => {
-              if (abortController.signal.aborted) {
-                clearInterval(checkInterval);
-                return;
-              }
-              const loading = document.querySelector('[data-loading="page"]');
-              if (!loading) {
-                clearInterval(checkInterval);
-                transitionTo('WAITING_FOR_RENDER', 'Suspense resolved');
-              }
-            }, 100);
-
-            // Timeout fallback
-            setTimeout(() => {
-              clearInterval(checkInterval);
-              if (active && !abortController.signal.aborted) {
-                transitionTo('WAITING_FOR_RENDER', 'Suspense fallback timeout');
-              }
-            }, 3000);
-          }
-          break;
-        }
-
-        case 'WAITING_FOR_RENDER': {
-          try {
-            await new Promise((r, reject) => {
-              const handle = requestAnimationFrame(() => requestAnimationFrame(r));
-              abortController.signal.addEventListener('abort', () => {
-                cancelAnimationFrame(handle);
-                reject(new Error('Render check aborted'));
-              });
-            });
-            transitionTo('WAITING_FOR_TARGET', 'Render complete');
-          } catch (e) {}
-          break;
-        }
-
-        case 'WAITING_FOR_TARGET': {
-          const isPageLoading = !!document.querySelector('[data-loading="page"]');
-          const hasLoader = document.querySelector('[data-loading]') || getTargetElement(step.targetId);
-          const maxWait = (isPageLoading || hasLoader) ? 15000 : 3000;
-
-          try {
-            await waitForTarget(step.targetId, abortController.signal, maxWait);
-            transitionTo('SCROLLING', 'Target resolved successfully');
-          } catch (e: any) {
-            if (active && !abortController.signal.aborted) {
-              console.warn(e.message);
-              if (step.onMissingTarget) {
-                step.onMissingTarget();
-              }
-              transitionTo('FAILED_RECOVERY', 'Target matching timeout');
-            }
-          }
-          break;
-        }
-
-        case 'SCROLLING': {
-          const el = getTargetElement(step.targetId);
-          if (el) {
-            lockScrolling();
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            try {
-              await waitForLayoutStabilize(el, abortController.signal, 3000);
-              transitionTo('MEASURING', 'Scroll layout stabilized');
-            } catch (e: any) {
-              if (active && !abortController.signal.aborted) {
-                transitionTo('MEASURING', 'Scroll stabilization timeout');
-              }
-            }
-          } else {
-            transitionTo('WAITING_FOR_TARGET', 'Scroll target missing');
-          }
-          break;
-        }
-
-        case 'MEASURING': {
-          const el = getTargetElement(step.targetId);
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            // Safe measurement validation
-            if (rect.width <= 0 || rect.height <= 0 || isNaN(rect.top) || isNaN(rect.left)) {
-              requestAnimationFrame(runState);
-              return;
-            }
-            setHighlightStyle({
-              top: `${rect.top + window.scrollY - 8}px`,
-              left: `${rect.left + window.scrollX - 8}px`,
-              width: `${rect.width + 16}px`,
-              height: `${rect.height + 16}px`,
-              position: 'absolute',
-            });
-            transitionTo('HIGHLIGHTING', 'Spotlight measured');
-          } else {
-            transitionTo('WAITING_FOR_TARGET', 'Measuring failed: target missing');
-          }
-          break;
-        }
-
-        case 'HIGHLIGHTING':
-          transitionTo('TOOLTIP_VISIBLE', 'Highlight coordinates rendered');
-          break;
-
-        case 'TOOLTIP_VISIBLE': {
-          const el = getTargetElement(step.targetId);
-          if (!el || !validateTarget(el)) {
-            transitionTo('WAITING_FOR_TARGET', 'Target lost or invalidated while visible');
-            return;
-          }
-
-          resizeObserver = new ResizeObserver(() => {
-            if (active && el) {
-              const rect = el.getBoundingClientRect();
-              setHighlightStyle({
-                top: `${rect.top + window.scrollY - 8}px`,
-                left: `${rect.left + window.scrollX - 8}px`,
-                width: `${rect.width + 16}px`,
-                height: `${rect.height + 16}px`,
-                position: 'absolute',
-              });
-            }
-          });
-          resizeObserver.observe(el);
-
-          if (step.afterEnter) {
-            await step.afterEnter();
-          }
-          break;
-        }
-
-        case 'FAILED_RECOVERY': {
-          setHighlightStyle(null);
-          restoreScrolling();
-          setToastMessage("This feature couldn't be highlighted automatically.");
-          
-          setTimeout(() => {
-            if (active && !abortController.signal.aborted) {
-              setToastMessage(null);
-              if (currentStepIndex < tourSteps.length - 1) {
-                setCurrentStepIndex(prev => prev + 1);
-                setRetryCount(0);
-                transitionTo('CLEANUP', 'Recovery: advancing to next step');
-              } else {
-                transitionTo('COMPLETED', 'Recovery: end of tour reached');
-              }
-            }
-          }, 2500);
-          break;
-        }
-
-        case 'COMPLETED':
-          setHighlightStyle(null);
-          restoreScrolling();
-          break;
-      }
-    };
-
-    runState();
+    rafRef.current = requestAnimationFrame(loop);
 
     return () => {
-      active = false;
-      abortController.abort();
-      if (resizeObserver) resizeObserver.disconnect();
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [fsmState, currentStepIndex, resolvedIssueId, location.pathname, addEvent]);
+  }, [status, updateSpotlight]);
 
-  // Controls API
-  const startTour = () => {
+  // ── Validation polling — only when step has validation fn ─────────────────
+  const clearValidationTimers = () => {
+    if (validationTimerRef.current) { clearInterval(validationTimerRef.current); validationTimerRef.current = null; }
+    if (skipTimerRef.current) { clearTimeout(skipTimerRef.current); skipTimerRef.current = null; }
+  };
+
+  useEffect(() => {
+    if (status !== 'active') { clearValidationTimers(); return; }
+
+    // Reset per-step validation state
+    setIsValidated(false);
+    setValidationTimedOut(false);
+
+    const validate = step?.validation;
+    if (!validate) {
+      // No validation needed — Next is always available
+      setIsValidated(true);
+      return;
+    }
+
+    // Run validation check at interval
+    const runCheck = () => {
+      try {
+        if (validate()) {
+          setIsValidated(true);
+          clearValidationTimers();
+          addEvent('VALIDATED', step.id);
+        }
+      } catch {
+        // Ignore validation errors
+      }
+    };
+
+    runCheck(); // Immediate check
+    validationTimerRef.current = setInterval(runCheck, VALIDATION_INTERVAL_MS);
+
+    // Skip timeout
+    skipTimerRef.current = setTimeout(() => {
+      setValidationTimedOut(true);
+      addEvent('VALIDATION_TIMEOUT', step.id);
+    }, SKIP_TIMEOUT_MS);
+
+    return () => clearValidationTimers();
+  }, [status, currentStepIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── isActive / showWelcome ─────────────────────────────────────────────────
+  const isActive = status === 'active';
+  const showWelcome = status === 'idle' && !localStorage.getItem('civicpulse-tour-dismissed');
+
+  // ── Controls ───────────────────────────────────────────────────────────────
+  const startTour = useCallback(() => {
     localStorage.removeItem('civicpulse-tour-dismissed');
-    setCurrentStepIndex(0);
     eventsRef.current = [];
-    window.dispatchEvent(new CustomEvent('tour-debug-event'));
-    addEvent('START_TOUR', 'Guided Tour started');
-    setFsmState('CLEANUP');
-  };
+    setCurrentStepIndex(0);
+    setStatus('active');
+    addEvent('START_TOUR');
+  }, [addEvent]);
 
-  const nextStep = async () => {
-    if (step && step.canAdvance) {
-      const allowed = await step.canAdvance();
-      if (!allowed) {
-        addEvent('ADVANCE_BLOCKED', 'canAdvance() returned false');
-        return;
-      }
-    }
-
-    addEvent('ADVANCE_STEP', `Moving from step index ${currentStepIndex}`);
+  const nextStep = useCallback(() => {
     if (currentStepIndex < tourSteps.length - 1) {
       setCurrentStepIndex(prev => prev + 1);
-      setFsmState('CLEANUP');
+      addEvent('NEXT_STEP', `${currentStepIndex} → ${currentStepIndex + 1}`);
     } else {
-      setFsmState('COMPLETED');
+      setStatus('completed');
+      addEvent('COMPLETED');
     }
-  };
+  }, [currentStepIndex, addEvent]);
 
-  const prevStep = () => {
-    addEvent('PREV_STEP', `Moving back from step index ${currentStepIndex}`);
+  const prevStep = useCallback(() => {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(prev => prev - 1);
-      setFsmState('CLEANUP');
+      addEvent('PREV_STEP');
     }
-  };
+  }, [currentStepIndex, addEvent]);
 
-  const skipTour = () => {
-    addEvent('SKIP_TOUR', 'Guided Tour skipped');
-    setFsmState('IDLE');
-  };
+  const skipTour = useCallback(() => {
+    setStatus('idle');
+    setHighlightRect(null);
+    addEvent('SKIP');
+  }, [addEvent]);
 
-  const dontShowAgain = () => {
+  const dontShowAgain = useCallback(() => {
     localStorage.setItem('civicpulse-tour-dismissed', 'true');
-    addEvent('DONT_SHOW_AGAIN', 'Guided Tour dismissed permanently');
-    setFsmState('IDLE');
-  };
+    setStatus('idle');
+    setHighlightRect(null);
+    addEvent('DONT_SHOW_AGAIN');
+  }, [addEvent]);
 
-  const restartTour = () => {
-    addEvent('RESTART_TOUR', 'Guided Tour restarted');
-    startTour();
-  };
+  const restartTour = useCallback(() => {
+    localStorage.removeItem('civicpulse-tour-dismissed');
+    eventsRef.current = [];
+    setCurrentStepIndex(0);
+    setStatus('active');
+    addEvent('RESTART');
+  }, [addEvent]);
+
+  const jumpToStep = useCallback((index: number) => {
+    if (index >= 0 && index < tourSteps.length) {
+      setCurrentStepIndex(index);
+      if (status !== 'active') setStatus('active');
+      addEvent('JUMP', `→ ${index}`);
+    }
+  }, [status, addEvent]);
+
+  // ── Dev global API ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    (window as any).__TOUR__ = {
+      status,
+      step: tourSteps[currentStepIndex],
+      registry: targetRegistry.current,
+      events: eventsRef.current,
+      next: nextStep,
+      back: prevStep,
+      restart: restartTour,
+      skip: skipTour,
+      jump: jumpToStep,
+    };
+    return () => { delete (window as any).__TOUR__; };
+  }, [status, currentStepIndex, nextStep, prevStep, restartTour, skipTour, jumpToStep]);
 
   return (
     <TourContext.Provider
       value={{
-        fsmState,
         status,
-        stepState,
         currentStepIndex,
         steps: tourSteps,
         isActive,
         showWelcome,
+        isValidated,
+        validationTimedOut,
         registerTourTarget,
         targetRegistry,
-        highlightStyle,
-        toastMessage,
-        isTransitioning,
-        transitionMessage,
+        getTargetElement,
+        highlightRect,
         resolvedIssueId,
         onIssueSubmitted,
         startTour,
@@ -779,11 +326,18 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
         skipTour,
         dontShowAgain,
         restartTour,
-        errorMsg,
+        jumpToStep,
         events: eventsRef.current,
         addEvent,
-        retryCount,
-        getTargetElement,
+        // Legacy compat stubs (consumed by existing pages/components)
+        fsmState: status === 'idle' ? 'IDLE' : status === 'completed' ? 'COMPLETED' : 'TOOLTIP_VISIBLE',
+        stepState: 'ready',
+        retryCount: 0,
+        highlightStyle: null,
+        toastMessage: null,
+        isTransitioning: false,
+        transitionMessage: null,
+        errorMsg: null,
         validateTarget,
       }}
     >
@@ -794,10 +348,6 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useTour = () => {
   const context = useContext(TourContext);
-  if (!context) {
-    throw new Error('useTour must be used within a TourProvider');
-  }
+  if (!context) throw new Error('useTour must be used within a TourProvider');
   return context;
 };
-
-export default TourProvider;

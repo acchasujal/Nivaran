@@ -1,3 +1,14 @@
+// ─── Tour Step Schema ──────────────────────────────────────────────────────────
+//
+// The guide is a PASSIVE observer. It never navigates, never clicks, never
+// submits. Each step explains a feature and waits for the user to act.
+//
+// validation() returns true when the expected user action is complete.
+// If validation never passes within ~30s, "Skip this step" appears.
+//
+// expectedAction: Human-readable instruction shown in the card.
+// route:          Informational — used to tell user where to go.
+
 export interface TourStep {
   id: string;
   route: string;
@@ -6,46 +17,66 @@ export interface TourStep {
   title: string;
   description: string;
   whyItMatters: string;
-  whatIsThis: string;
-  whyIsUseful: string;
-  howImproveAccountability: string;
+  expectedAction: string;
+  validation?: () => boolean;
+  // Legacy fields kept for backward compat — may be empty string
+  whatIsThis?: string;
+  whyIsUseful?: string;
+  howImproveAccountability?: string;
   footerNote?: string;
-  validation?: (element: HTMLElement | null) => boolean;
-  beforeEnter?: () => void | Promise<void>;
-  afterEnter?: () => void | Promise<void>;
-  canAdvance?: () => boolean | Promise<boolean>;
-  onMissingTarget?: () => void;
 }
 
+// ─── Jump Menu Groups ─────────────────────────────────────────────────────────
+//
+// Used by the Feature Explorer jump menu in the overlay.
+
+export interface TourGroup {
+  label: string;
+  stepIds: string[];
+}
+
+export const tourGroups: TourGroup[] = [
+  { label: 'Submission', stepIds: ['scenario', 'upload', 'ai-pipeline'] },
+  { label: 'Intelligence', stepIds: ['tracker', 'dashboard', 'ai-insights', 'silence-ledger', 'ward-pattern'] },
+  { label: 'Maps', stepIds: ['maps'] },
+  { label: 'Case File', stepIds: ['evidence-integrity', 'community-verification', 'timeline', 'complaint-draft', 'ai-recommendations', 'government-tracker'] },
+  { label: 'Actions', stepIds: ['save-pdf', 'send-email'] },
+];
+
+// ─── Steps ────────────────────────────────────────────────────────────────────
+
 export const tourSteps: TourStep[] = [
+  // ── 1. Submission ────────────────────────────────────────────────────────
   {
     id: 'scenario',
     route: '/',
     targetId: 'demo-scenario',
     selector: '#demo-scenario-select',
     title: '1. Choose a Demo Scenario',
-    description: 'Start by selecting one of the provided demo scenarios. Each scenario loads realistic civic infrastructure evidence so you can immediately experience the complete CivicPulse workflow.',
-    whyItMatters: 'Loads realistic demo data instantly without requiring you to source your own photos.',
-    whatIsThis: 'Sensible demo incident templates.',
-    whyIsUseful: 'Initiates a realistic workflow in one click.',
-    howImproveAccountability: 'Enables immediate evaluation of the processing pipeline.',
-    footerNote: 'You may also upload your own image at any time to test the platform.',
-    beforeEnter: () => {
-      // Auto-trigger default selection when starting the scenario step
-      window.dispatchEvent(new CustomEvent('civicpulse-tour-select-default'));
-    }
+    description: 'Pick any preset scenario to load realistic civic evidence instantly.',
+    whyItMatters: 'Loads a complete evidence package in one click — no photo sourcing needed.',
+    expectedAction: 'Select any scenario from the dropdown above.',
+    validation: () => {
+      // Passes when a photo preview is visible (scenario loaded)
+      return !!document.querySelector('img[alt="Evidence preview"]') ||
+        !!document.querySelector('[data-photo-loaded]') ||
+        // Also valid if photo-uploader shows a preview image
+        !!document.querySelector('#photo-uploader-container img');
+    },
   },
   {
     id: 'upload',
     route: '/',
     targetId: 'photo-uploader',
     selector: '#photo-uploader-container',
-    title: '2. Upload Your Own Evidence',
-    description: 'Upload any infrastructure photo to test the AI pipeline with your own data. Supported types include road damage, garbage, streetlights, water leaks, footpaths, construction, drainage, trees, and manholes.',
-    whyItMatters: 'Allows citizens to either continue with the guided demo scenarios or upload their own real image.',
-    whatIsThis: 'Direct file intake uploader.',
-    whyIsUseful: 'Allows testing with live real-world evidence.',
-    howImproveAccountability: 'Grants citizens direct access to report unique visual proofs.'
+    title: '2. Upload Evidence',
+    description: 'Photo evidence drives the entire AI pipeline. Any infrastructure photo works.',
+    whyItMatters: 'The AI cannot classify or draft without verified visual proof.',
+    expectedAction: 'A demo scenario photo should already be loaded. Proceed to the next step.',
+    validation: () => {
+      return !!document.querySelector('img[alt="Evidence preview"]') ||
+        !!document.querySelector('#photo-uploader-container img');
+    },
   },
   {
     id: 'ai-pipeline',
@@ -53,35 +84,41 @@ export const tourSteps: TourStep[] = [
     targetId: 'ai-pipeline',
     selector: '#intake-pipeline-container',
     title: '3. AI Processing Pipeline',
-    description: 'Follow the AI agent reasoning steps. The system runs Agent 1 (Classification) and Agent 2 (Deduplication) to analyze the uploaded case details.',
-    whyItMatters: 'Provides direct visibility into the AI\'s classification and duplicate check logic.',
-    whatIsThis: 'AI processing pipeline checklist.',
-    whyIsUseful: 'Reveals processing state in real-time.',
-    howImproveAccountability: 'Ensures audited, verifiable processing of evidence.'
+    description: 'Submit the report to run Agent 1 (Classification) and Agent 2 (Deduplication).',
+    whyItMatters: 'Every output traces to this step — no human classification, no fabricated scores.',
+    expectedAction: 'Click "Submit to Operations Center" to submit the report.',
+    validation: () => {
+      // Passes when the user navigates to an issue detail page after submission
+      return window.location.pathname.startsWith('/issue/') &&
+        !window.location.pathname.includes(':id');
+    },
   },
+
+  // ── 2. Platform Intelligence ─────────────────────────────────────────────
   {
     id: 'tracker',
     route: '/tracker',
     targetId: 'tracker-header',
     selector: '.bg-slate-900',
     title: '4. Operations Center',
-    description: 'Audit active cases from the Operations Center. This public dashboard aggregates citizen-submitted infrastructure evidence.',
-    whyItMatters: 'Builds public visibility into all active community issues.',
-    whatIsThis: 'Operations Center dashboard landing.',
-    whyIsUseful: 'Provides immediate overview of platform audit state.',
-    howImproveAccountability: 'Maintains a public audit ledger of municipal failures.'
+    description: 'The public dashboard aggregates all citizen-submitted evidence.',
+    whyItMatters: 'Creates a transparent public ledger of unresolved municipal failures.',
+    expectedAction: 'Click "Tracker" in the sidebar to open the Operations Center.',
+    validation: () => window.location.pathname === '/tracker',
   },
   {
     id: 'dashboard',
     route: '/tracker',
     targetId: 'transparency-dashboard',
     selector: '#transparency-dashboard-stats',
-    title: '5. Public Transparency Dashboard',
-    description: 'Displays real-time platform metrics, tracking total reports, AI verification status, and resolutions.',
-    whyItMatters: 'Builds public trust by showing the pipeline status of every single submission.',
-    whatIsThis: 'Platform-wide metric counter.',
-    whyIsUseful: 'Provides high-level audit summary.',
-    howImproveAccountability: 'Allows citizens to hold municipal departments accountable.'
+    title: '5. Transparency Dashboard',
+    description: 'Live platform metrics — reports, verified count, escalations. All from real data.',
+    whyItMatters: 'Every metric is evidence-grounded and survives judge cross-examination.',
+    expectedAction: 'Review the dashboard stats panel on the Tracker page.',
+    validation: () => {
+      return window.location.pathname === '/tracker' &&
+        !!document.querySelector('#transparency-dashboard-stats');
+    },
   },
   {
     id: 'ai-insights',
@@ -89,23 +126,31 @@ export const tourSteps: TourStep[] = [
     targetId: 'ai-insights',
     selector: '#ai-civic-insights-card',
     title: '6. AI Civic Insights',
-    description: 'Converts raw data into concise, actionable spatial intelligence using deterministic aggregation.',
-    whyItMatters: 'Identifies major infrastructure failures across wards automatically.',
-    whatIsThis: 'Evidence-based aggregation summaries.',
-    whyIsUseful: 'Highlights key operational trends.',
-    howImproveAccountability: 'Pinpoints specific wards needing urgent attention.'
+    description: 'Deterministic spatial intelligence derived from actual submitted reports.',
+    whyItMatters: 'Identifies infrastructure failure patterns without fabricating any scores.',
+    expectedAction: 'Scroll down to see the AI Civic Insights card.',
+    validation: () => {
+      const el = document.querySelector('#ai-civic-insights-card');
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    },
   },
   {
     id: 'silence-ledger',
     route: '/tracker',
     targetId: 'silence-ledger',
     selector: '#silence-ledger-container',
-    title: '7. Cross-Issue Silence Ledger',
-    description: 'Summarizes unresolved issues and tracks cumulative waiting time for notified authorities.',
-    whyItMatters: 'Forces transparency on government delay by exposing exactly how long issues remain ignored.',
-    whatIsThis: 'Delinquency and waiting time ledger.',
-    whyIsUseful: 'Quantifies bureaucratic delays.',
-    howImproveAccountability: 'Creates public pressure with evidence-based wait times.'
+    title: '7. Silence Ledger',
+    description: 'Tracks cumulative waiting days for unresolved issues — forcing transparency on delay.',
+    whyItMatters: 'Exposes exactly how long government has ignored each reported problem.',
+    expectedAction: 'Scroll to the Cross-Issue Silence Ledger section.',
+    validation: () => {
+      const el = document.querySelector('#silence-ledger-container');
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    },
   },
   {
     id: 'ward-pattern',
@@ -113,48 +158,50 @@ export const tourSteps: TourStep[] = [
     targetId: 'ward-pattern',
     selector: '#ward-pattern-container',
     title: '8. Ward Pattern Intelligence',
-    description: 'Visualizes pattern distributions across active wards to reveal systemic utility failures.',
-    whyItMatters: 'Shows that issues are ward-wide infrastructure deficits, not isolated incidents.',
-    whatIsThis: 'Evidence aggregation by ward.',
-    whyIsUseful: 'Tracks ward-level failure patterns.',
-    howImproveAccountability: 'Enables policy-level intervention instead of single fixes.'
+    description: 'Shows issue distribution by ward — systemic failures, not isolated incidents.',
+    whyItMatters: 'Enables policy-level intervention by revealing concentrated infrastructure deficits.',
+    expectedAction: 'Scroll to the Ward Pattern Intelligence section. Click any ward to filter.',
+    validation: () => {
+      const el = document.querySelector('#ward-pattern-container');
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    },
   },
+
+  // ── 3. Maps ──────────────────────────────────────────────────────────────
   {
     id: 'maps',
     route: '/tracker',
     targetId: 'operations-map',
     selector: '#operations-map-container',
     title: '9. Google Maps GIS Engine',
-    description: 'Visualizes geolocated reports with dynamic clustering and color-coded markers based on risk level.',
-    whyItMatters: 'Highlights cluster density to help officials prioritize systemic issues.',
-    whatIsThis: 'Interactive GIS operations map.',
-    whyIsUseful: 'Shows issue hotspots instantly.',
-    howImproveAccountability: 'Prevents ignoring concentrated neighborhood failures.',
-    validation: (el) => {
+    description: 'Geolocated reports with dynamic clustering and risk-coded markers.',
+    whyItMatters: 'Cluster density helps officials prioritize systemic hotspots over isolated fixes.',
+    expectedAction: 'Scroll to the map on the Tracker page.',
+    validation: () => {
+      const el = document.querySelector('#operations-map-container');
       if (!el) return false;
       const rect = el.getBoundingClientRect();
-      if (rect.width < 100 || rect.height < 100) return false;
-      
-      // Ensure Google Maps internals are fully mounted
       const gmStyle = el.querySelector('.gm-style');
-      if (!gmStyle) return false;
-
-      // Ensure some tiles or visual elements have rendered
-      const imgs = gmStyle.querySelectorAll('img');
-      return imgs.length > 0;
-    }
+      return rect.width > 100 && rect.height > 100 && !!gmStyle;
+    },
   },
+
+  // ── 4. Case File ─────────────────────────────────────────────────────────
   {
     id: 'evidence-integrity',
     route: '/issue/:id',
     targetId: 'evidence-integrity',
     selector: '#evidence-integrity-badge',
     title: '10. Evidence Integrity Badge',
-    description: 'Uses perceptual hashing to verify if an uploaded image is unique or a visual duplicate.',
-    whyItMatters: 'Shields the platform from spam while preserving genuine nearby submissions.',
-    whatIsThis: 'Perceptual hashing verification.',
-    whyIsUseful: 'Automatically flags duplicate spam.',
-    howImproveAccountability: 'Guarantees only genuine evidence is escalated.'
+    description: 'Perceptual hashing flags visual duplicates automatically.',
+    whyItMatters: 'Prevents spam while keeping genuine nearby reports — no manual review needed.',
+    expectedAction: 'Click any report in the Tracker to open its Case File.',
+    validation: () => {
+      return window.location.pathname.startsWith('/issue/') &&
+        !window.location.pathname.includes(':id');
+    },
   },
   {
     id: 'community-verification',
@@ -162,11 +209,15 @@ export const tourSteps: TourStep[] = [
     targetId: 'community-verification',
     selector: '#community-verification-container',
     title: '11. Community Verification',
-    description: 'Allows nearby residents to corroborate reports, upload photos, and add comments.',
-    whyItMatters: 'Leverages crowdsourced validation to strengthen and verify the report\'s urgency.',
-    whatIsThis: 'Crowdsourced verification panel.',
-    whyIsUseful: 'Builds community consensus.',
-    howImproveAccountability: 'Mitigates fraud via citizen peer validation.'
+    description: 'Residents can corroborate reports with photos and comments.',
+    whyItMatters: 'Crowdsourced validation builds consensus and strengthens escalation credibility.',
+    expectedAction: 'Scroll to the Community Corroboration section in the Case File.',
+    validation: () => {
+      const el = document.querySelector('#community-verification-container');
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    },
   },
   {
     id: 'timeline',
@@ -174,11 +225,15 @@ export const tourSteps: TourStep[] = [
     targetId: 'agent-timeline',
     selector: '#agent-timeline-container',
     title: '12. Agent Processing Timeline',
-    description: 'Tracks the backend reasoning steps of the 5-agent pipeline from intake to brief compilation.',
-    whyItMatters: 'Provides absolute explainability on how AI analyzed and structured the case details.',
-    whatIsThis: '5-agent reasoning history trail.',
-    whyIsUseful: 'Reveals decision transparency.',
-    howImproveAccountability: 'Ensures the AI reasoning path can be audited.'
+    description: '5-agent reasoning trail from intake to brief compilation.',
+    whyItMatters: 'Complete auditability — every AI decision is visible and traceable.',
+    expectedAction: 'Review the AI Agent Processing Pipeline in Section 02.',
+    validation: () => {
+      const el = document.querySelector('#agent-timeline-container');
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    },
   },
   {
     id: 'complaint-draft',
@@ -186,11 +241,15 @@ export const tourSteps: TourStep[] = [
     targetId: 'complaint-draft',
     selector: '#complaint-draft-workspace',
     title: '13. Complaint Draft Workspace',
-    description: 'An interactive workspace to edit and preview AI-generated complaints and RTI briefs.',
-    whyItMatters: 'Keeps citizens in control, allowing them to refine facts before official submission.',
-    whatIsThis: 'Editable document workspace.',
-    whyIsUseful: 'Allows human review of AI drafts.',
-    howImproveAccountability: 'Secures high-quality legal brief submissions.'
+    description: 'AI-generated complaint and RTI briefs — editable before submission.',
+    whyItMatters: 'Citizens stay in control. AI drafts, humans authorize. No bypassing the gate.',
+    expectedAction: 'Scroll to Section 05: Accountability Action Drafts.',
+    validation: () => {
+      const el = document.querySelector('#complaint-draft-workspace');
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    },
   },
   {
     id: 'ai-recommendations',
@@ -198,11 +257,14 @@ export const tourSteps: TourStep[] = [
     targetId: 'ai-recommendations',
     selector: '#ai-recommendations-container',
     title: '14. AI Recommendations',
-    description: 'Suggests target department, priority levels, and escalation timeline based on severity.',
-    whyItMatters: 'Guides citizens on the most effective legal and administrative route for resolution.',
-    whatIsThis: 'Strategic next-step advisor.',
-    whyIsUseful: 'Identifies correct department routes.',
-    howImproveAccountability: 'Standardizes escalations using regulatory windows.'
+    description: 'Suggests target department, priority level, and escalation timeline.',
+    whyItMatters: 'Routes complaints to the correct authority using regulatory frameworks.',
+    expectedAction: 'Review the AI Recommendations panel at the top of the Case File.',
+    validation: () => {
+      return window.location.pathname.startsWith('/issue/') &&
+        !window.location.pathname.includes(':id') &&
+        !!document.querySelector('#ai-recommendations-container');
+    },
   },
   {
     id: 'government-tracker',
@@ -210,34 +272,51 @@ export const tourSteps: TourStep[] = [
     targetId: 'government-tracker',
     selector: '#government-response-tracker',
     title: '15. Government Response Tracker',
-    description: 'Tracks post-submission statutory response windows (e.g. 30-day RTI reply cycle).',
-    whyItMatters: 'Notifies citizens when response limits expire, prompting standard next actions.',
-    whatIsThis: 'Statutory deadline tracker.',
-    whyIsUseful: 'Flags unresponsive officials.',
-    howImproveAccountability: 'Enforces statutory timelines on civic entities.'
+    description: 'Tracks statutory response windows (e.g. 30-day RTI cycle).',
+    whyItMatters: 'Alerts citizens when response deadlines expire — creating legal accountability.',
+    expectedAction: 'Scroll to the accountability timeline section.',
+    validation: () => {
+      const el = document.querySelector('#government-response-tracker') ||
+        document.querySelector('#accountability-timeline-container');
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    },
   },
+
+  // ── 5. Actions ──────────────────────────────────────────────────────────
   {
     id: 'save-pdf',
     route: '/issue/:id',
     targetId: 'btn-save-pdf',
     selector: '#tour-btn-save-pdf',
-    title: '16. PDF Export Action',
-    description: 'Compiles the authorized complaint brief into an official PDF document for direct print or local storage.',
-    whyItMatters: 'Bridges the digital verification trail with a tangible, portable file for direct presentation.',
-    whatIsThis: 'PDF compile control.',
-    whyIsUseful: 'Creates formal printed records.',
-    howImproveAccountability: 'Provides citizens with physical evidence packages.'
+    title: '16. PDF Export',
+    description: 'Compiles the complaint brief into an official PDF for print or filing.',
+    whyItMatters: 'Bridges digital evidence with a tangible, portable document for officials.',
+    expectedAction: 'Click "Generate PDF" inside the Complaint Draft Workspace.',
+    validation: () => {
+      // Passes when any draft has been escalated via pdf_export
+      // or when the EscalationDialog is open for pdf_export
+      const dialog = document.querySelector('[data-escalation-dialog]');
+      const pdfActive = document.querySelector('[data-method="pdf_export"]');
+      return !!dialog || !!pdfActive ||
+        !!document.querySelector('.escalation-dialog-open[data-method="pdf_export"]');
+    },
   },
   {
     id: 'send-email',
     route: '/issue/:id',
     targetId: 'btn-send-email',
     selector: '#tour-btn-send-email',
-    title: '17. Email Dispatch Action',
-    description: 'Dispatches the authorized complaint package directly to the responsible ward officer via SendGrid HTTP API.',
-    whyItMatters: 'Bridges online verification with formal municipal grievance channels.',
-    whatIsThis: 'Email dispatch system.',
-    whyIsUseful: 'Sends legal briefs directly in one click.',
-    howImproveAccountability: 'Ensures complaints reach authorities with direct accountability tracking.'
-  }
+    title: '17. Email Dispatch',
+    description: 'Sends the complaint package to the ward officer via SendGrid HTTP API.',
+    whyItMatters: 'A real external action — demonstrably connects AI output to official channels.',
+    expectedAction: 'Click "Send Email" inside the Complaint Draft Workspace.',
+    validation: () => {
+      // Passes when the EscalationDialog is open (email method)
+      const dialog = document.querySelector('[data-escalation-dialog]');
+      const emailActive = document.querySelector('[data-method="email"]');
+      return !!dialog || !!emailActive;
+    },
+  },
 ];

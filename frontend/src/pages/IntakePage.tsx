@@ -19,7 +19,7 @@ import { useTour } from '@/context/TourContext';
 export const IntakePage: React.FC = () => {
   const navigate = useNavigate();
   const createIssueMutation = useCreateIssue();
-  const { registerTourTarget, onIssueSubmitted } = useTour();
+  const { registerTourTarget } = useTour();
 
   // Stepper state
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -90,15 +90,7 @@ export const IntakePage: React.FC = () => {
     };
   }, [isSubmitting, submitError]);
 
-  useEffect(() => {
-    const handleTourSelectDefault = () => {
-      if (!photo && !isDemoLoading) {
-        handleSelectDemoScenario(demoScenarios[0]?.id || 'random');
-      }
-    };
-    window.addEventListener('civicpulse-tour-select-default', handleTourSelectDefault);
-    return () => window.removeEventListener('civicpulse-tour-select-default', handleTourSelectDefault);
-  }, [photo, isDemoLoading]);
+  // NOTE: No tour event listener here. The guide never auto-selects scenarios.
 
   const handlePhotoCapture = (file: File) => {
     setPhoto(file);
@@ -174,7 +166,7 @@ export const IntakePage: React.FC = () => {
       }
       setIsSubmitting(false);
       setSubmittedIssueId(response.id);
-      onIssueSubmitted(response.id);
+      // Tour reads issue ID passively from the URL — no explicit call needed.
 
     } catch (err) {
       setIsSubmitting(false);
