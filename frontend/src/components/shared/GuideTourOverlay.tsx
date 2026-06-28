@@ -32,6 +32,132 @@ class TourErrorBoundary extends React.Component<{ children: React.ReactNode; onR
   }
 }
 
+// Collapsible Floating Debug Panel (Dev-only)
+const TourDebugPanel: React.FC = () => {
+  const {
+    fsmState,
+    steps,
+    currentStepIndex,
+    targetRegistry,
+    retryCount,
+    events,
+    getTargetElement,
+    validateTarget
+  } = useTour();
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [elapsed, setElapsed] = React.useState(0);
+
+  useEffect(() => {
+    const handleRefresh = () => forceUpdate();
+    window.addEventListener('tour-debug-event', handleRefresh);
+    window.addEventListener('tour-target-registered', handleRefresh);
+    return () => {
+      window.removeEventListener('tour-debug-event', handleRefresh);
+      window.removeEventListener('tour-target-registered', handleRefresh);
+    };
+  }, []);
+
+  useEffect(() => {
+    setElapsed(0);
+    const start = Date.now();
+    const interval = setInterval(() => {
+      setElapsed(Date.now() - start);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [fsmState, currentStepIndex]);
+
+  if (!import.meta.env.DEV) return null;
+
+  const currentStep = steps[currentStepIndex];
+  const targetId = currentStep?.targetId;
+  const el = targetId ? getTargetElement(targetId) : null;
+  const isRegistered = !!el;
+  const isValid = validateTarget(el);
+
+  // Get registry items
+  const registryItems = Array.from(targetRegistry.current.entries()).map(([id, element]) => {
+    const rect = element.getBoundingClientRect();
+    const isConn = element.isConnected;
+    const isVal = validateTarget(element);
+    return {
+      id,
+      connected: isConn,
+      visible: isVal,
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      x: Math.round(rect.left),
+      y: Math.round(rect.top),
+    };
+  });
+
+  return (
+    <div className="fixed bottom-4 left-4 z-[99999] bg-slate-950 border border-slate-850 text-white rounded-medium shadow-premium font-mono text-[9px] w-80 max-h-[450px] flex flex-col overflow-hidden pointer-events-auto">
+      <div 
+        className="px-3 py-2 bg-slate-900 border-b border-slate-850 flex items-center justify-between cursor-pointer select-none"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <span className="font-bold uppercase tracking-wider text-teal-400">Tour Debugger</span>
+        <span>{isExpanded ? 'Collapse ▲' : 'Expand ▼'}</span>
+      </div>
+
+      {isExpanded && (
+        <div className="p-3 space-y-4 overflow-y-auto flex-1 scrollbar-thin max-h-[400px]">
+          {/* Status Metrics */}
+          <div className="space-y-1 bg-slate-900 p-2 rounded border border-slate-800">
+            <div><span className="text-slate-450">Step:</span> <span className="text-amber-400 font-bold">{currentStep?.id || 'N/A'}</span></div>
+            <div><span className="text-slate-450">FSM State:</span> <span className="text-teal-400 font-bold">{fsmState}</span></div>
+            <div><span className="text-slate-450">Route:</span> <span className="text-slate-300">{window.location.pathname}</span></div>
+            <div><span className="text-slate-450">Target ID:</span> <span className="text-slate-300">{targetId || 'N/A'}</span></div>
+            <div><span className="text-slate-450">Registered:</span> <span className={isRegistered ? 'text-emerald-400' : 'text-rose-400'}>{isRegistered ? '✓' : '✗'}</span></div>
+            <div><span className="text-slate-450">Visible/Valid:</span> <span className={isValid ? 'text-emerald-400' : 'text-rose-400'}>{isValid ? '✓' : '✗'}</span></div>
+            <div><span className="text-slate-450">Tooltip Visible:</span> <span>{fsmState === 'TOOLTIP_VISIBLE' ? '✓' : '✗'}</span></div>
+            <div><span className="text-slate-450">Retries:</span> <span className="text-rose-455 font-bold">{retryCount}</span></div>
+            <div><span className="text-slate-450">Elapsed Time:</span> <span className="text-teal-450 font-bold">{elapsed}ms</span></div>
+          </div>
+
+          {/* Registry Inspector */}
+          <div className="space-y-1">
+            <div className="font-bold text-slate-450 border-b border-slate-800 pb-0.5">REGISTRY ({registryItems.length})</div>
+            <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
+              {registryItems.length === 0 ? (
+                <div className="text-slate-500 italic">No targets registered</div>
+              ) : (
+                registryItems.map(item => (
+                  <div key={item.id} className="bg-slate-900 p-1.5 rounded border border-slate-800 space-y-0.5">
+                    <div className="font-bold text-teal-300">{item.id}</div>
+                    <div className="text-slate-400">
+                      conn={item.connected ? '1' : '0'} vis={item.visible ? '1' : '0'} size={item.width}x{item.height} pos={item.x},{item.y}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Event Timeline */}
+          <div className="space-y-1 flex flex-col min-h-[100px]">
+            <div className="font-bold text-slate-450 border-b border-slate-800 pb-0.5">EVENT TIMELINE</div>
+            <div className="space-y-1 max-h-36 overflow-y-auto flex-1 pr-1">
+              {events.length === 0 ? (
+                <div className="text-slate-500 italic">No events logged</div>
+              ) : (
+                events.map((evt, idx) => (
+                  <div key={idx} className="border-b border-slate-900 pb-1">
+                    <span className="text-slate-500">[{evt.timestamp}]</span>{' '}
+                    <span className="text-amber-400 font-bold">{evt.type}</span>
+                    {evt.details && <div className="text-slate-400 leading-normal pl-2">{evt.details}</div>}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const GuideTourOverlayContent: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -89,6 +215,7 @@ export const GuideTourOverlayContent: React.FC = () => {
             {transitionMessage}
           </span>
         </div>
+        <TourDebugPanel />
       </div>
     );
   }
@@ -134,6 +261,7 @@ export const GuideTourOverlayContent: React.FC = () => {
             </button>
           </div>
         </div>
+        <TourDebugPanel />
       </div>
     );
   }
@@ -196,6 +324,7 @@ export const GuideTourOverlayContent: React.FC = () => {
             </ol>
           </div>
         </div>
+        <TourDebugPanel />
       </div>
     );
   }
@@ -215,6 +344,7 @@ export const GuideTourOverlayContent: React.FC = () => {
             </div>
           </div>
         )}
+        <TourDebugPanel />
       </>
     );
   }
@@ -328,6 +458,7 @@ export const GuideTourOverlayContent: React.FC = () => {
           </div>
         </div>
       </div>
+      <TourDebugPanel />
     </>
   );
 };
