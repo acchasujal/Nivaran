@@ -23,7 +23,7 @@ const Spotlight: React.FC = () => {
       className="fixed inset-0 pointer-events-none z-[9000]"
       style={{ isolation: 'isolate' }}
     >
-      {/* Dark mask with cutout via box-shadow (low opacity 0.15 for high visibility and non-blocking clicks) */}
+      {/* Dark mask with cutout via box-shadow (low opacity 0.12 for high visibility and non-blocking clicks) */}
       <div
         className="absolute transition-all duration-200"
         style={{
@@ -32,7 +32,7 @@ const Spotlight: React.FC = () => {
           width,
           height,
           borderRadius: 6,
-          boxShadow: '0 0 0 9999px rgba(15,23,42,0.15)',
+          boxShadow: '0 0 0 9999px rgba(15,23,42,0.12)',
           border: '1.5px solid rgba(20,184,166,0.6)',
           pointerEvents: 'none',
         }}
@@ -53,10 +53,10 @@ export const TourWelcomeBanner: React.FC = () => {
     <div className="w-full bg-slate-50 border-b border-slate-200 py-2.5 px-6 flex flex-col transition-all z-40 select-none animate-fade">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs shrink-0 font-extrabold text-teal-650 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">
+          <span className="text-xs shrink-0 font-extrabold text-teal-650 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded uppercase tracking-wider">
             🚀 Quick Evaluation
           </span>
-          <span className="text-xs text-slate-650 font-medium truncate">
+          <span className="text-xs text-slate-650 font-medium truncate font-sans">
             Complete this 5-minute evaluation to explore CivicPulse.
           </span>
         </div>
@@ -88,7 +88,7 @@ export const TourWelcomeBanner: React.FC = () => {
           <div className="text-[10px] font-bold text-slate-450 uppercase tracking-widest pl-1">
             CivicPulse Evaluation Guide
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 animate-fade">
             {tourPhases.map(phase => (
               <div key={phase.number} className="bg-white border border-slate-150 rounded p-2 flex flex-col justify-between">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-[8px]">Phase {phase.number}</span>
@@ -137,7 +137,7 @@ const FeatureExplorer: React.FC = () => {
               <X size={12} />
             </button>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 font-sans">
             {explorerFeatures.map(feat => {
               const isChecked = !!completedFeatures[feat.id];
               const stepIdx = steps.findIndex(s => s.id === feat.stepId);
@@ -175,6 +175,36 @@ const FeatureExplorer: React.FC = () => {
 
 // ─── Floating Tooltip Card ───────────────────────────────────────────────────
 
+const getSuccessText = (stepId: string): string => {
+  switch (stepId) {
+    case 'scenario':
+    case 'upload':
+      return '✓ Report Submitted';
+    case 'ai-pipeline':
+    case 'evidence-integrity':
+    case 'timeline':
+      return '✓ AI Verification Complete';
+    case 'tracker':
+    case 'dashboard':
+    case 'maps':
+      return '✓ Operations Center Explored';
+    case 'ai-insights':
+    case 'silence-ledger':
+    case 'ward-pattern':
+      return '✓ AI Civic Insights Reviewed';
+    case 'complaint-draft':
+    case 'ai-recommendations':
+    case 'government-tracker':
+      return '✓ Complaint Workspace Reviewed';
+    case 'save-pdf':
+      return '✓ PDF Generated';
+    case 'send-email':
+      return '✓ Email Prepared';
+    default:
+      return '✓ Feature Reviewed';
+  }
+};
+
 const GuideCard: React.FC = () => {
   const {
     steps,
@@ -204,15 +234,13 @@ const GuideCard: React.FC = () => {
     }, 10000); // 10 seconds of inactivity
   };
 
+  // Reset timer on step index or validation state change (meaningful interaction / auto-completion)
   useEffect(() => {
     resetTimer();
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    events.forEach(evt => window.addEventListener(evt, resetTimer));
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      events.forEach(evt => window.removeEventListener(evt, resetTimer));
     };
-  }, [currentStepIndex]);
+  }, [currentStepIndex, isValidated]);
 
   // Collision detection reposition helper
   const getCardStyle = (): React.CSSProperties => {
@@ -314,7 +342,7 @@ const GuideCard: React.FC = () => {
   return (
     <div
       style={getCardStyle()}
-      className="z-[9990] bg-white border border-slate-200 rounded-xl shadow-premium overflow-hidden select-none animate-fade pointer-events-auto max-w-[480px] max-h-[110px]"
+      className="z-[9990] bg-white border border-slate-200 rounded-xl shadow-premium overflow-hidden select-none animate-fade pointer-events-auto max-w-[480px] max-h-[110px] font-sans"
     >
       {/* Top progress line */}
       <div className="h-0.5 bg-slate-100">
@@ -343,7 +371,7 @@ const GuideCard: React.FC = () => {
         {/* Row 2 & 3: Description, expected action */}
         <div className="space-y-0.5">
           <div className="text-[10px] text-slate-600 leading-tight flex items-center justify-between">
-            <span className="truncate font-semibold text-slate-400">Now Exploring:</span>
+            <span className="truncate font-semibold text-slate-450">Now Exploring:</span>
             <span className="truncate text-slate-600 ml-1.5 flex-1 text-left">{step.description}</span>
           </div>
 
@@ -354,14 +382,14 @@ const GuideCard: React.FC = () => {
               : "bg-teal-50/50 border-teal-200/50 text-teal-750"
           )}>
             <span className="truncate">
-              {isValidated ? '✓ Feature Reviewed' : `→ ${step.expectedAction}`}
+              {isValidated ? getSuccessText(step.id) : `→ ${step.expectedAction}`}
             </span>
             {validationTimedOut && !isValidated && (
               <button
                 onClick={nextStep}
                 className="text-[9px] font-bold text-amber-600 hover:text-amber-805 cursor-pointer border-none bg-transparent"
               >
-                Explore Later
+                Continue Exploring
               </button>
             )}
           </div>
@@ -373,14 +401,14 @@ const GuideCard: React.FC = () => {
             onClick={skipTour}
             className="text-[9.5px] font-bold text-slate-400 hover:text-slate-650 transition-colors bg-transparent border-none cursor-pointer"
           >
-            Explore Later
+            Continue Exploring
           </button>
 
           <div className="flex items-center gap-1.5">
             <button
               onClick={prevStep}
               disabled={currentStepIndex === 0}
-              className="inline-flex items-center gap-0.5 px-2 py-0.5 border border-slate-200 bg-white text-slate-600 text-[10px] font-bold rounded hover:bg-slate-50 disabled:opacity-30 cursor-pointer"
+              className="inline-flex items-center gap-0.5 px-2 py-0.5 border border-slate-200 bg-white text-slate-600 text-[10px] font-bold rounded hover:bg-slate-50 disabled:opacity-30 cursor-pointer animate-fade"
             >
               <ArrowLeft size={10} />
               Back
@@ -389,13 +417,13 @@ const GuideCard: React.FC = () => {
               onClick={nextStep}
               disabled={!isValidated}
               className={cn(
-                "inline-flex items-center gap-0.5 px-2.5 py-0.5 text-[10px] font-bold rounded shadow-sm transition-all",
+                "inline-flex items-center gap-0.5 px-2.5 py-0.5 text-[10px] font-bold rounded shadow-sm transition-all animate-fade",
                 isValidated
                   ? "bg-primary hover:bg-primary-hover text-white cursor-pointer"
                   : "bg-slate-100 text-slate-400 cursor-not-allowed"
               )}
             >
-              <span>{currentStepIndex === totalSteps - 1 ? 'Finish' : 'Continue'}</span>
+              <span>{currentStepIndex === totalSteps - 1 ? 'Finish' : 'Next Recommendation'}</span>
               <ArrowRight size={10} />
             </button>
           </div>

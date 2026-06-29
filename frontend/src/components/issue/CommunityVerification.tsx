@@ -52,8 +52,8 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
               Community Verification
               <HelpTooltip text="Allows multiple citizens to strengthen evidence for the same civic issue." />
             </h4>
-            <p className="text-[10px] text-slate-450 mt-0.5">
-              Nearby citizens can strengthen the evidence by confirming this report.
+            <p className="text-[10px] text-slate-450 mt-0.5 font-sans">
+              Nearby citizens can confirm this issue to strengthen the evidence.
             </p>
           </div>
         </div>
