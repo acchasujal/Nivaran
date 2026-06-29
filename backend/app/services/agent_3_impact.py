@@ -377,7 +377,8 @@ async def generate_merged_impact_and_drafts(
                 pio_designation="Right to Information Division",
                 authority=result.drafts.authority or "Municipal Authority",
                 subject=f"Status of public maintenance and contractor records for {result.drafts.issue} at {result.drafts.location or 'Local Ward'}",
-                questions=result.drafts.questions or ["What is the estimated budget?", "Who is the contractor?"]
+                questions=result.drafts.questions or ["What is the estimated budget?", "Who is the contractor?"],
+                ref_id=f"RTI-{cluster_id[:8].upper()}"
             )
 
             community_content = build_community_summary_document(

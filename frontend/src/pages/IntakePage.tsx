@@ -491,20 +491,10 @@ export const IntakePage: React.FC = () => {
                 <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Elapsed Time</span>
                 <span className="text-sm font-bold text-slate-750">{elapsedSeconds}s</span>
               </div>
-              <div className="px-3 border-r border-slate-200">
-                <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Completed Stages</span>
-                <span className="text-sm font-bold text-emerald-600">{Math.min(6, Math.floor(elapsedSeconds / 2))} / 6</span>
-              </div>
               <div className="px-3">
-                <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Current Stage</span>
+                <span className="text-[9px] uppercase tracking-wider text-slate-450 block">Status</span>
                 <span className="text-sm font-bold text-primary">
-                  {createIssueMutation.isSuccess ? 'Completed' : (
-                    elapsedSeconds < 2 ? 'Stage 0' : 
-                    elapsedSeconds < 4 ? 'Agent 1' : 
-                    elapsedSeconds < 6 ? 'Agent 2' : 
-                    elapsedSeconds < 8 ? 'Agent 3' : 
-                    elapsedSeconds < 10 ? 'Agent 4' : 'Agent 5'
-                  )}
+                  {createIssueMutation.isSuccess ? 'Completed' : 'Processing...'}
                 </span>
               </div>
             </div>

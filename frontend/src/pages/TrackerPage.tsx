@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Map, Plus, Filter, Users, ShieldAlert, Landmark, Clock, AlertCircle, Sparkles } from 'lucide-react';
+import { Map, Plus, Filter, ShieldAlert, Landmark, Clock, AlertCircle, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { LoadingState } from '@/components/feedback/LoadingState';
@@ -60,8 +60,8 @@ export const TrackerPage: React.FC = () => {
   const processedData = useMemo(() => {
     if (!data?.issues) return {
       issues: [],
-      stats: { reports: 0, verified: 0, inProgress: 0, drafted: 0, escalated: 0, citizens: 0 },
-      silenceStats: { awaitingAction: 0, authoritiesNotified: 0, escalated: 0, averageWaitingDays: 0, cumulativeWaitingDays: 0, verifiedReports: 0, citizensImpacted: 0 },
+      stats: { reports: 0, verified: 0, inProgress: 0, drafted: 0, escalated: 0 },
+      silenceStats: { awaitingAction: 0, authoritiesNotified: 0, escalated: 0, averageWaitingDays: 0, cumulativeWaitingDays: 0, verifiedReports: 0, activeWards: 0 },
       clusterCounts: {}
     };
 
@@ -75,7 +75,6 @@ export const TrackerPage: React.FC = () => {
       inProgress: sortedIssues.filter(i => i.status === 'clustered' || i.status === 'classified').length,
       drafted: sortedIssues.filter(i => i.status === 'drafted' || i.status === 'approved').length,
       escalated: sortedIssues.filter(i => i.status === 'escalated').length,
-      citizens: sortedIssues.length * 25, // Evidence-grounded footprint proxy (25 residents per report area)
     };
 
     const unresolvedIssues = sortedIssues.filter(i => (i.status as string) !== 'closed' && (i.status as string) !== 'resolved');
@@ -88,6 +87,11 @@ export const TrackerPage: React.FC = () => {
     const cumulativeWaitingDays = waitingDaysList.reduce((sum, d) => sum + d, 0);
     const averageWaitingDays = unresolvedIssues.length > 0 ? (cumulativeWaitingDays / unresolvedIssues.length) : 0;
 
+    const activeWardsSet = new Set(unresolvedIssues.map(i => {
+      const { ward } = getLocalityAndWard(i.latitude, i.longitude);
+      return ward;
+    }).filter(w => w !== 'Unknown Ward'));
+
     const silenceStats = {
       awaitingAction: unresolvedIssues.length,
       authoritiesNotified: unresolvedIssues.filter(i => i.status === 'escalated').length,
@@ -95,7 +99,7 @@ export const TrackerPage: React.FC = () => {
       averageWaitingDays: Math.round(averageWaitingDays * 10) / 10,
       cumulativeWaitingDays: Math.round(cumulativeWaitingDays),
       verifiedReports: unresolvedIssues.filter(i => i.credibility_score >= 0.8).length,
-      citizensImpacted: unresolvedIssues.length * 25,
+      activeWards: activeWardsSet.size,
     };
 
     const clusterCounts = sortedIssues.reduce((acc, issue) => {
@@ -298,10 +302,10 @@ export const TrackerPage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col pb-12 font-sans">
-      {/* Landing Experience: 15-second value proposition header */}
+      {/* Landing Experience: 10-second value proposition header */}
       <div ref={(el) => registerTourTarget('tracker-header', el)} className="bg-slate-900 text-white rounded-medium p-6 md:p-8 mt-6 shadow-premium relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-teal-950/20 to-transparent pointer-events-none" />
-        <div className="relative z-10 max-w-3xl space-y-3">
+        <div className="relative z-10 max-w-3xl space-y-3.5">
           <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest bg-teal-950/80 px-2 py-0.5 rounded-small border border-teal-800 select-none">
             AI-Grounded Action Platform
           </span>
@@ -311,7 +315,18 @@ export const TrackerPage: React.FC = () => {
           <p className="text-xs md:text-sm text-slate-355 font-normal leading-relaxed">
             Every citizen report containing photographic evidence is processed through an automated verification pipeline. The system clusters duplicates, assesses neighborhood safety risk, and drafts reviewable, sendable legal briefs for official action.
           </p>
-          <div className="pt-2 flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-1.5 md:gap-x-2.5 py-1 text-[10px] font-bold text-slate-300 select-none border-t border-b border-slate-800/60">
+            <span className="flex items-center gap-1 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60"><span className="text-teal-400">1</span> Upload</span>
+            <span className="text-slate-650 text-[8px]">➔</span>
+            <span className="flex items-center gap-1 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60"><span className="text-teal-400">2</span> Stage-0 AI Filter</span>
+            <span className="text-slate-650 text-[8px]">➔</span>
+            <span className="flex items-center gap-1 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60"><span className="text-teal-400">3</span> Evidence Cluster</span>
+            <span className="text-slate-650 text-[8px]">➔</span>
+            <span className="flex items-center gap-1 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60"><span className="text-teal-400">4</span> Legal Grievance/RTI</span>
+            <span className="text-slate-650 text-[8px]">➔</span>
+            <span className="flex items-center gap-1 bg-teal-950/80 px-2 py-0.5 rounded border border-teal-800 text-teal-300"><span className="text-teal-400">5</span> Dispatch (SendGrid)</span>
+          </div>
+          <div className="pt-1.5 flex flex-wrap gap-3">
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-small transition-all shadow-sm active:scale-[0.98]"
@@ -351,13 +366,12 @@ export const TrackerPage: React.FC = () => {
             {/* Main stats grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 divide-x divide-y sm:divide-y-0 divide-slate-100 border-b border-slate-100 font-sans">
               {[
-                { label: 'Ward Health', value: Object.keys(wardStats).length > 0 ? `${(10 - Object.keys(clusterCounts).length * 0.5).toFixed(1)}/10` : '10.0/10', sub: 'Average index', color: 'text-emerald-700' },
                 { label: 'Active Clusters', value: Object.keys(clusterCounts).length, sub: 'Spatial groupings', color: 'text-amber-700 font-bold' },
                 { label: 'Reports Today', value: issues.filter(i => new Date(i.created_at).toDateString() === new Date().toDateString()).length, sub: 'Logged last 24h', color: 'text-slate-700 font-mono' },
-                { label: 'AI Accuracy', value: '98.4%', sub: 'Target classification', color: 'text-teal-700 font-extrabold' },
+                { label: 'Acceptance Rate', value: metricsData && metricsData.total_validations > 0 ? `${Math.round((metricsData.accepted_uploads / metricsData.total_validations) * 100)}%` : 'N/A', sub: 'Stage 0 pass rate', color: 'text-teal-700 font-extrabold' },
                 { label: 'Dupes Blocked', value: metricsData ? metricsData.rejected_uploads : 0, sub: 'Stage 0 filtered', color: 'text-rose-700' },
                 { label: 'Gemini Calls Saved', value: metricsData ? metricsData.gemini_calls_saved : 0, sub: 'Via dhash cache', color: 'text-emerald-650 font-bold' },
-                { label: 'Avg Latency', value: metricsData && metricsData.average_validation_latency_ms ? `${metricsData.average_validation_latency_ms.toFixed(0)}ms` : '320ms', sub: 'Validation latency', color: 'text-slate-700 font-mono' },
+                { label: 'Avg Latency', value: metricsData && metricsData.average_validation_latency_ms ? `${metricsData.average_validation_latency_ms.toFixed(0)}ms` : 'N/A', sub: 'Validation latency', color: 'text-slate-700 font-mono' },
                 { label: 'Total Reports', value: stats.reports, sub: 'Verified pipeline', color: 'text-slate-700' },
               ].map(({ label, value, sub, color }) => (
                 <div key={label} className="px-5 py-4 space-y-1 select-none">
@@ -428,7 +442,7 @@ export const TrackerPage: React.FC = () => {
                   { label: 'Average Waiting Days', value: `${silenceStats.averageWaitingDays}d`, icon: Clock, sub: 'Average report age', color: 'text-slate-700 font-mono' },
                   { label: 'Cumulative Waiting Days', value: `${silenceStats.cumulativeWaitingDays}d`, icon: Clock, sub: 'Platform total wait', color: 'text-slate-700 font-mono' },
                   { label: 'Verified Reports', value: silenceStats.verifiedReports, icon: ShieldAlert, sub: 'Confirmed credibility', color: 'text-emerald-700' },
-                  { label: 'Citizens Impacted', value: `${silenceStats.citizensImpacted}+`, icon: Users, sub: 'Footprint proxy', color: 'text-slate-700' },
+                  { label: 'Active Wards', value: silenceStats.activeWards, icon: Map, sub: 'Wards represented', color: 'text-slate-700' },
                 ].map(({ label, value, icon: Icon, sub, color }) => (
                   <div key={label} className="px-5 py-4 space-y-1 select-none">
                     <div className="flex items-center justify-between">
