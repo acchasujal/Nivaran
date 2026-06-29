@@ -42,12 +42,12 @@ export const TrustScoreCard: React.FC<TrustScoreCardProps> = ({
         {/* Factors list with progress bars */}
         <div className="grid grid-cols-1 gap-2.5">
           {[
-            { name: 'Image Quality Check', score: 100, label: 'Passed cheap local PIL validations' },
-            { name: 'GPS Coordinates Lock', score: 100, label: 'Coordinates mapped to MCGM registry' },
+            { name: 'Image Quality Check', score: 100, label: 'Passed format and resolution validations' },
+            { name: 'GPS Coordinates Lock', score: issue.latitude !== 0 && issue.longitude !== 0 ? 100 : 0, label: issue.latitude !== 0 && issue.longitude !== 0 ? 'Coordinates verified' : 'Coordinates missing' },
             { name: 'Image Duplicate Hash', score: imageIntegrityStatus === "Original Evidence" ? 100 : Math.max(0, 100 - (imageIntegritySimilarity || 0)), label: imageIntegrityStatus || 'No visual duplicates found' },
-            { name: 'Infrastructure Detection', score: issue.credibility_score >= 0.8 ? 95 : 85, label: 'Civic assets recognized' },
-            { name: 'Visual Hazard Integrity', score: issue.credibility_score >= 0.8 ? 98 : 88, label: 'Confirmed hazard presence' },
-            { name: 'Metadata Signature', score: 100, label: 'File integrity verified' },
+            { name: 'Infrastructure Detection', score: Math.round(issue.credibility_score * 100), label: 'AI entity recognition confidence' },
+            { name: 'Visual Hazard Integrity', score: Math.round(issue.credibility_score * 95), label: 'Hazard feature mapping' },
+            { name: 'Metadata Signature', score: issue.photo_url ? 100 : 50, label: issue.photo_url ? 'File signature format verified' : 'No photo uploaded' },
           ].map((f) => (
             <div key={f.name} className="space-y-1 bg-white p-2.5 rounded border border-slate-150 shadow-sm">
               <div className="flex justify-between items-center text-[10px] select-none">

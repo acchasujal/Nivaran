@@ -90,31 +90,7 @@ export const IntakePage: React.FC = () => {
     };
   }, [isSubmitting, submitError]);
 
-  const liveLogs = useMemo(() => {
-    const logs: string[] = [];
-    if (elapsedSeconds >= 1) {
-      logs.push('[Stage 0] Analyzing image structure and checking cache...');
-      logs.push('[Stage 0] SUCCESS: Image passes quality, blur, and spam checks.');
-    }
-    if (elapsedSeconds >= 3) {
-      logs.push('[Agent 1] Classifying issue type and visual properties...');
-      logs.push('[Agent 1] SUCCESS: Detected road damage with high severity (4/5).');
-    }
-    if (elapsedSeconds >= 5) {
-      logs.push('[Agent 2] Scanning coordinates for nearby reports (300m)...');
-      logs.push('[Agent 2] SUCCESS: Merged report into active incident cluster.');
-    }
-    if (elapsedSeconds >= 7) {
-      logs.push('[Agent 3] Evaluating safety footprint and neighborhood risk...');
-      logs.push('[Agent 3] SUCCESS: Assessed risk level as High (critical corridor).');
-    }
-    if (elapsedSeconds >= 9) {
-      logs.push('[Agent 4] Preparing formal municipal complaint & RTI brief drafts...');
-      logs.push('[Agent 4] SUCCESS: Structured legal templates compiled.');
-      logs.push('[Agent 5] Pipeline complete. Awaiting human authorization to dispatch.');
-    }
-    return logs;
-  }, [elapsedSeconds]);
+
 
   // NOTE: No tour event listener here. The guide never auto-selects scenarios.
 
@@ -532,22 +508,6 @@ export const IntakePage: React.FC = () => {
               elapsedSeconds={elapsedSeconds}
               submitError={submitError}
             />
-            
-            <div className="border-t border-slate-100 pt-4 text-left">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Live Agent Pipeline Telemetry</span>
-              <div className="bg-slate-950 p-4 rounded-medium border border-slate-800 font-mono text-[10px] text-teal-400 space-y-1.5 h-36 overflow-y-auto shadow-inner select-text">
-                {liveLogs.length === 0 ? (
-                  <div className="text-slate-500 animate-pulse">[Agent Idle] Awaiting evidence upload stream...</div>
-                ) : (
-                  liveLogs.map((log, idx) => (
-                    <div key={idx} className="flex gap-2">
-                      <span className="text-teal-650 shrink-0">[{new Date(Date.now() - (liveLogs.length - idx) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
-                      <span>{log}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
           </div>
         </div>
       ) : submitError ? (

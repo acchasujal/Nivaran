@@ -52,14 +52,13 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
 
     // Check if we are in upload/submitting state
     if (isSubmitting || submitError) {
-      const elapsed = elapsedSeconds ?? 0;
-      
-      const step0: StepState = elapsed >= 1 ? 'completed' : 'running';
-      const step1: StepState = elapsed < 1 ? 'pending' : (elapsed >= 3 ? 'completed' : 'running');
-      const step2: StepState = elapsed < 3 ? 'pending' : (elapsed >= 5 ? 'completed' : 'running');
-      const step3: StepState = elapsed < 5 ? 'pending' : (elapsed >= 7 ? 'completed' : 'running');
-      const step4: StepState = elapsed < 7 ? 'pending' : (elapsed >= 9 ? 'completed' : 'running');
-      const step5: StepState = elapsed < 9 ? 'pending' : 'running';
+      // In synchronous execution, we are at intake validation & classification
+      const step0: StepState = submitError ? 'failed' : 'running';
+      const step1: StepState = 'pending';
+      const step2: StepState = 'pending';
+      const step3: StepState = 'pending';
+      const step4: StepState = 'pending';
+      const step5: StepState = 'pending';
 
       return [
         {
@@ -67,42 +66,42 @@ export const AgentTimelineComponent: React.FC<AgentTimelineProps> = ({
           name: 'Stage 0 Evidence Validation',
           agentLabel: 'Stage 0: Validation Gate',
           description: 'Validates resolution, blur, brightness, dhash cache, and runs Gemini Vision check.',
-          status: submitError && elapsed < 1 ? ('failed' as StepState) : step0,
+          status: step0,
         },
         {
           number: 2,
           name: 'Visual Intake & Classification',
           agentLabel: 'Agent 1: Classifier',
           description: 'Extracts coordinates, checks clarity, and classifies issue attributes.',
-          status: submitError && elapsed >= 1 && elapsed < 3 ? ('failed' as StepState) : step1,
+          status: step1,
         },
         {
           number: 3,
           name: 'Geographic Deduplication',
           agentLabel: 'Agent 2: Geo-Scanner',
           description: 'Triggers Haversine spatial scanner and runs duplicate matching.',
-          status: submitError && elapsed >= 3 && elapsed < 5 ? ('failed' as StepState) : step2,
+          status: step2,
         },
         {
           number: 4,
           name: 'Impact Assessment',
           agentLabel: 'Agent 3: Impact Analyst',
           description: 'Calculates public safety consequences on escalation threshold.',
-          status: submitError && elapsed >= 5 && elapsed < 7 ? ('failed' as StepState) : step3,
+          status: step3,
         },
         {
           number: 5,
           name: 'Official Draft Preparation',
           agentLabel: 'Agent 4: Action Generator',
           description: 'Prepares legal complaint briefs and RTI requests from evidence.',
-          status: submitError && elapsed >= 7 && elapsed < 9 ? ('failed' as StepState) : step4,
+          status: step4,
         },
         {
           number: 6,
           name: 'Escalation Dispatch',
           agentLabel: 'Agent 5: Escalation',
           description: 'Executes direct external SendGrid dispatch or PDF export.',
-          status: submitError && elapsed >= 9 ? ('failed' as StepState) : step5,
+          status: step5,
         },
       ];
     }
