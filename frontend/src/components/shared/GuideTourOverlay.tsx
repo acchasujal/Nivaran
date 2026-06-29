@@ -53,10 +53,10 @@ export const TourWelcomeBanner: React.FC = () => {
     <div className="w-full bg-slate-50 border-b border-slate-200 py-2.5 px-6 flex flex-col transition-all z-40 select-none animate-fade">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs shrink-0 font-extrabold text-teal-650 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded uppercase tracking-wider">
-            🚀 Quick Start
+          <span className="text-xs shrink-0 font-extrabold text-teal-650 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded uppercase tracking-wider animate-pulse">
+            🚀 Quick Evaluation
           </span>
-          <span className="text-xs text-slate-600 font-medium truncate">
+          <span className="text-xs text-slate-650 font-medium truncate">
             Complete this 5-minute evaluation to explore CivicPulse.
           </span>
         </div>
@@ -84,13 +84,18 @@ export const TourWelcomeBanner: React.FC = () => {
       </div>
 
       {viewStepsOpen && (
-        <div className="mt-2.5 pt-2.5 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-5 gap-3">
-          {tourPhases.map(phase => (
-            <div key={phase.number} className="bg-white border border-slate-150 rounded p-2 flex flex-col justify-between">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-[8px]">Phase {phase.number}</span>
-              <span className="text-[10px] font-bold text-slate-705 mt-0.5">{phase.name}</span>
-            </div>
-          ))}
+        <div className="mt-2.5 pt-2.5 border-t border-slate-200/60 flex flex-col gap-2.5">
+          <div className="text-[10px] font-bold text-slate-450 uppercase tracking-widest pl-1">
+            CivicPulse Evaluation Guide
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+            {tourPhases.map(phase => (
+              <div key={phase.number} className="bg-white border border-slate-150 rounded p-2 flex flex-col justify-between">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-[8px]">Phase {phase.number}</span>
+                <span className="text-[10px] font-bold text-slate-705 mt-0.5">{phase.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -107,7 +112,7 @@ const FeatureExplorer: React.FC = () => {
   const done = explorerFeatures.filter(f => completedFeatures[f.id]).length;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9995] font-sans pointer-events-auto select-none">
+    <div className="fixed bottom-4 right-4 z-[9995] font-sans pointer-events-auto select-none animate-fade">
       {/* Small floating status badge */}
       <button
         onClick={() => setIsOpen(x => !x)}
@@ -149,7 +154,7 @@ const FeatureExplorer: React.FC = () => {
                     "w-full text-left flex items-center justify-between px-2 py-1.5 rounded transition-all text-[10px] border border-transparent",
                     isChecked
                       ? "bg-emerald-50/55 text-emerald-800 cursor-default opacity-85"
-                      : "bg-slate-50 hover:bg-primary/5 hover:border-primary/20 text-slate-650 font-bold cursor-pointer"
+                      : "bg-slate-50 hover:bg-primary/5 hover:border-primary/20 text-slate-655 font-bold cursor-pointer"
                   )}
                 >
                   <span className="truncate">{feat.label}</span>
@@ -298,7 +303,7 @@ const GuideCard: React.FC = () => {
           resetTimer();
         }}
         style={getCardStyle()}
-        className="z-[9990] bg-slate-900 border border-slate-800 text-white rounded-full shadow-premium px-4 py-2 flex items-center justify-between text-xs font-bold transition-all cursor-pointer pointer-events-auto hover:bg-slate-800 select-none animate-fade w-[220px]"
+        className="z-[9990] bg-slate-900 border border-slate-800 text-white rounded-full shadow-premium px-4 py-2 flex items-center justify-between text-xs font-bold transition-all cursor-pointer pointer-events-auto hover:bg-slate-800 select-none animate-fade w-[230px]"
       >
         <span>Evaluation Guide ({completedTasks}/{totalTasks})</span>
         <ChevronDown size={14} className="animate-bounce" />
@@ -326,7 +331,7 @@ const GuideCard: React.FC = () => {
             <span className="text-[9px] font-extrabold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
               Phase {phase.number} • {phase.name}
             </span>
-            <span className="text-[11px] font-extrabold text-slate-850 uppercase tracking-wide truncate">
+            <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wide truncate">
               {step.title}
             </span>
           </div>
@@ -335,27 +340,28 @@ const GuideCard: React.FC = () => {
           </button>
         </div>
 
-        {/* Row 2 & 3: Description, why, expected action */}
+        {/* Row 2 & 3: Description, expected action */}
         <div className="space-y-0.5">
-          <p className="text-[10px] text-slate-600 leading-tight line-clamp-1">
-            {step.description} <span className="font-semibold text-slate-400 ml-1">Why: {step.whyItMatters}</span>
-          </p>
+          <div className="text-[10px] text-slate-600 leading-tight flex items-center justify-between">
+            <span className="truncate font-semibold text-slate-400">Now Exploring:</span>
+            <span className="truncate text-slate-600 ml-1.5 flex-1 text-left">{step.description}</span>
+          </div>
 
           <div className={cn(
-            "text-[9.5px] font-bold px-2 py-0.5 rounded border flex items-center justify-between transition-all",
+            "text-[9.5px] font-bold px-2 py-0.5 rounded border flex items-center justify-between transition-all duration-500",
             isValidated
               ? "bg-emerald-50 border-emerald-250 text-emerald-800 animate-pulse"
               : "bg-teal-50/50 border-teal-200/50 text-teal-750"
           )}>
             <span className="truncate">
-              {isValidated ? '✓ Completed' : `→ ${step.expectedAction}`}
+              {isValidated ? '✓ Feature Reviewed' : `→ ${step.expectedAction}`}
             </span>
             {validationTimedOut && !isValidated && (
               <button
                 onClick={nextStep}
-                className="text-[9px] font-bold text-amber-600 hover:text-amber-800 cursor-pointer border-none bg-transparent"
+                className="text-[9px] font-bold text-amber-600 hover:text-amber-805 cursor-pointer border-none bg-transparent"
               >
-                Skip this step
+                Explore Later
               </button>
             )}
           </div>
@@ -365,9 +371,9 @@ const GuideCard: React.FC = () => {
         <div className="flex items-center justify-between select-none border-t border-slate-100 pt-1">
           <button
             onClick={skipTour}
-            className="text-[9.5px] font-bold text-slate-400 hover:text-slate-600 transition-colors bg-transparent border-none cursor-pointer"
+            className="text-[9.5px] font-bold text-slate-400 hover:text-slate-650 transition-colors bg-transparent border-none cursor-pointer"
           >
-            Skip Guide
+            Explore Later
           </button>
 
           <div className="flex items-center gap-1.5">
@@ -389,7 +395,7 @@ const GuideCard: React.FC = () => {
                   : "bg-slate-100 text-slate-400 cursor-not-allowed"
               )}
             >
-              {currentStepIndex === totalSteps - 1 ? 'Finish' : 'Next'}
+              <span>{currentStepIndex === totalSteps - 1 ? 'Finish' : 'Continue'}</span>
               <ArrowRight size={10} />
             </button>
           </div>
@@ -425,7 +431,7 @@ const CompletionModal: React.FC = () => {
           </button>
           <button
             onClick={restartTour}
-            className="w-full px-4 py-1.5 text-slate-400 hover:text-slate-600 text-[10px] font-bold transition-all cursor-pointer bg-transparent border-none"
+            className="w-full px-4 py-1.5 text-slate-400 hover:text-slate-655 text-[10px] font-bold transition-all cursor-pointer bg-transparent border-none"
           >
             Restart Evaluation Guide
           </button>

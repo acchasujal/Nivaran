@@ -70,15 +70,15 @@ export interface FeatureExplorerItem {
 }
 
 export const explorerFeatures: FeatureExplorerItem[] = [
-  { id: 'submit_report',         label: 'Submit Report',            stepId: 'scenario' },
-  { id: 'ai_verification',       label: 'AI Verification',          stepId: 'ai-pipeline' },
-  { id: 'operations_center',     label: 'Operations Center',        stepId: 'tracker' },
-  { id: 'ai_insights',           label: 'AI Civic Insights',        stepId: 'ai-insights' },
-  { id: 'silence_ledger',        label: 'Silence Ledger',           stepId: 'silence-ledger' },
-  { id: 'ward_intelligence',     label: 'Ward Intelligence',        stepId: 'ward-pattern' },
-  { id: 'complaint_workspace',   label: 'Complaint Workspace',      stepId: 'complaint-draft' },
-  { id: 'pdf_export',            label: 'PDF Export',               stepId: 'save-pdf' },
-  { id: 'email_dispatch',        label: 'Email Dispatch',           stepId: 'send-email' },
+  { id: 'submit_report',         label: 'Submit Report',             stepId: 'scenario' },
+  { id: 'ai_verification',       label: 'Review AI Verification',     stepId: 'ai-pipeline' },
+  { id: 'operations_center',     label: 'Explore Operations Center',  stepId: 'tracker' },
+  { id: 'ai_insights',           label: 'Inspect AI Civic Insights',  stepId: 'ai-insights' },
+  { id: 'silence_ledger',        label: 'Review Silence Ledger',      stepId: 'silence-ledger' },
+  { id: 'ward_intelligence',     label: 'Explore Ward Intelligence',  stepId: 'ward-pattern' },
+  { id: 'complaint_workspace',   label: 'Review Complaint Workspace', stepId: 'complaint-draft' },
+  { id: 'pdf_export',            label: 'Generate Complaint PDF',     stepId: 'save-pdf' },
+  { id: 'email_dispatch',        label: 'Send Complaint Email',       stepId: 'send-email' },
 ];
 
 // ─── Steps (all descriptions <=20 words for maximum brevity) ──────────────────
@@ -212,7 +212,7 @@ export const tourSteps: TourStep[] = [
     selector: '#operations-map-container',
     title: 'City-wide GIS Map',
     description: 'Geolocated reports with dynamic clustering and risk markers.',
-    whyItMatters: 'Visualizes issue hotpots and municipal risk zones.',
+    whyItMatters: 'Visualizes issue hotspots and municipal risk zones.',
     expectedAction: 'Scroll to the map on the Tracker page.',
     validation: () => {
       const el = document.querySelector('#operations-map-container');
@@ -244,7 +244,7 @@ export const tourSteps: TourStep[] = [
     targetId: 'community-verification',
     selector: '#community-verification-container',
     title: 'Community Verification',
-    description: 'Allows citizens to corroborate, comment, and upload photos.',
+    description: 'Allows citizens to verify, comment, and upload photos.',
     whyItMatters: 'Consensus-driven verification builds case credibility.',
     expectedAction: 'Scroll to the Community Verification section.',
     validation: () => {
@@ -327,7 +327,7 @@ export const tourSteps: TourStep[] = [
     route: '/issue/:id',
     targetId: 'btn-save-pdf',
     selector: '#tour-btn-save-pdf',
-    title: 'Generate Official PDF',
+    title: 'Generate Complaint PDF',
     description: 'Compiles the evidence and drafts into a printable PDF.',
     whyItMatters: 'Creates a portable file for physical filing.',
     expectedAction: 'Click "Generate PDF" in the draft workspace.',
@@ -343,9 +343,9 @@ export const tourSteps: TourStep[] = [
     route: '/issue/:id',
     targetId: 'btn-send-email',
     selector: '#tour-btn-send-email',
-    title: 'Send Official Email',
+    title: 'Send Complaint Email',
     description: 'Dispatches the complaint package directly to authorities.',
-    whyItMatters: ' внешнее action connects platform outputs to officials.',
+    whyItMatters: 'External action connects platform outputs to officials.',
     expectedAction: 'Click "Send Email" in the workspace.',
     validation: () => {
       const dialog = document.querySelector('[data-escalation-dialog]');

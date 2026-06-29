@@ -53,7 +53,7 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
               <HelpTooltip text="Allows multiple citizens to strengthen evidence for the same civic issue." />
             </h4>
             <p className="text-[10px] text-slate-450 mt-0.5">
-              Nearby citizens can verify this report.
+              Nearby citizens can strengthen the evidence by confirming this report.
             </p>
           </div>
         </div>
@@ -79,7 +79,7 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
               {localConfirmCount === 1 ? 'citizen confirmed' : 'citizens confirmed'}
             </span>
             <p className="text-[10px] text-slate-450 mt-0.5">
-              Community verification strengthens evidence credibility and escalation priority.
+              Community verification increases confidence and helps prioritize escalation.
             </p>
           </div>
         </div>
@@ -115,9 +115,9 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
 
           {!submittedComment && !photoSubmitted && (
             <div className="border border-dashed border-slate-200 rounded-medium p-4 text-center select-none bg-slate-50/50">
-              <span className="text-xs text-slate-500 block font-semibold mb-1">No community contributions yet.</span>
+              <span className="text-xs text-slate-500 block font-semibold mb-1">No community verification yet.</span>
               <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto">
-                Be the first to confirm this issue or add your comments to strengthen the verified evidence trail!
+                Be the first citizen to strengthen this report.
               </p>
             </div>
           )}
