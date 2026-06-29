@@ -20,7 +20,7 @@ const HeaderBar: React.FC = () => {
         className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-705 text-xs font-bold rounded-small shadow-sm transition-all cursor-pointer select-none active:scale-[0.98]"
       >
         <HelpCircle size={14} className="text-primary animate-pulse" />
-        <span>Guide</span>
+        <span>Evaluation Guide</span>
       </button>
     </header>
   );

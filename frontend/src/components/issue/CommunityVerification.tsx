@@ -53,7 +53,7 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
               <HelpTooltip text="Allows multiple citizens to strengthen evidence for the same civic issue." />
             </h4>
             <p className="text-[10px] text-slate-450 mt-0.5">
-              Nearby citizens can corroborate this report.
+              Nearby citizens can verify this report.
             </p>
           </div>
         </div>
@@ -78,8 +78,8 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
             <span className="text-xs text-slate-500 ml-2">
               {localConfirmCount === 1 ? 'citizen confirmed' : 'citizens confirmed'}
             </span>
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Community corroboration strengthens escalation priority.
+            <p className="text-[10px] text-slate-450 mt-0.5">
+              Community verification strengthens evidence credibility and escalation priority.
             </p>
           </div>
         </div>
@@ -115,7 +115,7 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
 
           {!submittedComment && !photoSubmitted && (
             <div className="border border-dashed border-slate-200 rounded-medium p-4 text-center select-none bg-slate-50/50">
-              <span className="text-xs text-slate-500 block font-semibold mb-1">No community corroborations submitted yet</span>
+              <span className="text-xs text-slate-500 block font-semibold mb-1">No community contributions yet.</span>
               <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto">
                 Be the first to confirm this issue or add your comments to strengthen the verified evidence trail!
               </p>
@@ -204,7 +204,7 @@ export const CommunityVerification: React.FC<CommunityVerificationProps> = ({
         <div className="flex items-start gap-2 text-[9px] text-slate-400 select-none">
           <Info size={11} className="shrink-0 mt-0.5" />
           <span>
-            Community input is logged locally and strengthens case priority for review. Full community backend integration is on the roadmap.
+            Community verification strengthens evidence credibility and escalation priority.
           </span>
         </div>
       </div>

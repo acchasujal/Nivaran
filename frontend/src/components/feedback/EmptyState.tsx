@@ -5,14 +5,14 @@ import { cn } from '@/lib/utils';
 
 interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
-  description: string;
+  description?: string;
   action?: React.ReactNode;
   icon?: LucideIcon;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  title = 'No records found',
-  description,
+  title = 'No reports yet.',
+  description = 'Submit the first verified report for this area.',
   action,
   icon: Icon = FileQuestion,
   className,

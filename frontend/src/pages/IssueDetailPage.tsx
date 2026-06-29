@@ -289,7 +289,7 @@ export const IssueDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* SECTION 3: Community Corroboration */}
+        {/* SECTION 3: Community Verification */}
         <div className="relative pb-12">
           <div className="absolute -left-[32px] md:-left-[48px] top-0 flex items-center justify-center h-8 w-8 rounded-full border border-slate-350 bg-white text-xs font-bold text-slate-600 shadow-sm select-none">
             03
@@ -480,7 +480,7 @@ export const IssueDetailPage: React.FC = () => {
             <div className="flex items-center gap-2 border-b border-slate-100 pb-2 select-none">
               <Users size={15} className="text-primary shrink-0" />
               <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest">
-                Community Corroboration
+                Community Verification
               </h3>
             </div>
 

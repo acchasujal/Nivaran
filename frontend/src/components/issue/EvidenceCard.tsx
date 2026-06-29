@@ -52,7 +52,7 @@ export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({
       status: 'passed',
     },
     {
-      name: 'Community Corroboration Scan',
+      name: 'Duplicate Detection',
       description: issue.cluster_id 
         ? 'Matched and grouped with nearby community reports.'
         : 'Scanned against database. Registered as first report in this area.',

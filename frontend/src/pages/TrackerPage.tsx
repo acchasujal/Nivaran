@@ -570,11 +570,11 @@ export const TrackerPage: React.FC = () => {
           ) : filteredIssues.length === 0 ? (
             <EmptyState
               icon={Map}
-              title={selectedType !== 'all' || selectedRisk !== 'all' ? "No matching reports" : "No reports registered"}
+              title={selectedType !== 'all' || selectedRisk !== 'all' ? "No matching reports yet." : "No reports yet."}
               description={
                 selectedType !== 'all' || selectedRisk !== 'all'
-                  ? "No community reports of this specific category and risk level have been logged yet. Reset active filters to view other reports."
-                  : "The public tracker is currently empty. Submit a new report with photo evidence to trigger the automated verification pipeline."
+                  ? "No community reports of this category and risk level have been logged yet. Reset active filters or submit the first report for this area."
+                  : "Submit the first verified report for this area."
               }
               action={
                 selectedType !== 'all' || selectedRisk !== 'all' ? (
