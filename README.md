@@ -169,7 +169,7 @@ Each stage has a clearly defined responsibility and produces structured outputs 
 ---
 ## Architecture Overview
 
-![Technical Architecture](docs/assets/technical-architecture.png)
+![Technical Architecture](docs/assets/civicpulse-architecture.png)
 
 
 # Architecture
