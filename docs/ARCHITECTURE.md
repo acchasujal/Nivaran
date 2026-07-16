@@ -231,13 +231,13 @@ action_drafts (one) ──► escalations (one per send/export attempt)
 |---|---|---|---|
 | Gemini 2.0 Flash | Primary AI model | Native Vision input, structured-output JSON mode, long context for Agent 3, required for Google Technologies criterion | GPT-4o: not a Google technology |
 | SendGrid HTTP API | Email delivery | Port 587 blocked on venue WiFi; SendGrid HTTP works on any network; better deliverability on new domains | Raw SMTP: fails at hackathon venues |
-| SQLite + WAL mode | Database | Fast solo build; no external DB service; WAL prevents write-lock on concurrent access | Firebase: adds auth/SDK surface area under time pressure |
+| PostgreSQL Engine | Database | Dynamic PostgreSQL and SQLite support with indexes on foreign keys for high performance | SQLite-only: not suitable for multi-instance production |
 | FastAPI BackgroundTasks | Async Agent 3/4 | Cuts user-facing POST /issues latency from 3-agent to 2-agent synchronous wait | Celery/RQ: over-engineered; adds Redis dependency |
 | Synchronous Agent 1+2 | On-submit pipeline | Demo predictability; failures are immediately visible to user; no polling needed for the classification result | Full async: adds polling complexity, harder to debug solo |
 | WeasyPrint / reportlab | PDF export | Pure Python, no system service required; reliable on any deployment target | Puppeteer: requires Node.js subprocess; complex on Railway/Render |
 | React/Vite/Tailwind | Frontend | Fast development; Tailwind utility-first avoids CSS file complexity | Next.js: SSR overhead not needed for hackathon SPA |
-| No auth layer | Security | 7-day build; public read/write acceptable for demo; IP rate limiting reduces abuse | Full auth: consumes 1+ full build days |
-| DEMO_THRESHOLD_OVERRIDE env var | Demo orchestration | ESCALATION_THRESHOLD=3 requires 3 live submissions to show Agent 4; demo mode sets it to 1 | Hardcoding threshold to 1: breaks production behavior |
+| Token-Bucket Rate Limiter | Security | Public write endpoints protected from automation abuse | Full auth: consumes 1+ full build days |
+| Centralized Logging | Observability | Correlation IDs and JSON formatting for production tracing | Standard print logs: lacks structured queryability |
 
 ---
 
@@ -245,14 +245,12 @@ action_drafts (one) ──► escalations (one per send/export attempt)
 
 | Component | Target | Reason |
 |---|---|---|
-| Backend (FastAPI) | TBD — resolve Google AI Studio requirement first | If "Google AI Studio" = use Gemini API: deploy to Railway/Render. If = Google Cloud Run: deploy there. Do not start backend deployment before this is resolved. |
+| Backend (FastAPI) | Render | Managed Python environment, dynamic gunicorn scaling |
 | Frontend | Vercel | One-click deploy, automatic HTTPS, free tier |
-| Database | SQLite file on backend host | Hackathon scope; not multi-instance safe (documented, acceptable) |
+| Database | PostgreSQL on Render | Managed database service with scaling and backup support |
 | Photos | Local disk on backend host | Hackathon scope; move to GCS post-hackathon |
 | Email | SendGrid HTTP API | No infrastructure to manage |
 | PDF | Served as temp file from backend | Simple for hackathon; no CDN needed |
-
-**CRITICAL:** Resolve the Google AI Studio deployment requirement before Day 3 or the backend deployment plan is wrong.
 
 ---
 
