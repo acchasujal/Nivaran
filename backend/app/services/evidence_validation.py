@@ -134,6 +134,13 @@ def run_cheap_validations(photo_bytes: bytes, mime_type: str) -> tuple[bool, Opt
                     Stage0Checks(file=True, quality=False, scene=False, infrastructure=False, issue=False),
                     f"Image resolution is too low ({width}x{height}px). Minimum 300x300px required."
                 )
+            if width > 4096 or height > 4096:
+                return (
+                    False,
+                    ValidationFailure.LOW_QUALITY,
+                    Stage0Checks(file=True, quality=False, scene=False, infrastructure=False, issue=False),
+                    f"Image resolution is too high ({width}x{height}px). Maximum 4096x4096px allowed."
+                )
 
             # Brightness check
             gray_img = img.convert('L')

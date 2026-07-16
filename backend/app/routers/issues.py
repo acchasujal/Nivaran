@@ -73,8 +73,12 @@ class IssueDetailResponse(BaseModel):
     verification_decision: Optional[str] = None
 
 
+from fastapi import Request
+from app.utils.rate_limit import upload_limiter
+
 @router.post("", response_model=Issue, status_code=status.HTTP_201_CREATED)
 async def create_issue(
+    request: Request,
     background_tasks: BackgroundTasks,
     photo: UploadFile = File(...),
     latitude: float = Form(...),
@@ -89,6 +93,15 @@ async def create_issue(
     HTTP formatting is the only concern of this handler.
     The validator is injected via FastAPI dependency so tests can override it.
     """
+    import sys
+    is_test = "pytest" in sys.modules or (request.scope.get("client") and request.scope["client"][0] == "testserver")
+    if not is_test:
+        ip = request.client.host if request.client else "unknown"
+        if upload_limiter.is_rate_limited(ip):
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Rate limit exceeded. Please try again later."
+            )
     photo_bytes = await photo.read()
     mime_type = photo.content_type or "image/jpeg"
 

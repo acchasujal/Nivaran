@@ -148,86 +148,83 @@ async def create_issue_from_bytes(
     unique_filename = f"{uuid.uuid4()}{ext}"
     photo_path = os.path.join(UPLOAD_DIR, unique_filename)
 
-    with open(photo_path, "wb") as f:
-        f.write(photo_bytes)
+    from PIL import Image
+    import io
+
+    try:
+        img = Image.open(io.BytesIO(photo_bytes))
+        # Discard EXIF metadata by copying pixel data into a new Image object
+        clean_img = Image.new(img.mode, img.size)
+        clean_img.putdata(list(img.getdata()))
+        clean_img.save(photo_path, format=img.format)
+    except Exception as e:
+        logger.warning(f"exif_stripping_failed | error={str(e)} | falling back to raw save")
+        with open(photo_path, "wb") as f:
+            f.write(photo_bytes)
 
     # ------------------------------------------------------------------
-    # 3. Stage-0 Validation Gate
+    # 3. Pipeline execution with transaction safety
     # ------------------------------------------------------------------
     try:
+        # 3.1 Stage-0 Validation Gate
         stage0_result = await _validator(
             photo_bytes=photo_bytes,
             mime_type=mime_type,
         )
-    except Exception as e:
-        _cleanup(photo_path)
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={"error": "ai_unavailable", "retryable": True},
-        ) from e
+        if not stage0_result.accepted:
+            raise IssueValidationError(stage0_result)
 
-    if not stage0_result.accepted:
-        _cleanup(photo_path)
-        raise IssueValidationError(stage0_result)
-
-    # ------------------------------------------------------------------
-    # 4. Agent 1 — Classification
-    # ------------------------------------------------------------------
-    start_time = time.time()
-    try:
+        # 3.2 Agent 1 — Classification
+        start_time = time.time()
         agent1_result = await analyze_issue_photo(
             photo_bytes=photo_bytes,
             mime_type=mime_type,
             user_note=user_note,
         )
-    except Exception as e:
-        _cleanup(photo_path)
+
+        # Map Agent 1 outputs to DB-allowed types
+        mapped_issue_type = agent1_result.issue_type
+        if mapped_issue_type == "lighting":
+            mapped_issue_type = "street_lighting"
+        elif mapped_issue_type in ("waste", "other"):
+            mapped_issue_type = "garbage"
+
+        # 3.3 DB write
+        db_issue = Issue(
+            photo_url=f"/static/uploads/{unique_filename}",
+            latitude=latitude,
+            longitude=longitude,
+            user_note=user_note,
+            issue_type=mapped_issue_type,
+            severity=agent1_result.severity,
+            description=agent1_result.description,
+            credibility_score=agent1_result.credibility_score,
+            status="classified",
+        )
+        session.add(db_issue)
+        session.commit()
+        session.refresh(db_issue)
+
         latency_ms = int((time.time() - start_time) * 1000)
         logger.info(
-            json.dumps({"agent": "Agent1", "issue_id": "N/A", "latency_ms": latency_ms, "success": False})
+            json.dumps({"agent": "Agent1", "issue_id": db_issue.id, "latency_ms": latency_ms, "success": True})
         )
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={"error": "ai_unavailable", "retryable": True},
-        ) from e
 
-    # Map Agent 1 outputs to DB-allowed types
-    mapped_issue_type = agent1_result.issue_type
-    if mapped_issue_type == "lighting":
-        mapped_issue_type = "street_lighting"
-    elif mapped_issue_type in ("waste", "other"):
-        mapped_issue_type = "garbage"
-
-    # ------------------------------------------------------------------
-    # 5. DB write
-    # ------------------------------------------------------------------
-    db_issue = Issue(
-        photo_url=f"/static/uploads/{unique_filename}",
-        latitude=latitude,
-        longitude=longitude,
-        user_note=user_note,
-        issue_type=mapped_issue_type,
-        severity=agent1_result.severity,
-        description=agent1_result.description,
-        credibility_score=agent1_result.credibility_score,
-        status="classified",
-    )
-    session.add(db_issue)
-    session.commit()
-    session.refresh(db_issue)
-
-    latency_ms = int((time.time() - start_time) * 1000)
-    logger.info(
-        json.dumps({"agent": "Agent1", "issue_id": db_issue.id, "latency_ms": latency_ms, "success": True})
-    )
-
-    # ------------------------------------------------------------------
-    # 6. Agent 2 — Verification & Clustering
-    # ------------------------------------------------------------------
-    try:
+        # 3.4 Agent 2 — Verification & Clustering
         await verify_and_cluster_issue(db_issue, session)
+
+    except IssueValidationError as exc:
+        session.rollback()
+        _cleanup(photo_path)
+        raise exc
+    except HTTPException as exc:
+        session.rollback()
+        _cleanup(photo_path)
+        raise exc
     except Exception as e:
-        logger.error(f"agent_2_failed_entirely | error={str(e)}")
+        session.rollback()
+        _cleanup(photo_path)
+        logger.error(f"pipeline_execution_failed | error={str(e)}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={"error": "ai_unavailable", "retryable": True},
