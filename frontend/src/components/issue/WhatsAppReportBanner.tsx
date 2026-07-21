@@ -20,7 +20,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, QrCode, ExternalLink, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { QrCode, ExternalLink, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WhatsAppReportBannerProps {
