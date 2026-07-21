@@ -1,50 +1,44 @@
-import React, { lazy } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import AppLayout from './components/layout/AppLayout';
-
-const IntakePage = lazy(() => import('./pages/IntakePage'));
-const TrackerPage = lazy(() => import('./pages/TrackerPage'));
-const IssueDetailPage = lazy(() => import('./pages/IssueDetailPage'));
-
-// Initialize the TanStack Query Client with sensible defaults
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5000,
-    },
-  },
-});
-
-// Configure the client routing structure
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <AppLayout />,
-    children: [
-      {
-        path: '',
-        element: <IntakePage />,
-      },
-      {
-        path: 'tracker',
-        element: <TrackerPage />,
-      },
-      {
-        path: 'issue/:id',
-        element: <IssueDetailPage />,
-      },
-    ],
-  },
-]);
+import React from 'react';
+import { GlobalErrorBoundary } from './core/boundaries/GlobalErrorBoundary';
+import { QueryProvider } from './core/providers/QueryProvider';
+import { AuthProvider } from './core/providers/AuthProvider';
+import { ConnectivityProvider } from './core/providers/ConnectivityProvider';
+import { OfflineProvider } from './core/providers/OfflineProvider';
+import { ThemeProvider } from './core/providers/ThemeProvider';
+import { AccessibilityProvider } from './core/providers/AccessibilityProvider';
+import { FeedbackProvider } from './core/providers/FeedbackProvider';
+import { PermissionProvider } from './core/providers/PermissionProvider';
+import { AppRouter } from './core/router/AppRouter';
 
 export const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <GlobalErrorBoundary>
+      <QueryProvider>
+        <AuthProvider>
+          <ConnectivityProvider>
+            <OfflineProvider>
+              <ThemeProvider>
+                <AccessibilityProvider>
+                  <FeedbackProvider>
+                    <PermissionProvider>
+                      {/* WCAG Skip Navigation Link */}
+                      <a
+                        href="#main-content"
+                        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-700 focus:text-white focus:rounded-md focus:shadow-modal"
+                      >
+                        Skip to main content
+                      </a>
+
+                      <AppRouter />
+                    </PermissionProvider>
+                  </FeedbackProvider>
+                </AccessibilityProvider>
+              </ThemeProvider>
+            </OfflineProvider>
+          </ConnectivityProvider>
+        </AuthProvider>
+      </QueryProvider>
+    </GlobalErrorBoundary>
   );
 };
 
