@@ -61,11 +61,23 @@ def migrate_data(sqlite_path: str, pg_url: str):
     sqlite_conn.row_factory = sqlite3.Row
     sqlite_cursor = sqlite_conn.cursor()
 
+    # Ensure URL uses postgresql dialect and has explicit driver if needed
     if pg_url.startswith("postgres://"):
         pg_url = pg_url.replace("postgres://", "postgresql://", 1)
 
     logger.info("Connecting to target PostgreSQL database...")
-    pg_engine = create_engine(pg_url, pool_pre_ping=True)
+    try:
+        pg_engine = create_engine(pg_url, pool_pre_ping=True)
+    except Exception as exc:
+        if "psycopg2" in str(exc) or "ModuleNotFoundError" in str(exc):
+            logger.info("psycopg2 driver not installed in current Python environment, trying psycopg...")
+            if "+" not in pg_url.split("://")[0]:
+                pg_url_driver = pg_url.replace("postgresql://", "postgresql+psycopg://", 1)
+                pg_engine = create_engine(pg_url_driver, pool_pre_ping=True)
+            else:
+                raise
+        else:
+            raise
 
     logger.info("Ensuring PostgreSQL table schemas exist via SQLModel metadata...")
     SQLModel.metadata.create_all(pg_engine)
