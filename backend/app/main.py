@@ -7,7 +7,8 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.db import init_db
-from app.routers import issues, clusters, impact, actions, escalations, whatsapp, auth, sync_router, case_router
+from app.routers import issues, clusters, impact, actions, escalations, whatsapp, auth, sync_router, case_router, notification_router
+
 
 
 
@@ -67,6 +68,8 @@ app.include_router(whatsapp.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(sync_router.router, prefix="/api")
 app.include_router(case_router.router, prefix="/api")
+app.include_router(notification_router.router, prefix="/api")
+
 
 
 
