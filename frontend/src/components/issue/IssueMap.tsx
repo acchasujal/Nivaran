@@ -100,14 +100,38 @@ export const IssueMap: React.FC<IssueMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    // Use OpenFreeMap Liberty Vector Style (completely free, zero API key)
+    // Use robust OpenStreetMap raster tile style (guaranteed to render globally without CORS or WebGL driver issues)
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
+      style: {
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'osm-tiles-layer',
+            type: 'raster',
+            source: 'osm-tiles',
+            minzoom: 0,
+            maxzoom: 19
+          }
+        ]
+      },
       center: [72.8777, 19.0760], // Mumbai Center [lng, lat]
       zoom: 12,
       maxZoom: 18,
-      minZoom: 9,
+      minZoom: 2,
       attributionControl: false,
     });
 
@@ -122,11 +146,21 @@ export const IssueMap: React.FC<IssueMapProps> = ({
 
     mapRef.current = map;
 
+    // Trigger canvas resize once container layout settles
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
     };
   }, []);
+
 
   // Render & Update Supercluster Markers when map moves or data changes
   const updateMarkers = () => {
