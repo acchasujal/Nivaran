@@ -98,68 +98,80 @@ export const IssueMap: React.FC<IssueMapProps> = ({
 
   // Initialize MapLibre GL Map Instance
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current) return;
+    if (mapRef.current) return;
 
-    // Use robust OpenStreetMap raster tile style (guaranteed to render globally without CORS or WebGL driver issues)
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: {
-        version: 8,
-        sources: {
-          'osm-tiles': {
-            type: 'raster',
-            tiles: [
-              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
-            ],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
-          }
+    console.log('[MapLibre Debug] Map constructor initializing on container:', mapContainerRef.current);
+
+    try {
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: {
+          version: 8,
+          sources: {
+            'osm-tiles': {
+              type: 'raster',
+              tiles: [
+                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+              ],
+              tileSize: 256,
+              attribution: '© OpenStreetMap contributors'
+            }
+          },
+          layers: [
+            {
+              id: 'osm-tiles-layer',
+              type: 'raster',
+              source: 'osm-tiles',
+              minzoom: 0,
+              maxzoom: 19
+            }
+          ]
         },
-        layers: [
-          {
-            id: 'osm-tiles-layer',
-            type: 'raster',
-            source: 'osm-tiles',
-            minzoom: 0,
-            maxzoom: 19
-          }
-        ]
-      },
-      center: [72.8777, 19.0760], // Mumbai Center [lng, lat]
-      zoom: 12,
-      maxZoom: 18,
-      minZoom: 2,
-      attributionControl: false,
-    });
+        center: [72.8777, 19.0760], // Mumbai Center [lng, lat]
+        zoom: 12,
+        maxZoom: 18,
+        minZoom: 2,
+        attributionControl: false,
+      });
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+      map.on('load', () => console.log('[MapLibre Debug] event: load'));
+      map.on('style.load', () => console.log('[MapLibre Debug] event: style.load'));
+      map.on('idle', () => console.log('[MapLibre Debug] event: idle'));
+      map.on('error', (e) => console.error('[MapLibre Debug] event: error', e));
 
-    popupRef.current = new maplibregl.Popup({
-      closeButton: true,
-      closeOnClick: false,
-      maxWidth: '240px',
-    });
+      map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
-    mapRef.current = map;
+      popupRef.current = new maplibregl.Popup({
+        closeButton: true,
+        closeOnClick: false,
+        maxWidth: '240px',
+      });
 
-    // Trigger canvas resize once container layout settles
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
-    if (mapContainerRef.current) {
-      resizeObserver.observe(mapContainerRef.current);
+      mapRef.current = map;
+
+      const resizeObserver = new ResizeObserver(() => {
+        map.resize();
+      });
+      if (mapContainerRef.current) {
+        resizeObserver.observe(mapContainerRef.current);
+      }
+
+      return () => {
+        console.log('[MapLibre Debug] Cleanup triggered, removing map instance.');
+        resizeObserver.disconnect();
+        map.remove();
+        mapRef.current = null;
+      };
+    } catch (err) {
+      console.error('[MapLibre Debug] Constructor threw exception:', err);
     }
-
-    return () => {
-      resizeObserver.disconnect();
-      map.remove();
-      mapRef.current = null;
-    };
   }, []);
+
 
 
   // Render & Update Supercluster Markers when map moves or data changes
