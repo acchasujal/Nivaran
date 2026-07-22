@@ -24,9 +24,13 @@ if is_sqlite:
 
 def init_db():
     # Import all models to ensure they are registered with SQLModel.metadata before creation
-    from app.models import Cluster, Issue, ImpactSummary, ActionDraft, Escalation
+    from app.models import (
+        Cluster, Issue, ImpactSummary, ActionDraft, Escalation,
+        User, Role, Permission, RefreshToken, Session, LoginHistory
+    )
     SQLModel.metadata.create_all(engine)
     logger.info("Database tables initialized successfully.")
+
     
     # Auto-seed database if empty (ensures production never appears empty)
     with Session(engine) as session:

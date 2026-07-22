@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     AGENT5_PDF_FALLBACK: bool = True
     APP_BASE_URL: str = ""
 
+    # Auth & JWT Configuration
+    JWT_SECRET_KEY: str = "civicpulse_super_secret_jwt_key_2026_change_in_production!"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    JWT_ISSUER: str = "civicpulse-auth"
+    JWT_AUDIENCE: str = "civicpulse-app"
+
     # WhatsApp channel (Twilio Sandbox for development; Meta Cloud API in production)
     # Set WHATSAPP_ENABLED=true and supply Twilio credentials to activate.
     WHATSAPP_ENABLED: bool = False
@@ -37,6 +45,7 @@ class Settings(BaseSettings):
     }
 
 settings = Settings()
+
 
 
 
