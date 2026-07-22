@@ -31,6 +31,7 @@ export const getImageUrl = (path: string | null | undefined): string => {
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
     resolvedUrl = trimmed;
   } else {
+    // Demo images reside directly in frontend static /public folder (e.g. /demo_pothole1.jpg)
     if (trimmed.includes('demo_')) {
       const parts = trimmed.split('/');
       const filename = parts[parts.length - 1];
@@ -48,6 +49,7 @@ export const getImageUrl = (path: string | null | undefined): string => {
       resolvedUrl = VITE_API_HOST ? `${VITE_API_HOST}/${cleanPath}` : `/${cleanPath}`;
     }
   }
+
   
   memoCache.set(path, resolvedUrl);
   return resolvedUrl;
