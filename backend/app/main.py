@@ -7,7 +7,8 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.db import init_db
-from app.routers import issues, clusters, impact, actions, escalations, whatsapp
+from app.routers import issues, clusters, impact, actions, escalations, whatsapp, auth
+
 from app.utils.logging import setup_structured_logging, LoggingMiddleware
 
 # Configure structured logging
@@ -61,6 +62,8 @@ app.include_router(impact.router, prefix="/api")
 app.include_router(actions.router, prefix="/api")
 app.include_router(escalations.router, prefix="/api")
 app.include_router(whatsapp.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+
 
 # Dynamic frontend dist directory resolution
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
