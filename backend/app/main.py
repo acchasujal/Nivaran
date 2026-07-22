@@ -14,6 +14,7 @@ from app.routers import issues, clusters, impact, actions, escalations, whatsapp
 
 
 from app.utils.logging import setup_structured_logging, LoggingMiddleware
+from app.core.security_middleware import SecurityHeadersMiddleware, RateLimitMiddleware
 
 # Configure structured logging
 setup_structured_logging()
@@ -38,11 +39,16 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down application...")
 
 app = FastAPI(
-    title="CivicPulse API",
-    description="5-Agent Civic Accountability Platform Backend",
+    title="CivicPulse Backend API",
+    description="Backend API for CivicPulse issue tracking system",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+
+# Production Security, Rate Limiting & Structured Logging Middleware
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(LoggingMiddleware)
 
 # CORS Lockdown to frontend origin(s)
 origins = [org.strip() for org in settings.FRONTEND_ORIGIN.split(",") if org.strip()]
