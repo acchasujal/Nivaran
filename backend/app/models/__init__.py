@@ -4,6 +4,7 @@ from .impact_summary import ImpactSummary
 from .action_draft import ActionDraft
 from .escalation import Escalation
 from .user import User, Role, Permission, RefreshToken, Session, LoginHistory
+from .sync import IdempotencyKey, UploadSession, MediaAsset, OfflineSyncJob, SyncConflict
 
 __all__ = [
     "Cluster",
@@ -17,5 +18,11 @@ __all__ = [
     "RefreshToken",
     "Session",
     "LoginHistory",
+    "IdempotencyKey",
+    "UploadSession",
+    "MediaAsset",
+    "OfflineSyncJob",
+    "SyncConflict",
 ]
+
 

@@ -26,10 +26,12 @@ def init_db():
     # Import all models to ensure they are registered with SQLModel.metadata before creation
     from app.models import (
         Cluster, Issue, ImpactSummary, ActionDraft, Escalation,
-        User, Role, Permission, RefreshToken, Session, LoginHistory
+        User, Role, Permission, RefreshToken, Session, LoginHistory,
+        IdempotencyKey, UploadSession, MediaAsset, OfflineSyncJob, SyncConflict
     )
     SQLModel.metadata.create_all(engine)
     logger.info("Database tables initialized successfully.")
+
 
     
     # Auto-seed database if empty (ensures production never appears empty)
