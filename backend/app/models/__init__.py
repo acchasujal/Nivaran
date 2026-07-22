@@ -6,6 +6,7 @@ from .escalation import Escalation
 from .user import User, Role, Permission, RefreshToken, Session, LoginHistory
 from .sync import IdempotencyKey, UploadSession, MediaAsset, OfflineSyncJob, SyncConflict
 from .case import Department, OfficerProfile, CaseAssignment, CaseTransition, RepairVerification, ResolutionRecord
+from .notification import Notification, NotificationPreference, NotificationDelivery, Announcement
 
 __all__ = [
     "Cluster",
@@ -30,7 +31,12 @@ __all__ = [
     "CaseTransition",
     "RepairVerification",
     "ResolutionRecord",
+    "Notification",
+    "NotificationPreference",
+    "NotificationDelivery",
+    "Announcement",
 ]
+
 
 
 

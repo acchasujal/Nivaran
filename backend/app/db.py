@@ -28,10 +28,12 @@ def init_db():
         Cluster, Issue, ImpactSummary, ActionDraft, Escalation,
         User, Role, Permission, RefreshToken, Session, LoginHistory,
         IdempotencyKey, UploadSession, MediaAsset, OfflineSyncJob, SyncConflict,
-        Department, OfficerProfile, CaseAssignment, CaseTransition, RepairVerification, ResolutionRecord
+        Department, OfficerProfile, CaseAssignment, CaseTransition, RepairVerification, ResolutionRecord,
+        Notification, NotificationPreference, NotificationDelivery, Announcement
     )
     SQLModel.metadata.create_all(engine)
     logger.info("Database tables initialized successfully.")
+
 
 
 
