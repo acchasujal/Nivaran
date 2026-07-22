@@ -27,16 +27,6 @@ interface WhatsAppReportBannerProps {
   className?: string;
 }
 
-// WhatsApp number from env — e.g. VITE_WHATSAPP_NUMBER=+14155238886
-const WA_NUMBER = (import.meta.env.VITE_WHATSAPP_NUMBER || '').replace(/\D/g, '');
-const WA_GREETING = encodeURIComponent('Hi');
-const WA_DEEP_LINK = WA_NUMBER ? `https://wa.me/${WA_NUMBER}?text=${WA_GREETING}` : null;
-
-// Google Charts QR code — a Google Technology, produces a clean 200×200 QR image
-const QR_URL = WA_DEEP_LINK
-  ? `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(WA_DEEP_LINK)}&choe=UTF-8`
-  : null;
-
 const WhatsAppIcon: React.FC<{ size?: number; className?: string }> = ({ size = 20, className }) => (
   <svg
     width={size}
@@ -52,10 +42,38 @@ const WhatsAppIcon: React.FC<{ size?: number; className?: string }> = ({ size = 
 
 export const WhatsAppReportBanner: React.FC<WhatsAppReportBannerProps> = ({ className }) => {
   const [expanded, setExpanded] = useState(false);
+  const [configWaNumber, setConfigWaNumber] = useState<string>(() => {
+    return import.meta.env.VITE_WHATSAPP_NUMBER || '';
+  });
+  const [waEnabled, setWaEnabled] = useState<boolean>(true);
   const [dismissed, setDismissed] = useState(() => {
-    // Persist dismissal for the session only
     return sessionStorage.getItem('wa_banner_dismissed') === '1';
   });
+
+  React.useEffect(() => {
+    // Dynamically query runtime backend configuration to fallback/override build-time env
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.whatsapp_number) {
+          setConfigWaNumber(data.whatsapp_number);
+        }
+        if (data.whatsapp_enabled !== undefined) {
+          setWaEnabled(Boolean(data.whatsapp_enabled));
+        }
+      })
+      .catch(() => {
+        // Silent fallback to VITE_WHATSAPP_NUMBER
+      });
+  }, []);
+
+  const waNumberClean = configWaNumber.replace(/\D/g, '');
+  const waGreeting = encodeURIComponent('Hi');
+  const waDeepLink = (waEnabled && waNumberClean) ? `https://wa.me/${waNumberClean}?text=${waGreeting}` : null;
+  const qrUrl = waDeepLink
+    ? `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(waDeepLink)}&choe=UTF-8`
+    : null;
+
 
   if (dismissed) return null;
 
@@ -155,9 +173,9 @@ export const WhatsAppReportBanner: React.FC<WhatsAppReportBannerProps> = ({ clas
                     </div>
                   </div>
 
-                  {WA_DEEP_LINK && (
+                  {waDeepLink && (
                     <a
-                      href={WA_DEEP_LINK}
+                      href={waDeepLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       id="wa-open-link"
@@ -169,7 +187,7 @@ export const WhatsAppReportBanner: React.FC<WhatsAppReportBannerProps> = ({ clas
                     </a>
                   )}
 
-                  {!WA_DEEP_LINK && (
+                  {!waDeepLink && (
                     <p className="text-[10px] text-slate-400 italic">
                       WhatsApp reporting is not configured in this deployment.
                     </p>
@@ -177,7 +195,7 @@ export const WhatsAppReportBanner: React.FC<WhatsAppReportBannerProps> = ({ clas
                 </div>
 
                 {/* Right: QR code */}
-                {QR_URL && (
+                {qrUrl && (
                   <div className="flex flex-col items-center gap-2 shrink-0">
                     <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
                       <QrCode size={12} />
@@ -185,7 +203,7 @@ export const WhatsAppReportBanner: React.FC<WhatsAppReportBannerProps> = ({ clas
                     </div>
                     <div className="border-2 border-emerald-200 rounded-medium p-2 bg-white shadow-sm">
                       <img
-                        src={QR_URL}
+                        src={qrUrl}
                         alt="QR code — scan to open WhatsApp and start reporting"
                         width={140}
                         height={140}
@@ -193,6 +211,7 @@ export const WhatsAppReportBanner: React.FC<WhatsAppReportBannerProps> = ({ clas
                         loading="lazy"
                       />
                     </div>
+
                     <p className="text-[9px] text-slate-400 text-center max-w-[140px] leading-tight">
                       Opens WhatsApp with a pre-filled greeting
                     </p>

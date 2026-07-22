@@ -135,6 +135,18 @@ def ready_check():
 def version_check():
     return {"version": "1.0.0", "environment": os.getenv("ENV", "production")}
 
+@app.get("/api/config")
+@app.get("/config")
+def get_public_config():
+    """Expose non-sensitive runtime feature flags and public configuration to frontend."""
+    return {
+        "whatsapp_enabled": settings.WHATSAPP_ENABLED,
+        "whatsapp_number": settings.TWILIO_WHATSAPP_NUMBER if settings.WHATSAPP_ENABLED else "",
+        "environment": settings.ENVIRONMENT,
+        "escalation_threshold": settings.threshold
+    }
+
+
 
 # SPA catch-all route to serve the React index.html or other static files in dist
 from fastapi.responses import FileResponse
