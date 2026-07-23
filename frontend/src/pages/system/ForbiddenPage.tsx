@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '../../design-system/primitives/buttons/Button';
 import { usePageTitle } from '../../core/hooks/usePageTitle';
+import { AuthModal } from '../../components/auth/AuthModal';
 
 export const ForbiddenPage: React.FC = () => {
   const navigate = useNavigate();
   usePageTitle('403 — Access Restricted');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans text-center">
@@ -19,13 +21,20 @@ export const ForbiddenPage: React.FC = () => {
         </span>
         <h1 className="text-2xl font-bold text-neutral-900">Official Authorization Required</h1>
         <p className="text-sm text-neutral-700 leading-relaxed">
-          This portal section requires executive institutional credentials or specific role privileges.
+          This portal section requires Municipal Officer, Compliance Auditor, or System Admin role privileges.
         </p>
 
-        <Button variant="secondary" onClick={() => navigate(-1)} leadingIcon={<ArrowLeft className="w-4 h-4" />}>
-          Go Back
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
+          <Button variant="primary" onClick={() => setAuthModalOpen(true)} leadingIcon={<Shield className="w-4 h-4" />} className="flex-1">
+            Sign In / Switch Role
+          </Button>
+          <Button variant="secondary" onClick={() => navigate('/')} leadingIcon={<ArrowLeft className="w-4 h-4" />}>
+            Home
+          </Button>
+        </div>
       </div>
+
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 };

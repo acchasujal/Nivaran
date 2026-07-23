@@ -1,28 +1,53 @@
 import os
 import shutil
+import logging
+from sqlmodel import Session, select
+from app.models.user import User, Role
+from app.models.cluster import Cluster
+from app.models.issue import Issue
+from app.models.action_draft import ActionDraft, ImpactSummary
+from app.models.escalation import Escalation
+from app.utils.security import hash_password
+
+logger = logging.getLogger("nivaran")
 
 def sync_demo_assets():
-    os.makedirs("static/uploads", exist_ok=True)
-    public_dirs = [
+    """
+    Ensures all demo images (demo_*.jpg) from frontend/public or scripts/demo_assets
+    are copied into static/uploads so FastAPI StaticFiles and backend image hashing
+    can serve and verify them without 404 errors.
+    """
+    target_dir = os.path.abspath("static/uploads")
+    os.makedirs(target_dir, exist_ok=True)
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    search_dirs = [
         os.path.abspath("frontend/public"),
-        os.path.abspath(os.path.join("..", "frontend", "public")),
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "public"))
+        os.path.abspath(os.path.join(base_dir, "frontend", "public")),
+        os.path.abspath(os.path.join(base_dir, "frontend", "dist")),
+        os.path.abspath("scripts/demo_assets"),
+        os.path.abspath(os.path.join(base_dir, "scripts", "demo_assets")),
     ]
-    for pdir in public_dirs:
+
+    copied_count = 0
+    for pdir in search_dirs:
         if os.path.exists(pdir) and os.path.isdir(pdir):
             for fname in os.listdir(pdir):
-                if fname.startswith("demo_") and (fname.endswith(".jpg") or fname.endswith(".png")):
+                if (fname.startswith("demo_") or fname.startswith("UPL-")) and (fname.endswith(".jpg") or fname.endswith(".png") or fname.endswith(".webp")):
                     src = os.path.join(pdir, fname)
-                    dst = os.path.join("static", "uploads", fname)
-                    if not os.path.exists(dst):
+                    dst = os.path.join(target_dir, fname)
+                    if not os.path.exists(dst) or os.path.getsize(dst) != os.path.getsize(src):
                         try:
                             shutil.copy2(src, dst)
-                        except Exception:
-                            pass
-            break
+                            copied_count += 1
+                        except Exception as err:
+                            logger.warning(f"Failed to copy demo asset {fname}: {err}")
+
+    logger.info(f"sync_demo_assets | target={target_dir} | copied={copied_count} files")
 
 def seed_data(session: Session):
     sync_demo_assets()
+
     # 0. Seed Default Roles and Seed Accounts
     roles_data = [
         {"id": "role-citizen", "name": "citizen", "description": "Standard citizen user"},
@@ -92,7 +117,7 @@ def seed_data(session: Session):
             session.add(user)
     session.commit()
 
-    # 1. Define Clusters (Only clusters that contain 2 or more reports)
+    # 1. Define Clusters
     clusters_data = [
         {
             "id": "c-road-andheri",
@@ -191,7 +216,7 @@ def seed_data(session: Session):
             session.add(cluster)
     session.commit()
 
-    # 2. Define 26 issues spanning every asset in scripts/demo_assets/
+    # 2. Define 26 issues
     issues_data = [
         {
             "id": "iss-001", "type": "road_damage", "photo": "/static/uploads/demo_pothole1.jpg", "lat": 19.1196, "lng": 72.8791, "cluster_id": "c-road-andheri",
@@ -369,6 +394,13 @@ def seed_data(session: Session):
                 created_at=i["time"]
             )
             session.add(issue)
+        else:
+            # Ensure existing records have normalized photo_url
+            if not existing.photo_url or not existing.photo_url.startswith("/static/uploads/"):
+                fname = os.path.basename(existing.photo_url or "")
+                if fname:
+                    existing.photo_url = f"/static/uploads/{fname}"
+                    session.add(existing)
     session.commit()
 
     # 3. Generate matching ImpactSummaries, ActionDrafts, and Escalations
@@ -386,10 +418,9 @@ def seed_data(session: Session):
                     generated_at="2026-06-25T15:00:00Z"
                 )
                 session.add(impact)
-            
+
             draft_status = "approved" if c["status"] in ["approved", "escalated"] else "pending_review"
 
-            # Seed drafts
             draft_types = [
                 ("complaint", f"To: Municipal Ward Officer\nSubject: Official Complaint regarding issues at {c['area_label']}\n\nWe hereby request immediate action regarding this recurring municipal issue which is negatively impacting local residents."),
                 ("rti", f"AI-generated draft. Review before submission.\n\nApplication Under the Right to Information Act, 2005\nTo: Public Information Officer\n\nPlease provide logs of maintenance actions taken at {c['area_label']}."),
@@ -411,7 +442,6 @@ def seed_data(session: Session):
                     session.add(draft)
             session.commit()
 
-            # Seed Escalations
             if c["status"] == "escalated":
                 esc_id = f"esc-{c['id']}"
                 existing_escalation = session.get(Escalation, esc_id)

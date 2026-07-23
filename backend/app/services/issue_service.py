@@ -94,6 +94,7 @@ async def create_issue_from_bytes(
     latitude: float,
     longitude: float,
     user_note: Optional[str],
+    community_choice: Optional[str] = "join",
     background_tasks: BackgroundTasks,
     session: Session,
     validator: Optional[Callable[..., Awaitable[Stage0Result]]] = None,
@@ -211,7 +212,10 @@ async def create_issue_from_bytes(
         )
 
         # 3.4 Agent 2 — Verification & Clustering
-        await verify_and_cluster_issue(db_issue, session)
+        if community_choice == "new":
+            logger.info(f"community_choice=new | skipping spatial clustering for issue {db_issue.id}")
+        else:
+            await verify_and_cluster_issue(db_issue, session)
 
     except IssueValidationError as exc:
         session.rollback()

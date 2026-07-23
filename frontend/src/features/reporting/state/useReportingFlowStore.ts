@@ -29,7 +29,7 @@ const INITIAL_STATE: ReportingState = {
   userNote: '',
   createdIssueResponse: null,
   createdIssueId: null,
-  communityChoice: 'new',
+  communityChoice: 'join',
   consented: false,
 };
 

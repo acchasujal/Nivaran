@@ -30,45 +30,51 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   className,
 }) => {
   return (
-    <fieldset className={cn('w-full space-y-2 font-sans', className)}>
-      <legend className="text-sm font-medium text-neutral-900 mb-1 select-none">{label}</legend>
+    <fieldset className={cn('w-full space-y-3 font-sans', className)}>
+      <legend className="text-sm font-bold text-neutral-900 mb-1 select-none">{label}</legend>
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {options.map((opt) => {
           const inputId = `radio-${name}-${opt.value}`;
-          const isSelected = value !== undefined ? value === opt.value : undefined;
+          const isSelected = value !== undefined ? value === opt.value : defaultValue === opt.value;
 
           return (
             <label
               key={opt.value}
               htmlFor={inputId}
+              onClick={() => !opt.disabled && onChange?.(opt.value)}
               className={cn(
-                'flex items-start gap-3 min-h-[48px] p-2.5 rounded-md border border-transparent hover:border-neutral-200 cursor-pointer group transition-colors select-none',
+                'flex items-start gap-3 min-h-[54px] p-3.5 rounded-lg border transition-all cursor-pointer group select-none',
+                isSelected
+                  ? 'bg-primary-50/60 border-primary-600 shadow-sm ring-1 ring-primary-500'
+                  : 'bg-white border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/60',
                 opt.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
               )}
             >
-              <div className="relative flex items-center justify-center mt-0.5">
+              <div className="relative flex items-center justify-center mt-0.5 shrink-0">
                 <input
                   type="radio"
                   id={inputId}
                   name={name}
                   value={opt.value}
                   checked={isSelected}
-                  defaultChecked={defaultValue === opt.value}
                   disabled={opt.disabled}
                   onChange={(e) => onChange?.(e.target.value)}
-                  className="sr-only peer"
+                  className="sr-only"
                 />
-                <div className="w-5 h-5 rounded-pill border-2 border-neutral-300 bg-white transition-all flex items-center justify-center peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500 peer-focus-visible:ring-offset-2 peer-checked:border-primary-700">
-                  <div className="w-2.5 h-2.5 rounded-pill bg-primary-700 opacity-0 peer-checked:opacity-100 transition-opacity" />
+                <div className={cn(
+                  "w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center bg-white",
+                  isSelected ? "border-primary-700 bg-primary-700" : "border-neutral-400 group-hover:border-neutral-500"
+                )}>
+                  {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                 </div>
               </div>
 
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-neutral-900 group-hover:text-primary-700 transition-colors">
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className={cn("text-sm font-bold transition-colors", isSelected ? "text-primary-950" : "text-neutral-900")}>
                   {opt.label}
                 </span>
-                {opt.description && <span className="text-xs text-neutral-700 mt-0.5">{opt.description}</span>}
+                {opt.description && <span className="text-xs text-neutral-600 mt-1 leading-relaxed">{opt.description}</span>}
               </div>
             </label>
           );

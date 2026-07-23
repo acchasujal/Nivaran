@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, FileText, PlusCircle, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, FileText, PlusCircle, ShieldCheck, FileCheck, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Logo } from '../../primitives/foundation/Logo';
 import { cn } from '../../../lib/utils';
 
@@ -21,8 +21,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const items = [
     { id: 'home', label: 'Home Feed', icon: <Home className="w-5 h-5 shrink-0" /> },
     { id: 'report', label: 'Report Issue', icon: <PlusCircle className="w-5 h-5 shrink-0" /> },
-    { id: 'my-reports', label: 'My Reports', icon: <FileText className="w-5 h-5 shrink-0" /> },
+    { id: 'my-reports', label: 'Map & Reports', icon: <FileText className="w-5 h-5 shrink-0" /> },
     { id: 'government', label: 'Official Queue', icon: <ShieldCheck className="w-5 h-5 shrink-0" /> },
+    { id: 'internal', label: 'Document Review', icon: <FileCheck className="w-5 h-5 shrink-0" /> },
+    { id: 'admin', label: 'Admin Console', icon: <Settings className="w-5 h-5 shrink-0" /> },
   ];
 
   return (
@@ -58,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => onNavigate?.(item.id)}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'w-full flex items-center gap-3 min-h-[48px] px-3.5 py-2.5 rounded-md font-medium text-sm transition-colors text-left',
+                'w-full flex items-center gap-3 min-h-[48px] px-3.5 py-2.5 rounded-md font-medium text-sm transition-colors text-left cursor-pointer',
                 isActive
                   ? 'bg-primary-500/10 text-primary-700 font-semibold'
                   : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900',

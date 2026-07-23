@@ -1,6 +1,11 @@
 import pytest
 import os
+from fastapi.testclient import TestClient
+from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel.pool import StaticPool
+
 from app.main import app
+from app.db import get_session
 from app.dependencies import get_evidence_validator
 from app.services.evidence_validation import Stage0Result, Stage0Checks
 
@@ -29,5 +34,23 @@ async def override_validate_evidence_photo(photo_bytes: bytes, mime_type: str):
 def global_validator_override():
     app.dependency_overrides[get_evidence_validator] = lambda: override_validate_evidence_photo
     yield
-    # Keep it clean across test runs
     app.dependency_overrides[get_evidence_validator] = lambda: override_validate_evidence_photo
+
+@pytest.fixture(name="session")
+def session_fixture():
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+
+@pytest.fixture(name="client")
+def client_fixture(session: Session):
+    def get_session_override():
+        return session
+
+    app.dependency_overrides[get_session] = get_session_override
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()

@@ -84,6 +84,7 @@ async def create_issue(
     latitude: float = Form(...),
     longitude: float = Form(...),
     user_note: Optional[str] = Form(None),
+    community_choice: Optional[str] = Form("join"),
     session: Session = Depends(get_session),
     validator = Depends(get_evidence_validator),
 ):
@@ -112,6 +113,7 @@ async def create_issue(
             latitude=latitude,
             longitude=longitude,
             user_note=user_note,
+            community_choice=community_choice,
             background_tasks=background_tasks,
             session=session,
             validator=validator,
