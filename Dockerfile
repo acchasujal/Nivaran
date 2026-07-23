@@ -27,8 +27,12 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 # Copy backend application source code
 COPY backend/ .
 
-# Copy built frontend assets from Stage 1 into /app/frontend/dist
+# Copy built frontend assets from Stage 1 into /app/frontend/dist and public
 COPY --from=frontend-builder /frontend-src/dist ./frontend/dist
+COPY --from=frontend-builder /frontend-src/public ./frontend/public
+
+# Pre-seed static uploads directory with demo image assets
+RUN mkdir -p static/uploads && cp -f frontend/public/demo_* static/uploads/ 2>/dev/null || true
 
 # Expose default port
 EXPOSE 8000

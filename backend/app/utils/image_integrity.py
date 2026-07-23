@@ -55,7 +55,7 @@ def calculate_dhash(image_path: str, hash_size: int = 8) -> str:
     try:
         with Image.open(resolved_path) as img:
             img = img.convert('L').resize((hash_size + 1, hash_size), Image.Resampling.BILINEAR)
-            pixels = list(img.getdata())
+            pixels = list(img.tobytes())
 
             diff = []
             for row in range(hash_size):

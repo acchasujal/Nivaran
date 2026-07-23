@@ -21,9 +21,13 @@ setup_structured_logging()
 logger = logging.getLogger("nivaran")
 
 
-# Ensure static directories exist at import time
-os.makedirs("static/uploads", exist_ok=True)
-os.makedirs("static/downloads", exist_ok=True)
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_DIR = BASE_DIR / "static"
+STATIC_UPLOADS_DIR = STATIC_DIR / "uploads"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+STATIC_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,7 +50,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
 # Production Security, Rate Limiting & Structured Logging Middleware
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
@@ -61,11 +64,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Accept", "Authorization", "Content-Type", "Idempotency-Key", "X-Request-ID"],
 )
-app.add_middleware(LoggingMiddleware)
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/api/static", StaticFiles(directory="static"), name="api_static")
+# Mount static files with deterministic absolute pathing
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/api/static", StaticFiles(directory=str(STATIC_DIR)), name="api_static")
 
 # Wire routers under /api namespace
 app.include_router(issues.router, prefix="/api")

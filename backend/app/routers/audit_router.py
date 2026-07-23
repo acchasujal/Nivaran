@@ -24,7 +24,7 @@ def search_audit_log(
 
 @router.get("/export")
 def export_audit_log(
-    format: str = Query("csv", regex="^(csv|json)$"),
+    format: str = Query("csv", pattern="^(csv|json)$"),
     issue_id: Optional[str] = None,
     db: DBSession = Depends(get_session)
 ):

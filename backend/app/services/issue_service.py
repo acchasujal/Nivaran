@@ -156,7 +156,7 @@ async def create_issue_from_bytes(
         img = Image.open(io.BytesIO(photo_bytes))
         # Discard EXIF metadata by copying pixel data into a new Image object
         clean_img = Image.new(img.mode, img.size)
-        clean_img.putdata(list(img.getdata()))
+        clean_img.paste(img)
         clean_img.save(photo_path, format=img.format)
     except Exception as e:
         logger.warning(f"exif_stripping_failed | error={str(e)} | falling back to raw save")
