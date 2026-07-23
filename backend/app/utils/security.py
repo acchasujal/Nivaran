@@ -5,6 +5,16 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Tuple
 import jwt
 import hashlib
+import bcrypt
+
+# Fix for passlib 1.7.4 compatibility with bcrypt >= 4.0.0 (prevents ValueError on 72+ byte check secrets)
+_orig_hashpw = bcrypt.hashpw
+def _safe_hashpw(password, salt):
+    if isinstance(password, bytes) and len(password) > 72:
+        password = password[:72]
+    return _orig_hashpw(password, salt)
+bcrypt.hashpw = _safe_hashpw
+
 from passlib.context import CryptContext
 
 from app.config import settings

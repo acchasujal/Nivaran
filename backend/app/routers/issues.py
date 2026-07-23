@@ -227,16 +227,9 @@ async def get_issue(
                 )
 
     # Perceptual hashing image integrity checks
-    from app.utils.image_integrity import calculate_dhash, check_evidence_integrity
+    from app.utils.image_integrity import calculate_dhash, check_evidence_integrity, resolve_image_path
 
-    clean_url = issue.photo_url.lstrip("/")
-    path_candidates = [
-        clean_url,
-        os.path.join("backend", clean_url),
-        os.path.join("..", clean_url),
-    ]
-    target_path = next((p for p in path_candidates if os.path.exists(p)), clean_url)
-
+    target_path = resolve_image_path(issue.photo_url) or issue.photo_url
     img_hash = calculate_dhash(target_path)
     integrity_status, integrity_similarity = check_evidence_integrity(img_hash, session, issue.id)
 

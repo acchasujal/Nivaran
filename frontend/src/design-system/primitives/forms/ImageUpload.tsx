@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { ShieldCheck, RefreshCw } from 'lucide-react';
-import { FAB } from '../buttons/FAB';
+import React, { useState, useRef } from 'react';
+import { ShieldCheck, RefreshCw, Camera } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { cn } from '../../../lib/utils';
 
@@ -20,6 +19,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const [image, setImage] = useState<string | null>(previewUrl || null);
   const [altText, setAltText] = useState('');
   const [fileObj, setFileObj] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleShutterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[EvidenceUpload] shutter clicked, triggering file input click');
+    fileInputRef.current?.click();
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -38,11 +45,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setImage(null);
     setFileObj(null);
     setAltText('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
     <div className={cn('w-full font-sans space-y-3', className)}>
-      <label className="block text-sm font-medium text-neutral-900 select-none">
+      <label htmlFor="evidence-photo-input" className="block text-sm font-medium text-neutral-900 select-none">
         {label}
       </label>
 
@@ -53,19 +63,31 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         </span>
       </div>
 
+      <input
+        ref={fileInputRef}
+        id="evidence-photo-input"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        onChange={handleFileChange}
+        className="hidden"
+        style={{ display: 'none' }}
+      />
+
       {!image ? (
-        <div className="flex flex-col items-center justify-center p-8 bg-neutral-100 border-2 border-dashed border-neutral-300 rounded-lg text-center space-y-4">
-          <label className="cursor-pointer flex flex-col items-center">
-            <FAB isShutter label="Take Evidence Photo" />
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileChange}
-              className="sr-only"
-            />
-          </label>
-          <span className="text-xs text-neutral-700 font-medium">
+        <div
+          onClick={handleShutterClick}
+          className="flex flex-col items-center justify-center p-8 bg-neutral-100 border-2 border-dashed border-neutral-300 hover:border-primary-500 hover:bg-slate-200/40 rounded-lg text-center space-y-4 cursor-pointer transition-colors"
+        >
+          <button
+            type="button"
+            onClick={handleShutterClick}
+            aria-label="Take Evidence Photo"
+            className="min-w-[72px] min-h-[72px] rounded-full bg-primary-700 hover:bg-primary-500 text-white shadow-premium flex items-center justify-center border-4 border-white active:scale-95 transition-transform duration-fast focus-visible:ring-4 focus-visible:ring-primary-500 cursor-pointer"
+          >
+            <Camera className="w-8 h-8" aria-hidden="true" />
+          </button>
+          <span className="text-xs text-neutral-700 font-medium select-none">
             Tap shutter button (72×72px) to launch camera or upload photo
           </span>
         </div>

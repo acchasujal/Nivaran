@@ -40,32 +40,17 @@ const WhatsAppIcon: React.FC<{ size?: number; className?: string }> = ({ size = 
   </svg>
 );
 
+import { usePublicConfig } from '@/api/queries';
+
 export const WhatsAppReportBanner: React.FC<WhatsAppReportBannerProps> = ({ className }) => {
   const [expanded, setExpanded] = useState(false);
-  const [configWaNumber, setConfigWaNumber] = useState<string>(() => {
-    return import.meta.env.VITE_WHATSAPP_NUMBER || '';
-  });
-  const [waEnabled, setWaEnabled] = useState<boolean>(true);
+  const { data: configData } = usePublicConfig();
   const [dismissed, setDismissed] = useState(() => {
     return sessionStorage.getItem('wa_banner_dismissed') === '1';
   });
 
-  React.useEffect(() => {
-    // Dynamically query runtime backend configuration to fallback/override build-time env
-    fetch('/api/config')
-      .then(res => res.json())
-      .then(data => {
-        if (data.whatsapp_number) {
-          setConfigWaNumber(data.whatsapp_number);
-        }
-        if (data.whatsapp_enabled !== undefined) {
-          setWaEnabled(Boolean(data.whatsapp_enabled));
-        }
-      })
-      .catch(() => {
-        // Silent fallback to VITE_WHATSAPP_NUMBER
-      });
-  }, []);
+  const configWaNumber = configData?.whatsapp_number || import.meta.env.VITE_WHATSAPP_NUMBER || '';
+  const waEnabled = configData?.whatsapp_enabled !== undefined ? configData.whatsapp_enabled : true;
 
   const waNumberClean = configWaNumber.replace(/\D/g, '');
   const waGreeting = encodeURIComponent('Hi');

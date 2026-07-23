@@ -1,8 +1,28 @@
-from sqlmodel import Session, select
-from app.models import Cluster, Issue, ImpactSummary, ActionDraft, Escalation, User, Role, Permission
-from app.utils.security import hash_password
+import os
+import shutil
+
+def sync_demo_assets():
+    os.makedirs("static/uploads", exist_ok=True)
+    public_dirs = [
+        os.path.abspath("frontend/public"),
+        os.path.abspath(os.path.join("..", "frontend", "public")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "public"))
+    ]
+    for pdir in public_dirs:
+        if os.path.exists(pdir) and os.path.isdir(pdir):
+            for fname in os.listdir(pdir):
+                if fname.startswith("demo_") and (fname.endswith(".jpg") or fname.endswith(".png")):
+                    src = os.path.join(pdir, fname)
+                    dst = os.path.join("static", "uploads", fname)
+                    if not os.path.exists(dst):
+                        try:
+                            shutil.copy2(src, dst)
+                        except Exception:
+                            pass
+            break
 
 def seed_data(session: Session):
+    sync_demo_assets()
     # 0. Seed Default Roles and Seed Accounts
     roles_data = [
         {"id": "role-citizen", "name": "citizen", "description": "Standard citizen user"},

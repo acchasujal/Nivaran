@@ -10,6 +10,25 @@ import type {
   ImpactSummary,
 } from './types';
 
+export interface PublicConfig {
+  whatsapp_enabled: boolean;
+  whatsapp_number: string;
+  environment: string;
+  escalation_threshold: number;
+}
+
+// Fetch public application configuration
+export const usePublicConfig = () => {
+  return useQuery<PublicConfig>({
+    queryKey: ['publicConfig'],
+    queryFn: async () => {
+      const response = await apiClient.get<PublicConfig>('/config');
+      return response.data;
+    },
+    staleTime: 300000, // 5 minutes cache to prevent duplicate requests across component mounts
+  });
+};
+
 // Fetch all issues
 export const useIssues = (clusterId?: string) => {
   return useQuery<IssuesListResponse>({
@@ -20,6 +39,7 @@ export const useIssues = (clusterId?: string) => {
       });
       return response.data;
     },
+    staleTime: 30000, // 30 seconds cache to eliminate duplicate concurrent queries
   });
 };
 

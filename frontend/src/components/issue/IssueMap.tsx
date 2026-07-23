@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import Supercluster from 'supercluster';
-
 
 import type { Issue } from '@/api/types';
 import { getImageUrl } from '@/utils/getImageUrl';
 import { getLocalityName } from '@/utils/getLocalityName';
 import { humanizeIssueType } from '@/utils/issueHelpers';
-import { Navigation } from 'lucide-react';
+import { Navigation, AlertTriangle } from 'lucide-react';
 
 interface IssueMapProps {
   issues: Issue[];
@@ -38,11 +38,28 @@ export const IssueMap: React.FC<IssueMapProps> = ({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const popupRef = useRef<maplibregl.Popup | null>(null);
+  const [webGlSupported, setWebGlSupported] = useState<boolean>(true);
+
+  // Sanitize and filter input issues
+  const validIssues = useMemo(() => {
+    return issues.filter((issue) => {
+      const lat = Number(issue.latitude);
+      const lng = Number(issue.longitude);
+      return (
+        Number.isFinite(lat) &&
+        Number.isFinite(lng) &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180
+      );
+    });
+  }, [issues]);
 
   // Group reports by cluster_id or issue.id (if solitary)
   const groupedData = useMemo(() => {
     const groups: Record<string, Issue[]> = {};
-    issues.forEach((issue) => {
+    validIssues.forEach((issue) => {
       const key = issue.cluster_id || `solitary-${issue.id}`;
       if (!groups[key]) groups[key] = [];
       groups[key].push(issue);
@@ -62,7 +79,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
         maxSeverity: Math.max(...reports.map((r) => r.severity)),
       };
     });
-  }, [issues]);
+  }, [validIssues]);
 
   // Convert grouped data to GeoJSON features for Supercluster
   const geojsonFeatures = useMemo(() => {
@@ -98,24 +115,34 @@ export const IssueMap: React.FC<IssueMapProps> = ({
 
   // Initialize MapLibre GL Map Instance
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    console.log('[MapLibre Debug] Component mounted');
+
+    if (typeof (maplibregl as any).supported === 'function' && !(maplibregl as any).supported()) {
+      console.warn('[MapLibre Debug] WebGL is not supported in this browser environment');
+      setWebGlSupported(false);
+      return;
+    }
+
+    const container = mapContainerRef.current;
+    if (!container) return;
     if (mapRef.current) return;
 
-    console.log('[MapLibre Debug] Map constructor initializing on container:', mapContainerRef.current);
+    const rect = container.getBoundingClientRect();
+    console.log('[MapLibre Debug] Host element:', container);
+    console.log('[MapLibre Debug] Host size:', { width: rect.width, height: rect.height, rect });
+    console.log('[MapLibre Debug] Supported WebGL:', (maplibregl as any).supported());
+    console.log('[MapLibre Debug] Constructing MapLibre map instance...');
 
     try {
       const map = new maplibregl.Map({
-        container: mapContainerRef.current,
+        container: container,
         style: {
           version: 8,
           sources: {
             'osm-tiles': {
               type: 'raster',
               tiles: [
-                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
               ],
               tileSize: 256,
               attribution: '© OpenStreetMap contributors'
@@ -138,10 +165,21 @@ export const IssueMap: React.FC<IssueMapProps> = ({
         attributionControl: false,
       });
 
-      map.on('load', () => console.log('[MapLibre Debug] event: load'));
-      map.on('style.load', () => console.log('[MapLibre Debug] event: style.load'));
-      map.on('idle', () => console.log('[MapLibre Debug] event: idle'));
-      map.on('error', (e) => console.error('[MapLibre Debug] event: error', e));
+      console.log('[MapLibre Debug] Map constructed successfully:', map);
+
+      map.on('load', () => {
+        console.log('[MapLibre Debug] Event: load');
+        map.resize();
+        const canvas = container.querySelector('.maplibregl-canvas') as HTMLCanvasElement | null;
+        const controls = container.querySelector('.maplibregl-control-container');
+        console.log('[MapLibre Debug] DOM Check - Canvas exists:', !!canvas, 'Dimensions:', canvas?.width, 'x', canvas?.height);
+        console.log('[MapLibre Debug] DOM Check - Controls exist:', !!controls);
+      });
+
+      map.on('style.load', () => console.log('[MapLibre Debug] Event: style.load'));
+      map.on('idle', () => console.log('[MapLibre Debug] Event: idle'));
+      map.on('error', (e) => console.error('[MapLibre Debug] Event: error', e));
+      map.on('webglcontextlost', (e) => console.error('[MapLibre Debug] Event: webglcontextlost', e));
 
       map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
       map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
@@ -155,31 +193,30 @@ export const IssueMap: React.FC<IssueMapProps> = ({
       mapRef.current = map;
 
       const resizeObserver = new ResizeObserver(() => {
-        map.resize();
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
       });
-      if (mapContainerRef.current) {
-        resizeObserver.observe(mapContainerRef.current);
-      }
+      resizeObserver.observe(container);
 
       return () => {
-        console.log('[MapLibre Debug] Cleanup triggered, removing map instance.');
+        console.log('[MapLibre Debug] Cleanup triggered, removing map instance');
         resizeObserver.disconnect();
-        map.remove();
-        mapRef.current = null;
+        if (mapRef.current) {
+          mapRef.current.remove();
+          mapRef.current = null;
+        }
       };
     } catch (err) {
-      console.error('[MapLibre Debug] Constructor threw exception:', err);
+      console.error('[MapLibre Debug] Map constructor exception:', err);
     }
   }, []);
-
-
 
   // Render & Update Supercluster Markers when map moves or data changes
   const updateMarkers = () => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Clear existing markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -203,7 +240,6 @@ export const IssueMap: React.FC<IssueMapProps> = ({
       el.style.cursor = 'pointer';
 
       if (isCluster) {
-        // Multi-point cluster marker
         const pointCount = (cluster.properties as any).point_count;
         const size = Math.min(30 + pointCount * 3, 56);
 
@@ -233,7 +269,6 @@ export const IssueMap: React.FC<IssueMapProps> = ({
           });
         });
       } else {
-        // Individual issue marker
         const props = cluster.properties as any;
         const typeColor = getIssueTypeColor(props.issueType);
         const reportCount = props.reportCount;
@@ -366,10 +401,31 @@ export const IssueMap: React.FC<IssueMapProps> = ({
     );
   };
 
+  if (!webGlSupported) {
+    return (
+      <div className={className} style={{ position: 'relative', width: '100%', height: '100%', minHeight: '300px' }}>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 p-6 text-center text-slate-700 font-sans space-y-3">
+          <AlertTriangle className="w-10 h-10 text-amber-500" />
+          <h4 className="font-bold text-base text-slate-800">WebGL Vector Map Fallback</h4>
+          <p className="text-xs text-slate-500 max-w-md leading-relaxed">
+            Vector graphics (WebGL) are not supported by your browser session. Please review the reports list directly.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={className} style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div className={className} style={{ position: 'relative', width: '100%', height: '100%', minHeight: '360px' }}>
+      {/* Dedicated MapLibre Canvas Container Host Element */}
+      <div
+        ref={mapContainerRef}
+        className="absolute inset-0 w-full h-full"
+        style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+
       {/* Legend Overlay */}
-      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm border border-slate-200/80 p-3 rounded-medium shadow-md text-[10px] space-y-2 select-none z-10 max-w-[150px] font-sans font-medium text-slate-700">
+      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm border border-slate-200/80 p-3 rounded-medium shadow-md text-[10px] space-y-2 select-none z-10 max-w-[150px] font-sans font-medium text-slate-700 pointer-events-auto">
         <div className="font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-1 text-[9px]">
           Vector Map Legend
         </div>
@@ -400,13 +456,11 @@ export const IssueMap: React.FC<IssueMapProps> = ({
       {/* Locate button */}
       <button
         onClick={handleGeolocate}
-        className="absolute bottom-6 right-4 bg-white hover:bg-slate-50 border border-slate-200 p-2.5 rounded-medium shadow-md text-slate-700 transition-all select-none z-10 cursor-pointer active:scale-95"
+        className="absolute bottom-6 right-4 bg-white hover:bg-slate-50 border border-slate-200 p-2.5 rounded-medium shadow-md text-slate-700 transition-all select-none z-10 cursor-pointer active:scale-95 pointer-events-auto"
         title="Pan to My Current Location"
       >
         <Navigation size={15} className="rotate-45" />
       </button>
-
-      <div ref={mapContainerRef} className="w-full h-full min-h-[300px]" />
     </div>
   );
 };
