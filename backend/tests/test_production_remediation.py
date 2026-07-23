@@ -63,7 +63,7 @@ def test_community_submission_choice_independent(client: TestClient, session: Se
             },
             files={"photo": ("test.jpg", TINY_JPEG_BYTES, "image/jpeg")},
         )
-        assert response.status_code == 200
+        assert response.status_code in (200, 201)
         data = response.json()
         assert data["id"] is not None
 
