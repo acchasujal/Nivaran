@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-7 — Verify deployed production path
+
+- Objective: Confirm the existing public deployment is healthy before further changes.
+- Files modified: `progress.md` only; production configuration was not changed.
+- Tests executed: Read-only HTTP smoke checks against the user-provided deployment: `/health` 200 with database connected; `/ready` 200; `/api/config` 200; `/api/issues` 200 with seeded issue data.
+- Manual verification completed: Confirmed the public service is live, connected to its database, exposes production configuration, and serves public issue data.
+- Result: Complete and verified.
+- Remaining work: Documentation alignment, Codex evidence, and remaining P0 items.
+- Date/time: 2026-07-29.
+
 ## P0-6 — Verify deterministic demo data path
 
 - Objective: Ensure a repeatable seeded case exists for the core demo without changing production-specific configuration.
