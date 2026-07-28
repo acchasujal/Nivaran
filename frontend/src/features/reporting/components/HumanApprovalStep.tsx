@@ -30,7 +30,7 @@ export const HumanApprovalStep: React.FC<HumanApprovalStepProps> = ({
       <Surface variant="card" elevation={1} className="p-4 space-y-3">
         <div className="flex items-center gap-2 text-primary-700 font-semibold border-b border-neutral-100 pb-2">
           <FileText className="w-5 h-5" />
-          <h4 className="text-base text-neutral-900">Review Generated Municipal Complaint</h4>
+          <h4 className="text-base text-neutral-900">Review Your Evidence Before Submission</h4>
         </div>
 
         <div className="p-3 bg-neutral-50 rounded-md border border-neutral-200 text-xs leading-relaxed space-y-2">
@@ -39,7 +39,7 @@ export const HumanApprovalStep: React.FC<HumanApprovalStepProps> = ({
             Target Category: <strong className="uppercase">{issueType.replace('_', ' ')}</strong> | Location: <strong>{locality}</strong>
           </p>
           <p>
-            "This report contains your evidence and description of a possible public issue. Review the details before sending it to the relevant authority."
+            "This report contains your evidence and description of a possible public issue. Review the details before submitting it for server-side evidence review. Any municipal action draft will be generated later, if the evidence is sufficiently corroborated, and will require separate approval."
           </p>
           {userNote && <p className="italic text-neutral-700">Citizen note: "{userNote}"</p>}
         </div>
@@ -47,7 +47,7 @@ export const HumanApprovalStep: React.FC<HumanApprovalStepProps> = ({
         <div className="p-3 bg-green-50 border border-green-200 rounded-md">
           <Checkbox
             id="human-approval-ack"
-            label="I certify that I have reviewed the generated complaint and evidence details."
+            label="I confirm that I have reviewed my evidence and want to submit this report for review."
             checked={consented}
             onChange={handleCheckbox}
           />

@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-3 — Clarify report consent versus action approval
+
+- Objective: Ensure the pre-submit checkbox does not claim that a municipal action draft already exists or has been approved.
+- Files modified: `frontend/src/features/reporting/components/HumanApprovalStep.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed the heading, explanatory copy, and checkbox now describe evidence submission consent; municipal action approval is explicitly deferred to a later step.
+- Result: Complete and verified locally.
+- Remaining work: Other P0 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P0-2 — Remove fabricated pre-submit community match
 
 - Objective: Remove the hard-coded nearby-report count and accurately describe post-submission clustering.
