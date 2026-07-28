@@ -14,7 +14,7 @@ export const CommunityPage: React.FC = () => {
       <CommunityTrustCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VerificationVotePanel caseId="CP-2026-881" />
+        <VerificationVotePanel caseId="iss-001" />
         <AdditionalEvidenceForm caseId="CP-2026-881" onEvidenceSubmit={(data) => console.log('Evidence submitted:', data)} />
       </div>
 

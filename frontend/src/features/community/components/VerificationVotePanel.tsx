@@ -3,12 +3,13 @@ import { Surface } from '../../../design-system/primitives/foundation/Surface';
 import { Progress } from '../../../design-system/primitives/feedback/Progress';
 import { VerificationVote } from '../../../design-system/patterns/community/VerificationVote';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
+import { useSubmitVerificationVote } from '../../../api/queries';
 
 export interface VerificationVotePanelProps {
   caseId: string;
   confirmedCount?: number;
   unrepairedCount?: number;
-  onVoteSubmit?: (vote: string) => void;
+  onVoteSubmit?: (vote: string) => void | Promise<void>;
   className?: string;
 }
 
@@ -20,11 +21,19 @@ export const VerificationVotePanel: React.FC<VerificationVotePanelProps> = ({
   className,
 }) => {
   const [userVoted, setUserVoted] = useState(false);
+  const voteMutation = useSubmitVerificationVote();
   const totalVotes = confirmedCount + unrepairedCount;
   const consensusPercent = Math.round((confirmedCount / totalVotes) * 100);
 
-  const handleVote = (vote: string) => {
-    if (onVoteSubmit) onVoteSubmit(vote);
+  const handleVote = async (vote: string) => {
+    if (onVoteSubmit) {
+      await onVoteSubmit(vote);
+    } else {
+      await voteMutation.mutateAsync({
+        caseId,
+        vote: vote as 'confirm' | 'not-repaired' | 'uncertain',
+      });
+    }
     setUserVoted(true);
   };
 
@@ -53,7 +62,7 @@ export const VerificationVotePanel: React.FC<VerificationVotePanelProps> = ({
 
         {/* Voting Interface */}
         {!userVoted ? (
-          <VerificationVote caseId={caseId} onVoteSubmit={handleVote} />
+          <VerificationVote caseId={caseId} onVoteSubmit={handleVote} loading={voteMutation.isPending} />
         ) : (
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 text-xs text-neutral-900">
             <CheckCircle2 className="w-5 h-5 text-success shrink-0" />

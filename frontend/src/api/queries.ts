@@ -193,3 +193,19 @@ export const useValidationMetrics = () => {
     refetchInterval: 5000,
   });
 };
+
+// Submit a community repair-verification vote (POST /cases/{id}/verify)
+export const useSubmitVerificationVote = () => {
+  return useMutation<
+    { status: string; verification_status: string; votes_passed: number; votes_failed: number },
+    Error,
+    { caseId: string; vote: 'confirm' | 'not-repaired' | 'uncertain' }
+  >({
+    mutationFn: async ({ caseId, vote }) => {
+      const response = await apiClient.post(`/cases/${caseId}/verify`, {
+        vote_passed: vote === 'confirm',
+      });
+      return response.data;
+    },
+  });
+};

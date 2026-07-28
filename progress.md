@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P2-3 — Connect one genuine community verification interaction
+
+- Objective: Submit the community verification vote through the existing case verification API instead of only changing local UI state.
+- Files modified: `frontend/src/api/queries.ts`, `frontend/src/features/community/components/VerificationVotePanel.tsx`, `frontend/src/pages/public/CommunityPage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`; existing backend case verification tests cover the target API.
+- Manual verification completed: Confirmed the community vote now calls `POST /api/cases/{id}/verify`, exposes loading state, and only marks the vote submitted after the API mutation succeeds.
+- Result: Complete and verified locally.
+- Remaining work: Other P2 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P2-2 — Verify genuine government review interaction
 
 - Objective: Confirm one institutional review action is genuinely connected end to end.
