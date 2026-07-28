@@ -38,6 +38,7 @@ export const IssueDetailPage: React.FC = () => {
   const cluster = data.cluster;
   const approvedDraft = data.action_drafts.find((draft) => draft.status === 'approved');
   const escalation = data.action_drafts.find((draft) => draft.escalation)?.escalation;
+  const pipelineProcessing = issue.status === 'classified' || issue.status === 'clustered';
 
   return (
     <div className="space-y-6 font-sans py-2">
@@ -53,6 +54,16 @@ export const IssueDetailPage: React.FC = () => {
       </div>
 
       <CaseDetailHeader issue={issue} areaLabel={cluster?.area_label} />
+
+      {pipelineProcessing && (
+        <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3" role="status">
+          <p className="text-sm font-semibold text-sky-900">Evidence pipeline still processing</p>
+          <p className="mt-1 text-sm text-sky-800">
+            Nivaran is completing corroboration and will show the impact and action package when the available
+            evidence supports it. This page refreshes automatically while processing continues.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ComprehensiveEvidenceGallery issue={issue} />

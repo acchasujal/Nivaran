@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P2-1 — Make background processing status explicit
+
+- Objective: Tell users when the existing classified/clustered pipeline is still processing and explain automatic refresh behavior.
+- Files modified: `frontend/src/pages/public/IssueDetailPage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed classified/clustered cases show an explicit processing status and explain that the existing detail-page polling refreshes the case.
+- Result: Complete and verified locally.
+- Remaining work: Other P2 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P1-5 — Make partial and failure states explicit
 
 - Objective: Present missing impact/draft output as a pending pipeline state rather than silently implying completion.
