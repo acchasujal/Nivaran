@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P3-1 — Add formal evaluation matrix
+
+- Objective: Turn existing critical-path tests into a durable portfolio-facing evaluation record with explicit scope boundaries.
+- Files modified: `docs/codex/EVALUATION_MATRIX.md`, `progress.md`.
+- Tests executed: Documentation-only change; referenced existing frontend/backend verification suites.
+- Manual verification completed: Confirmed every matrix row maps to an existing test file or current frontend smoke contract, and explicitly excludes unimplemented portfolio capabilities.
+- Result: Complete and verified locally.
+- Remaining work: Durable infrastructure and broader portfolio P3 capabilities remain.
+- Date/time: 2026-07-29.
+
 ## P2 completion verification
 
 - All five identified P2 tasks are complete or verified as already satisfied, each with an individual pushed commit.
