@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P1-1 — Present the public Action Package as one unit
+
+- Objective: Make the existing impact summary and action drafts legible as one evidence-to-action package on the public case page.
+- Files modified: `frontend/src/pages/public/IssueDetailPage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed the public case page now groups impact evidence count and available documents under one Action Package heading, while empty/pending states remain explicit.
+- Result: Complete and verified locally.
+- Remaining work: Other P1 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P0-1 — Remove fabricated pre-submit AI confidence
 
 - Objective: Replace the fixed 94% pre-submit AI result with an honest pending-analysis state.
