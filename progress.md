@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-5 — Keep scripted evaluation mode hidden
+
+- Objective: Ensure the scripted evaluation workspace is not exposed as a normal citizen product surface.
+- Files modified: `progress.md` only; runtime behavior already satisfies this requirement.
+- Tests executed: Existing frontend smoke test confirms internal evaluation is not mounted in the citizen shell; frontend typecheck/build previously passed.
+- Manual verification completed: Confirmed `AppRouter.tsx` mounts evaluation only under `/internal/evaluate`, protected by auditor/admin role and `enableInternalEvaluation`; the default feature flag is false and the citizen navigation has no evaluation entry.
+- Result: Complete and verified; no runtime change required.
+- Remaining work: Other P0 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P0-4 — Hide disconnected institutional surfaces from citizen navigation
 
 - Objective: Keep government/internal routes available while removing them from the citizen-facing primary sidebar.
