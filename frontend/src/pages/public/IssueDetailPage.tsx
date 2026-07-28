@@ -111,6 +111,15 @@ export const IssueDetailPage: React.FC = () => {
             </div>
           </div>
         )}
+        {!data.impact_summary && (
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3" role="status">
+            <p className="text-sm font-semibold text-amber-900">Action package pending corroborated evidence</p>
+            <p className="mt-1 text-sm text-amber-800">
+              Impact analysis and action documents are not available yet. The case remains reviewable while the
+              evidence pipeline completes; no document is being presented as ready or dispatched.
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

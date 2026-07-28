@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P1-5 — Make partial and failure states explicit
+
+- Objective: Present missing impact/draft output as a pending pipeline state rather than silently implying completion.
+- Files modified: `frontend/src/pages/public/IssueDetailPage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed missing impact data now produces an explicit pending status message with no implication that documents are ready or dispatched.
+- Result: Complete and verified locally.
+- Remaining work: Final P1 regression verification.
+- Date/time: 2026-07-29.
+
 ## P1-4 — Show approval and dispatch state in public trace
 
 - Objective: Surface the existing draft approval and escalation response in the public Action Package.
