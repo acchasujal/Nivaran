@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P2-5 — Verify WhatsApp as a secondary channel
+
+- Objective: Confirm the existing WhatsApp adapter is configured and tested without risking a live provider mutation.
+- Files modified: `progress.md` only; no runtime change required.
+- Tests executed: Existing WhatsApp webhook suite covers greeting, photo, location, full flow, idempotency, failures, and status callbacks; production `/api/config` reported `whatsapp_enabled: true`.
+- Manual verification completed: Confirmed the production public config exposes WhatsApp as enabled and the backend webhook is the shared issue pipeline adapter.
+- Result: Complete and verified; no live WhatsApp message was sent.
+- Remaining work: Final P2 regression verification.
+- Date/time: 2026-07-29.
+
 ## P2-4 — Expose AI processing metadata
 
 - Objective: Show the configured Gemini model in the case package without exposing credentials or changing pipeline behavior.
