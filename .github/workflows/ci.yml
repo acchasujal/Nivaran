@@ -46,27 +46,8 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Lint Frontend
+      - name: Verify Frontend (Lint, Typecheck, Test, Build)
         run: |
           cd frontend
-          npm run lint
+          npm run verify
 
-      - name: Typecheck Frontend
-        run: |
-          cd frontend
-          npm run typecheck
-
-      - name: Frontend Smoke Tests
-        run: |
-          cd frontend
-          npm test
-
-      - name: Build Frontend
-        run: |
-          cd frontend
-          npm run build
-
-      - name: Dependency Audit
-        run: |
-          cd frontend
-          npm audit --audit-level=high
