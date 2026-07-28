@@ -1,5 +1,13 @@
 # Implementation Progress
 
+## P3 status
+
+- Completed: formal evaluation matrix and scope boundary in `docs/codex/EVALUATION_MATRIX.md`.
+- Verified after completion: frontend typecheck, frontend smoke tests (4/4), frontend production build, and backend regression suite completed without reported failures.
+- Remaining P3 work: durable background job processing; object storage/media durability; complete repair and resolution lifecycle; real municipal authority routing; production-grade offline media synchronization; multilingual and voice intake; and a true model-quality/cost/latency benchmarking harness.
+- These remaining items are intentionally not marked complete because they require architecture, provider, or product-scope changes beyond a safe incremental P3 documentation task.
+- Date/time: 2026-07-29.
+
 ## P3-1 — Add formal evaluation matrix
 
 - Objective: Turn existing critical-path tests into a durable portfolio-facing evaluation record with explicit scope boundaries.
