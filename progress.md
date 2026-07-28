@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-9 — Add authentic Codex engineering evidence
+
+- Objective: Make planning, review, implementation, human decisions, and verification visible in the public repository without adding fake runtime AI.
+- Files modified: `docs/codex/BUILD_LOG.md`, `progress.md`.
+- Tests executed: Documentation-only change; `git diff --check` passed.
+- Manual verification completed: Confirmed the record references only completed commits and observed verification, explicitly separates Codex engineering work from the Gemini civic runtime, and documents human review decisions.
+- Result: Complete and verified locally.
+- Remaining work: Final P0 integration verification and any remaining P0 items.
+- Date/time: 2026-07-29.
+
 ## P0-8 — Align submission-facing documentation with implementation
 
 - Objective: Make the current product boundary and canonical production infrastructure explicit without rewriting working deployment artifacts.
