@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-6 — Verify deterministic demo data path
+
+- Objective: Ensure a repeatable seeded case exists for the core demo without changing production-specific configuration.
+- Files modified: `progress.md` only; deterministic seeding already exists in `backend/app/utils/seeder.py` and `scripts/seed_demo.py`.
+- Tests executed: Existing backend seed/demo tests and backend regression suite have passed in prior verification; source inspection confirmed fixed cluster/issue/draft/escalation records and `--wipe` reseeding support.
+- Manual verification completed: Confirmed seeded clusters include threshold-crossing drafted/escalated cases and seeded media assets are synchronized into `static/uploads`.
+- Result: Complete and verified; no runtime change required.
+- Remaining work: Deployment verification, documentation alignment, Codex evidence, and remaining P0 items.
+- Date/time: 2026-07-29.
+
 ## P0-5 — Keep scripted evaluation mode hidden
 
 - Objective: Ensure the scripted evaluation workspace is not exposed as a normal citizen product surface.
