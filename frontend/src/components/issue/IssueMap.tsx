@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Supercluster from 'supercluster';
@@ -39,6 +39,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [webGlSupported, setWebGlSupported] = useState<boolean>(true);
+  const [mapReady, setMapReady] = useState(false);
 
   // Sanitize and filter input issues
   const validIssues = useMemo(() => {
@@ -191,6 +192,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
       });
 
       mapRef.current = map;
+      setMapReady(true);
 
       const resizeObserver = new ResizeObserver(() => {
         if (mapRef.current) {
@@ -206,6 +208,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
           mapRef.current.remove();
           mapRef.current = null;
         }
+        setMapReady(false);
       };
     } catch (err) {
       console.error('[MapLibre Debug] Map constructor exception:', err);
@@ -213,7 +216,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
   }, []);
 
   // Render & Update Supercluster Markers when map moves or data changes
-  const updateMarkers = () => {
+  const updateMarkers = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -333,7 +336,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
 
       markersRef.current.push(marker);
     });
-  };
+  }, [supercluster, onSelectIssue]);
 
   // Sync markers on map move or zoom
   useEffect(() => {
@@ -350,7 +353,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
       map.off('moveend', handleMove);
       map.off('zoomend', handleMove);
     };
-  }, [supercluster, mapRef.current]);
+  }, [mapReady, updateMarkers]);
 
   // Center & Fit Bounds when groupedData changes
   useEffect(() => {

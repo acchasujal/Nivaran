@@ -132,7 +132,7 @@ const router = createBrowserRouter([
     ),
     children: [
       {
-        path: 'document-review',
+        path: 'document-review/:issueId',
         element: (
           <Suspense fallback={<SuspenseFallback label="Loading document review..." />}>
             <DocumentReviewPage />

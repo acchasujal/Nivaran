@@ -135,7 +135,13 @@ def ready_check():
 
 @app.get("/version")
 def version_check():
-    return {"version": "1.0.0", "environment": os.getenv("ENV", "production")}
+    return {
+        "version": os.getenv("APP_VERSION", "1.0.0"),
+        "environment": os.getenv("ENVIRONMENT", os.getenv("ENV", "production")),
+        "commit_sha": os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT_SHA", "unknown")),
+        "build_time": os.getenv("BUILD_TIME", "unknown"),
+        "deployment_id": os.getenv("RENDER_DEPLOY_ID", os.getenv("DEPLOYMENT_ID", "unknown")),
+    }
 
 @app.get("/api/config")
 @app.get("/config")

@@ -1,5 +1,113 @@
 # Implementation Progress
 
+## Stabilization — deployment consistency — 2026-07-29
+
+- Problem: Declarative Render configuration described a Python-only service while the deployed application serves a Docker-built frontend; `/version` exposed only a static version and environment.
+- Root Cause: `render.yaml` and `Dockerfile` represented different deployment architectures, and deployment identity was not surfaced.
+- Files Changed: `render.yaml`, `backend/app/main.py`.
+- Tests Executed: `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run build`, `npm.cmd run test` (frontend); backend regression verification pending in this environment.
+- Verification: Frontend checks completed locally; lint remains warning-only with pre-existing warnings. `/version` contract now includes version, environment, commit SHA, build time, and deployment ID fields.
+- Regression Results: No frontend regression detected; no application feature code changed.
+- Deployment Status: Not deployed; production verification intentionally deferred until local stabilization changes are complete.
+- Remaining Work: Add reusable verification commands where justified, then stabilize map subsystem and role/API contracts.
+
+## Stabilization — tracker map lifecycle — 2026-07-29
+
+- Problem: Tracker markers could remain absent after MapLibre initialized because the synchronization effect depended on mutable `mapRef.current`.
+- Root Cause: Ref mutation does not trigger a React render, so the effect could exit while the map was still null and never rerun for the new map instance.
+- Files Changed: `frontend/src/components/issue/IssueMap.tsx`.
+- Tests Executed: `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run build`, `npm.cmd run test`.
+- Verification: Added explicit `mapReady` state and memoized marker synchronization; lint no longer reports the `IssueMap` dependency warnings; all frontend tests pass.
+- Regression Results: 4/4 frontend smoke tests pass; build succeeds; lint remains warning-only for unrelated pre-existing files.
+- Deployment Status: Not deployed; browser/production map verification remains pending.
+- Remaining Work: Unify the discovery map route, then continue role/API and demo-artifact stabilization.
+
+## Stabilization — discovery map unification — 2026-07-29
+
+- Problem: `/discover` presented a static marker placeholder and a console-only location search instead of the application’s actual map subsystem.
+- Root Cause: `InteractiveMapExperience` rendered `MapMarker` elements inside `MapWrapper` rather than mounting `IssueMap`/MapLibre.
+- Files Changed: `frontend/src/features/discovery/components/InteractiveMapExperience.tsx`.
+- Tests Executed: `npm.cmd run typecheck`, `npm.cmd run lint`, `npm.cmd run build`, `npm.cmd run test`.
+- Verification: Discovery now mounts the shared `IssueMap` component and retains the accessible list fallback; the disconnected location-search callback was removed.
+- Regression Results: Frontend smoke tests pass; typecheck/build pass; lint remains warning-only for unrelated files.
+- Deployment Status: Not deployed; route-level browser verification remains pending.
+- Remaining Work: Verify map behavior in a browser, then stabilize role/API contracts and remove verified demo artifacts.
+
+## Stabilization — government review truthfulness — 2026-07-29
+
+- Problem: Government document review always opened `CP-2026-001`, supplied fallback `DRAFT-99` content, and exposed console-only action/repair callbacks.
+- Root Cause: The route had no selected case parameter and treated missing backend data as a demo success state.
+- Files Changed: `frontend/src/core/router/AppRouter.tsx`, `frontend/src/pages/institutional/GovernmentQueuePage.tsx`, `frontend/src/pages/institutional/DocumentReviewPage.tsx`, `frontend/src/layouts/CitizenShell.tsx`.
+- Tests Executed: `npm.cmd run typecheck`, `npm.cmd run build`, `npm.cmd run test`.
+- Verification: Queue navigation now carries the selected issue ID; missing drafts render an honest unavailable state; console-only action/repair surfaces and fabricated fallback data were removed.
+- Regression Results: 4/4 frontend smoke tests pass; typecheck/build pass.
+- Deployment Status: Not deployed; production route verification remains pending.
+- Remaining Work: Remove remaining verified hard-coded community/demo artifacts and reconcile role/API contracts.
+
+## Stabilization — community demo-artifact removal — 2026-07-29
+
+- Problem: Community landing page used fixed case IDs, fake verification counts, and a console-only evidence callback that claimed successful submission.
+- Root Cause: Case-specific community components were mounted without a selected case or verified evidence mutation contract; vote defaults fabricated consensus.
+- Files Changed: `frontend/src/pages/public/CommunityPage.tsx`, `frontend/src/features/community/components/VerificationVotePanel.tsx`.
+- Tests Executed: `npm.cmd run typecheck`, `npm.cmd run build`, `npm.cmd run test`.
+- Verification: Community landing page now explains that a real case must be selected before case-specific actions appear; verification counts are unavailable rather than fabricated when not supplied.
+- Regression Results: 4/4 frontend smoke tests pass; typecheck/build pass.
+- Deployment Status: Not deployed; production verification remains pending.
+- Remaining Work: Reconcile role taxonomy/API permissions, then add reusable verification scripts and perform final deployment verification.
+
+## Stabilization — escalation recipient safety — 2026-07-29
+
+- Problem: Draft review hard-coded `mayor@noida.gov.in` as an escalation destination.
+- Root Cause: The component embedded a demo recipient instead of receiving an authority selected by a verified backend/configuration contract.
+- Files Changed: `frontend/src/features/government/components/DraftReviewPanel.tsx`.
+- Tests Executed: `npm.cmd run typecheck`, `npm.cmd run test`.
+- Verification: Escalation is now unavailable unless a configured recipient is explicitly supplied; the hard-coded recipient is removed.
+- Regression Results: 4/4 frontend smoke tests pass; typecheck passes.
+- Deployment Status: Not deployed; production verification remains pending.
+- Remaining Work: Role/API reconciliation and reusable verification scripts.
+
+## Audit started — 2026-07-29
+
+- Files: repository source, frontend/backend configs, production URL, deployed HTML and lazy bundles.
+- Tests: verification phase initiated; no code changes made.
+- Verification: production health/API endpoints reachable; local scripts and test inventory inspected.
+- Status: In progress.
+
+## Scripts added — 2026-07-29
+
+- Files: none.
+- Tests: no new scripts added because existing frontend/backend commands provide baseline coverage; browser-level route/map verification is missing.
+- Verification: `npm.cmd run typecheck`, `npm.cmd run test`, `npm.cmd run build`, `npm.cmd run lint`, and backend pytest collection executed.
+- Status: Complete for inventory; browser verification gap documented.
+
+## Verification completed — 2026-07-29
+
+- Files: none.
+- Tests: frontend typecheck/build/smoke; lint with warnings; backend 67-test collection and regression command.
+- Verification: production `/health`, `/ready`, `/api/config`, `/api/issues` returned 200.
+- Status: Complete with UX/browser gaps remaining.
+
+## Map investigation — 2026-07-29
+
+- Files: `frontend/src/features/discovery/components/InteractiveMapExperience.tsx`, `frontend/src/components/issue/IssueMap.tsx`, `frontend/src/design-system/patterns/maps/MapWrapper.tsx`, `backend/app/core/security_middleware.py`.
+- Tests: deployed HTML/lazy bundle inspection and CSP header inspection.
+- Verification: `/discover` path renders static marker surface, not MapLibre; `/tracker` contains MapLibre with mutable-ref marker-effect risk; production CSP permits OSM hosts; browser console/network capture remains required for final tile/WebGL diagnosis.
+- Status: Complete for code/deployment evidence; no fixes applied.
+
+## Role audit — 2026-07-29
+
+- Files: `frontend/src/core/providers/AuthProvider.tsx`, `frontend/src/core/router/AppRouter.tsx`, `frontend/src/components/auth/AuthModal.tsx`, `backend/app/core/permissions.py`, `backend/app/dependencies/auth_deps.py`.
+- Tests: source-level role/permission matrix inspection.
+- Verification: backend has seven roles; frontend has four; route protection and dashboard ownership diverge.
+- Status: Complete; no fixes applied.
+
+## Bug audit — 2026-07-29
+
+- Files: `BUG_AUDIT.md` and referenced files within it.
+- Tests: all available local checks and read-only production checks listed in the audit.
+- Verification: every finding includes reproduction, root cause, affected files, risk, recommended fix, effort, and verification method.
+- Status: Complete; implementation paused pending review.
+
 ## P3 status
 
 - Completed: formal evaluation matrix and scope boundary in `docs/codex/EVALUATION_MATRIX.md`.

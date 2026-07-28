@@ -27,7 +27,7 @@ export const CitizenShell: React.FC = () => {
     else if (tab === 'report') navigate('/report');
     else if (tab === 'my-reports') navigate('/tracker');
     else if (tab === 'government') navigate('/government/queue');
-    else if (tab === 'internal') navigate('/internal/document-review');
+    else if (tab === 'internal') navigate('/government/queue');
     else if (tab === 'admin') navigate('/internal/admin');
   };
 

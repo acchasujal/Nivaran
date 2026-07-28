@@ -15,13 +15,20 @@ export interface VerificationVotePanelProps {
 
 export const VerificationVotePanel: React.FC<VerificationVotePanelProps> = ({
   caseId,
-  confirmedCount = 14,
-  unrepairedCount = 2,
+  confirmedCount,
+  unrepairedCount,
   onVoteSubmit,
   className,
 }) => {
   const [userVoted, setUserVoted] = useState(false);
   const voteMutation = useSubmitVerificationVote();
+  if (confirmedCount === undefined || unrepairedCount === undefined) {
+    return (
+      <Surface variant="card" className={`p-6 text-sm text-neutral-700 ${className || ''}`}>
+        Community verification counts are available after selecting a specific case.
+      </Surface>
+    );
+  }
   const totalVotes = confirmedCount + unrepairedCount;
   const consensusPercent = Math.round((confirmedCount / totalVotes) * 100);
 

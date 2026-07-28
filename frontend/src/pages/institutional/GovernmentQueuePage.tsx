@@ -70,7 +70,7 @@ export const GovernmentQueuePage: React.FC = () => {
           onToggleSelect={toggleSelect}
           onSelectAll={selectAll}
           onClearSelection={clearSelection}
-          onReviewCase={() => navigate('/internal/document-review')}
+          onReviewCase={(issueId) => navigate(`/internal/document-review/${issueId}`)}
         />
       </div>
     </div>

@@ -9,10 +9,11 @@ import type { ActionDraft } from '../../../api/types';
 export interface DraftReviewPanelProps {
   issueId: string;
   draft: ActionDraft;
+  escalationRecipient?: string;
   className?: string;
 }
 
-export const DraftReviewPanel: React.FC<DraftReviewPanelProps> = ({ issueId, draft, className }) => {
+export const DraftReviewPanel: React.FC<DraftReviewPanelProps> = ({ issueId, draft, escalationRecipient, className }) => {
   const [content, setContent] = useState(draft.content);
   const approveMutation = useApproveDraft(issueId);
   const updateMutation = useUpdateDraft(issueId);
@@ -27,7 +28,8 @@ export const DraftReviewPanel: React.FC<DraftReviewPanelProps> = ({ issueId, dra
   };
 
   const handleEscalate = async () => {
-    await escalateMutation.mutateAsync({ draftId: draft.id, method: 'email', recipient: 'mayor@noida.gov.in' });
+    if (!escalationRecipient) return;
+    await escalateMutation.mutateAsync({ draftId: draft.id, method: 'email', recipient: escalationRecipient });
   };
 
   return (
@@ -71,15 +73,17 @@ export const DraftReviewPanel: React.FC<DraftReviewPanelProps> = ({ issueId, dra
             Approve Draft Directive
           </Button>
 
-          <Button
-            variant="danger"
-            size="sm"
-            loading={escalateMutation.isPending}
-            onClick={handleEscalate}
-            leadingIcon={<Send className="w-4 h-4" />}
-          >
-            Escalate to Mayor / Executive
-          </Button>
+          {escalationRecipient && (
+            <Button
+              variant="danger"
+              size="sm"
+              loading={escalateMutation.isPending}
+              onClick={handleEscalate}
+              leadingIcon={<Send className="w-4 h-4" />}
+            >
+              Escalate to configured authority
+            </Button>
+          )}
         </div>
       </div>
     </Surface>
