@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-4 — Hide disconnected institutional surfaces from citizen navigation
+
+- Objective: Keep government/internal routes available while removing them from the citizen-facing primary sidebar.
+- Files modified: `frontend/src/design-system/composites/navigation/Sidebar.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed the citizen sidebar now contains only Home Feed, Report Issue, and Map & Reports; institutional routes remain present in the router.
+- Result: Complete and verified locally.
+- Remaining work: Other P0 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P0-3 — Clarify report consent versus action approval
 
 - Objective: Ensure the pre-submit checkbox does not claim that a municipal action draft already exists or has been approved.

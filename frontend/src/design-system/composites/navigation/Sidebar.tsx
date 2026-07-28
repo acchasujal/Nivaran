@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, FileText, PlusCircle, ShieldCheck, FileCheck, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, FileText, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Logo } from '../../primitives/foundation/Logo';
 import { cn } from '../../../lib/utils';
 
@@ -22,9 +22,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'home', label: 'Home Feed', icon: <Home className="w-5 h-5 shrink-0" /> },
     { id: 'report', label: 'Report Issue', icon: <PlusCircle className="w-5 h-5 shrink-0" /> },
     { id: 'my-reports', label: 'Map & Reports', icon: <FileText className="w-5 h-5 shrink-0" /> },
-    { id: 'government', label: 'Official Queue', icon: <ShieldCheck className="w-5 h-5 shrink-0" /> },
-    { id: 'internal', label: 'Document Review', icon: <FileCheck className="w-5 h-5 shrink-0" /> },
-    { id: 'admin', label: 'Admin Console', icon: <Settings className="w-5 h-5 shrink-0" /> },
   ];
 
   return (
