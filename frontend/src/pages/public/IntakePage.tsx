@@ -19,12 +19,12 @@ import { HumanApprovalStep } from '../../features/reporting/components/HumanAppr
 import { SubmissionSuccessStep } from '../../features/reporting/components/SubmissionSuccessStep';
 
 const STEPS = [
-  { id: 1, label: 'Capture & Category' },
-  { id: 2, label: 'Review & Geolocation' },
-  { id: 3, label: 'Trust Gate & AI' },
-  { id: 4, label: 'Community Match' },
-  { id: 5, label: 'Final Approval' },
-  { id: 6, label: 'Success Confirmation' },
+  { id: 1, label: 'Evidence & Category' },
+  { id: 2, label: 'Review & Location' },
+  { id: 3, label: 'Server Evidence Review' },
+  { id: 4, label: 'Corroboration Decision' },
+  { id: 5, label: 'Submission Consent' },
+  { id: 6, label: 'Case Created' },
 ];
 
 export const IntakePage: React.FC = () => {

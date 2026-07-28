@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-10 — Frame the existing report flow as Case Assembly
+
+- Objective: Make the active workflow read as one evidence-to-case journey without changing architecture or API behavior.
+- Files modified: `frontend/src/pages/public/IntakePage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed the six active report steps now describe evidence, server review, corroboration, consent, and case creation without changing submission logic.
+- Result: Complete and verified locally.
+- Remaining work: Final P0 regression verification.
+- Date/time: 2026-07-29.
+
 ## P0-9 — Add authentic Codex engineering evidence
 
 - Objective: Make planning, review, implementation, human decisions, and verification visible in the public repository without adding fake runtime AI.
