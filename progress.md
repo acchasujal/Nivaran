@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P1-2 — Show evidence references in the Action Package
+
+- Objective: Surface real report and cluster identifiers already returned by the API, without fabricating member records.
+- Files modified: `frontend/src/pages/public/IssueDetailPage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed the package displays the actual primary issue ID and cluster ID returned by the case API; no unsupported member IDs are generated.
+- Result: Complete and verified locally.
+- Remaining work: Other P1 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P1-1 — Present the public Action Package as one unit
 
 - Objective: Make the existing impact summary and action drafts legible as one evidence-to-action package on the public case page.

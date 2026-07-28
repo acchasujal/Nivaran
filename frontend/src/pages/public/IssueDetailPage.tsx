@@ -87,6 +87,12 @@ export const IssueDetailPage: React.FC = () => {
                   : 'Pending corroborated evidence'}
               </p>
             </div>
+            <div className="rounded-md bg-neutral-50 p-3 md:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">Evidence references</p>
+              <p className="mt-1 text-sm font-mono text-neutral-800">
+                Primary report: {issue.id}{cluster?.id ? ` · Cluster: ${cluster.id}` : ''}
+              </p>
+            </div>
           </div>
         )}
       </section>
