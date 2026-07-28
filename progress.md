@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P2-2 — Verify genuine government review interaction
+
+- Objective: Confirm one institutional review action is genuinely connected end to end.
+- Files modified: `progress.md` only; existing `DraftReviewPanel.tsx` already uses draft update, approval, and escalation mutations.
+- Tests executed: Existing frontend typecheck/smoke/build and backend API tests cover the connected mutations; no runtime change required.
+- Manual verification completed: Confirmed `DraftReviewPanel` calls `useUpdateDraft`, `useApproveDraft`, and `useEscalateDraft`, while `DocumentReviewPage` supplies the live issue/draft data.
+- Result: Complete and verified; no duplicate interaction added.
+- Remaining work: Other P2 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P2-1 — Make background processing status explicit
 
 - Objective: Tell users when the existing classified/clustered pipeline is still processing and explain automatic refresh behavior.
