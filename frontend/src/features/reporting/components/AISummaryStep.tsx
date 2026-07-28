@@ -1,5 +1,4 @@
 import React from 'react';
-import { AIEvent } from '../../../design-system/composites/timeline/AIEvent';
 import { StatusChip } from '../../../design-system/composites/status/StatusChip';
 import type { IssueType } from '../../../api/types';
 
@@ -16,14 +15,18 @@ export const AISummaryStep: React.FC<AISummaryStepProps> = ({ issueType, userNot
         <StatusChip category="ai" label="Machine Analysis" />
       </div>
 
-      <AIEvent
-        claim={`Classified as ${issueType.replace('_', ' ').toUpperCase()}`}
-        confidencePercent={94}
-        timestamp="Just now"
-        explanation={`Automated inference detected visual cues matching municipal ${issueType.replace('_', ' ')} specifications. Severity evaluated as Moderate (Level 3/5). ${
-          userNote ? `Citizen note incorporated: "${userNote}"` : ''
-        }`}
-      />
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <p className="text-sm font-semibold text-neutral-900">Analysis runs after submission</p>
+        <p className="mt-1 text-sm leading-relaxed text-neutral-700">
+          Nivaran will review the uploaded evidence on the server after you submit. The returned issue type,
+          confidence, severity, and explanation will appear on the case timeline; no result is shown here before
+          the evidence has been processed.
+        </p>
+        <p className="mt-2 text-xs text-neutral-600">
+          Selected category: <span className="font-medium">{issueType.replace('_', ' ')}</span>
+          {userNote ? ' · Your note will be included in the review.' : ''}
+        </p>
+      </div>
     </div>
   );
 };
