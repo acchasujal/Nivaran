@@ -20,6 +20,16 @@
 - Remaining work: Final P0 regression verification.
 - Date/time: 2026-07-29.
 
+## P0 completion verification
+
+- All identified P0 tasks are complete or were verified as already satisfied.
+- Final frontend verification: typecheck passed; smoke tests 4/4 passed; production build completed.
+- Final backend verification: regression suite completed without reported failures.
+- Final production verification: `/health`, `/ready`, `/api/config`, and `/api/issues` each returned HTTP 200.
+- All implementation/documentation commits were pushed to `origin/main`.
+- Remaining worktree changes are pre-existing/generated backend SQLite journal/static artifacts and were not included in the P0 commits.
+- Date/time: 2026-07-29.
+
 ## P0-9 — Add authentic Codex engineering evidence
 
 - Objective: Make planning, review, implementation, human decisions, and verification visible in the public repository without adding fake runtime AI.
