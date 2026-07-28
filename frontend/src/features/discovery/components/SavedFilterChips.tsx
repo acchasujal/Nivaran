@@ -9,7 +9,7 @@ export interface SavedFilterChipsProps {
 const PRESETS: { label: string; filter: Partial<DiscoveryFilterState> }[] = [
   { label: '🔥 High Severity Road Hazards', filter: { category: 'road_damage', sort: 'severity' } },
   { label: '💧 Water Leaks', filter: { category: 'water' } },
-  { label: '✅ Verified Resolved', filter: { status: 'approved' } },
+  { label: '✅ Action Approved', filter: { status: 'approved' } },
   { label: '🛡 High Credibility Evidence', filter: { sort: 'credibility' } },
 ];
 

@@ -25,7 +25,7 @@ const CATEGORY_OPTIONS = [
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
   { value: 'active', label: 'In Progress / Active' },
-  { value: 'approved', label: 'Verified Resolved' },
+  { value: 'approved', label: 'Action Approved' },
 ];
 
 const SORT_OPTIONS = [

@@ -53,7 +53,7 @@ export const DiscoverFeed: React.FC = () => {
         tabs={[
           { id: 'all', label: 'All Issues', count: issues.length },
           { id: 'active', label: 'In Progress', count: issues.filter((i) => i.status !== 'approved').length },
-          { id: 'resolved', label: 'Verified Resolved', count: issues.filter((i) => i.status === 'approved').length },
+          { id: 'resolved', label: 'Action Approved', count: issues.filter((i) => i.status === 'approved').length },
         ]}
         value={activeFilter}
         onValueChange={(val) => setActiveFilter(val as any)}
@@ -87,7 +87,7 @@ export const DiscoverFeed: React.FC = () => {
               key={issue.id}
               id={issue.id}
               label={issue.issue_type.replace('_', ' ')}
-              status={issue.status === 'approved' ? 'resolved' : 'active'}
+              status={issue.status === 'approved' ? 'active' : 'active'}
               latitude={issue.latitude}
               longitude={issue.longitude}
               onClick={() => navigate(`/issue/${issue.id}`)}

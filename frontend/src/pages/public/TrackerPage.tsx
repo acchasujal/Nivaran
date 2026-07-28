@@ -33,7 +33,7 @@ export const TrackerPage: React.FC = () => {
 
   const issues = data?.issues || [];
   const activeIssues = issues.filter((i) => i.status !== 'approved');
-  const resolvedIssues = issues.filter((i) => i.status === 'approved');
+  const approvedIssues = issues.filter((i) => i.status === 'approved');
 
   return (
     <div className="space-y-4 font-sans py-2">
@@ -66,14 +66,14 @@ export const TrackerPage: React.FC = () => {
           },
           {
             id: 'resolved',
-            label: 'Verified Resolved',
-            count: resolvedIssues.length,
+            label: 'Action Approved',
+            count: approvedIssues.length,
             content:
-              resolvedIssues.length === 0 ? (
-                <EmptyState title="No verified resolved cases" description="Resolved cases confirmed by verifiers appear here." />
+              approvedIssues.length === 0 ? (
+                <EmptyState title="No approved action packages" description="Cases with a human-approved action package appear here. Approval does not confirm repair or resolution." />
               ) : (
                 <div className="space-y-3 pt-2">
-                  {resolvedIssues.map((issue) => (
+                  {approvedIssues.map((issue) => (
                     <EvidenceCard
                       key={issue.id}
                       id={issue.id}

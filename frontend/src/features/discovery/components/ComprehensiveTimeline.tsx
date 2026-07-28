@@ -3,8 +3,6 @@ import { Timeline } from '../../../design-system/composites/timeline/Timeline';
 import { StatusEvent } from '../../../design-system/composites/timeline/StatusEvent';
 import { GovernmentEvent } from '../../../design-system/composites/timeline/GovernmentEvent';
 import { AIEvent } from '../../../design-system/composites/timeline/AIEvent';
-import { RepairEvent } from '../../../design-system/composites/timeline/RepairEvent';
-import { VerificationEvent } from '../../../design-system/composites/timeline/VerificationEvent';
 import type { IssueDetailResponse } from '../../../api/types';
 
 export interface ComprehensiveTimelineProps {
@@ -48,25 +46,12 @@ export const ComprehensiveTimeline: React.FC<ComprehensiveTimelineProps> = ({ de
           />
         )}
 
-        {/* Event 4: Repair Evidence Pair (if approved) */}
+        {/* Approval is not evidence of repair or resolution. */}
         {issue.status === 'approved' && (
-          <RepairEvent
-            departmentName="Municipal Repair Crew #4"
-            timestamp="Work Completed"
-            notes="Asphalt resurfaced and sealed. Pedestrian safety restored."
-          />
-        )}
-
-        {/* Event 5: Community Verification Gate */}
-        {issue.status === 'approved' && (
-          <VerificationEvent
-            verifierName="Citizen Audit Panel"
-            timestamp="Verified"
-            criteriaChecked={[
-              'Physical road hazard resolved',
-              'Before/After evidence alignment confirmed',
-              'Location coordinates matched',
-            ]}
+          <StatusEvent
+            statusLabel="Action Package Approved"
+            timestamp="Human review"
+            description="A human approved the generated action package. This does not confirm that the civic issue has been repaired."
           />
         )}
       </Timeline>

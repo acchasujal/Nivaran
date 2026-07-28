@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P1-3 — Normalize public action status language
+
+- Objective: Stop presenting `approved` as repaired, resolved, or physically verified.
+- Files modified: `frontend/src/pages/public/TrackerPage.tsx`, `frontend/src/features/reporting/components/DiscoverFeed.tsx`, `frontend/src/features/discovery/components/SearchFilterBar.tsx`, `frontend/src/features/discovery/components/SavedFilterChips.tsx`, `frontend/src/features/discovery/components/ComprehensiveTimeline.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed public labels now say “Action Approved”; the timeline explicitly states approval does not confirm repair, and fabricated repair/verification events were removed from that public path.
+- Result: Complete and verified locally.
+- Remaining work: Other P1 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P1-2 — Show evidence references in the Action Package
 
 - Objective: Surface real report and cluster identifiers already returned by the API, without fabricating member records.
