@@ -1,9 +1,9 @@
 # nivaran Production Readiness & Audit Report
 
-## Summary Verdict: PRODUCTION READY (Release Candidate RC1)
+## Summary Verdict: Core intake workflow deployed; broader platform capabilities remain partial
 
-- **Test Suite Pass Rate**: 100% (66/66 backend unit & integration tests passing).
-- **OWASP Security Audit**: Compliant with OWASP Security Headers, JWT rotation, role RBAC, and rate limiting.
+- **Test Suite**: Backend coverage includes intake agents, escalation, authentication, sync, WhatsApp, analytics, and workflow tests; the repository currently collects 67 backend tests.
+- **Security hardening**: Security headers, JWT rotation, role RBAC, and rate limiting are implemented; this document is not a substitute for an independent OWASP audit.
 - **Accessibility**: WCAG 2.1 AA compliant.
 - **Observability**: Standardized `/health`, `/ready`, `/live`, and `/metrics` probes.
 

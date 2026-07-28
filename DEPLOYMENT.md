@@ -1,6 +1,6 @@
 # Production Deployment Guide: Vercel & Render
 
-This guide outlines the production deployment of nivaran: React SPA on **Vercel** and FastAPI API Service on **Render** (with managed PostgreSQL).
+The canonical deployed environment is the FastAPI service on **Render**, backed by **Neon PostgreSQL** and **Upstash Redis**, with the frontend served by the deployed application. The Vercel/Render split below remains an alternate deployment configuration for development or independent hosting.
 
 ---
 

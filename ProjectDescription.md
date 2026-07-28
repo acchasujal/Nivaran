@@ -11,6 +11,8 @@ Without a system that actively verifies, clusters, and escalates citizen evidenc
 
 ## 2. Solution Overview
 nivaran is an active civic accountability platform that converts raw photo uploads of infrastructure failures into structured, sendable legal dispatches within minutes, backed by a verified community evidence ledger.
+
+**Implementation boundary:** The deployed end-to-end path currently covers evidence validation, Gemini classification, spatial/semantic clustering, threshold-triggered impact and action drafts, human draft approval, and email/PDF escalation. Full repair verification, the extended government lifecycle, offline sync, notifications, and community workflows have supporting backend or prototype components but are not complete end-to-end user journeys.
 1. **Deterministic Stage-0 Validation Gate**: A local image-processing pipeline (brightness, contrast, and PIL blur metrics) coupled with an image difference hashing (dhash) cache. If not cached, it runs a conservative Gemini 2.0 Vision check to filter out selfies, documents, and screenshots instantly—preventing database pollution and saving LLM costs.
 2. **Multi-Agent Engine (Observe → Reason → Create → Act)**:
    - **Agent 1 (Intake Classifier)**: Categorizes the issue, determines severity, and rates visual credibility.

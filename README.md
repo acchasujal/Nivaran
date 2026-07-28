@@ -24,6 +24,12 @@ Turning verified citizen evidence into explainable AI decisions, government-read
 
 Nivaran is an AI-powered civic issue reporting and governance platform that enables citizens to report infrastructure problems while improving government accountability through intelligent workflows.
 
+## Current implementation scope
+
+The currently deployed product is the evidence-to-action intake workflow: image evidence validation, Gemini issue classification, nearby issue clustering, threshold-triggered impact and action-draft generation, human draft approval, and email/PDF escalation. The government case lifecycle, offline sync, notifications, community collaboration, and WhatsApp channel include backend or prototype components but are not all complete end-to-end product journeys.
+
+The canonical production deployment is the Render service backed by Neon PostgreSQL and Upstash Redis. Other Docker, Vercel, and Cloud Run files are development or alternate deployment artifacts.
+
 
 Instead of generating another ticket number, nivaran helps citizens build evidence that is difficult to ignore.
 

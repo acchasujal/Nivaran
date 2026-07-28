@@ -10,6 +10,16 @@
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
 
+## P0-8 — Align submission-facing documentation with implementation
+
+- Objective: Make the current product boundary and canonical production infrastructure explicit without rewriting working deployment artifacts.
+- Files modified: `README.md`, `ProjectDescription.md`, `docs/PRODUCTION_READINESS.md`, `DEPLOYMENT.md`, `progress.md`.
+- Tests executed: Documentation-only change; no runtime behavior changed. Existing frontend/backend verification remained green before this edit.
+- Manual verification completed: Confirmed the added scope statements distinguish the deployed intake/escalation path from partial prototype capabilities and identify Render + Neon PostgreSQL + Upstash Redis as canonical production infrastructure.
+- Result: Complete and verified locally.
+- Remaining work: Codex evidence and any remaining P0 items.
+- Date/time: 2026-07-29.
+
 ## P0-7 — Verify deployed production path
 
 - Objective: Confirm the existing public deployment is healthy before further changes.
