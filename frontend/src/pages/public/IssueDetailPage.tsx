@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../core/hooks/usePageTitle';
-import { useIssueDetail } from '../../api/queries';
+import { useIssueDetail, usePublicConfig } from '../../api/queries';
 import { CaseDetailHeader } from '../../features/discovery/components/CaseDetailHeader';
 import { ComprehensiveEvidenceGallery } from '../../features/discovery/components/ComprehensiveEvidenceGallery';
 import { ComprehensiveTimeline } from '../../features/discovery/components/ComprehensiveTimeline';
@@ -15,6 +15,7 @@ export const IssueDetailPage: React.FC = () => {
   const navigate = useNavigate();
   usePageTitle(`Case #${id} Detail & Timeline — nivaran`);
   const { data, isLoading, isError, refetch } = useIssueDetail(id);
+  const { data: publicConfig } = usePublicConfig();
 
   if (isLoading) {
     return (
@@ -106,6 +107,14 @@ export const IssueDetailPage: React.FC = () => {
                 Primary report: {issue.id}{cluster?.id ? ` · Cluster: ${cluster.id}` : ''}
               </p>
             </div>
+            {publicConfig?.gemini_model && (
+              <div className="rounded-md bg-neutral-50 p-3 md:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">Processing metadata</p>
+                <p className="mt-1 text-sm text-neutral-800">
+                  Structured analysis model: <span className="font-mono">{publicConfig.gemini_model}</span>
+                </p>
+              </div>
+            )}
             <div className="rounded-md bg-neutral-50 p-3 md:col-span-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">Review and dispatch state</p>
               <p className="mt-1 text-sm text-neutral-800">

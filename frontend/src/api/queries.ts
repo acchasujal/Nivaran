@@ -14,6 +14,7 @@ export interface PublicConfig {
   whatsapp_enabled: boolean;
   whatsapp_number: string;
   environment: string;
+  gemini_model: string;
   escalation_threshold: number;
 }
 

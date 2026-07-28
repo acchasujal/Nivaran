@@ -145,6 +145,7 @@ def get_public_config():
         "whatsapp_enabled": settings.WHATSAPP_ENABLED,
         "whatsapp_number": settings.TWILIO_WHATSAPP_NUMBER if settings.WHATSAPP_ENABLED else "",
         "environment": settings.ENVIRONMENT,
+        "gemini_model": settings.GEMINI_MODEL,
         "escalation_threshold": settings.threshold
     }
 

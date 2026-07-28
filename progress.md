@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P2-4 — Expose AI processing metadata
+
+- Objective: Show the configured Gemini model in the case package without exposing credentials or changing pipeline behavior.
+- Files modified: `backend/app/main.py`, `frontend/src/api/queries.ts`, `frontend/src/pages/public/IssueDetailPage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`; backend regression suite completed without reported failures.
+- Manual verification completed: Confirmed `/api/config` exposes only the configured model name, and the case page renders it as processing metadata when available; no credentials are exposed.
+- Result: Complete and verified locally.
+- Remaining work: Other P2 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P2-3 — Connect one genuine community verification interaction
 
 - Objective: Submit the community verification vote through the existing case verification API instead of only changing local UI state.
