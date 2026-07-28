@@ -36,6 +36,8 @@ export const IssueDetailPage: React.FC = () => {
 
   const issue = data.issue;
   const cluster = data.cluster;
+  const approvedDraft = data.action_drafts.find((draft) => draft.status === 'approved');
+  const escalation = data.action_drafts.find((draft) => draft.escalation)?.escalation;
 
   return (
     <div className="space-y-6 font-sans py-2">
@@ -91,6 +93,20 @@ export const IssueDetailPage: React.FC = () => {
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">Evidence references</p>
               <p className="mt-1 text-sm font-mono text-neutral-800">
                 Primary report: {issue.id}{cluster?.id ? ` · Cluster: ${cluster.id}` : ''}
+              </p>
+            </div>
+            <div className="rounded-md bg-neutral-50 p-3 md:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">Review and dispatch state</p>
+              <p className="mt-1 text-sm text-neutral-800">
+                {approvedDraft
+                  ? 'Action package approved by a human reviewer.'
+                  : 'Action package is awaiting human review.'}
+                {' '}
+                {escalation?.status === 'sent'
+                  ? 'Email dispatch recorded.'
+                  : escalation?.status === 'exported'
+                    ? 'PDF export recorded.'
+                    : 'No dispatch has been recorded.'}
               </p>
             </div>
           </div>

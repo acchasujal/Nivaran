@@ -1,5 +1,15 @@
 # Implementation Progress
 
+## P1-4 — Show approval and dispatch state in public trace
+
+- Objective: Surface the existing draft approval and escalation response in the public Action Package.
+- Files modified: `frontend/src/pages/public/IssueDetailPage.tsx`, `progress.md`.
+- Tests executed: `npm.cmd run typecheck`; `npm.cmd run test` (4/4 passed); `npm.cmd run build`.
+- Manual verification completed: Confirmed the public package derives approval from draft status and dispatch from the existing escalation response, with explicit pending/no-dispatch states.
+- Result: Complete and verified locally.
+- Remaining work: Other P1 tasks are not started.
+- Date/time: 2026-07-29.
+
 ## P1-3 — Normalize public action status language
 
 - Objective: Stop presenting `approved` as repaired, resolved, or physically verified.
