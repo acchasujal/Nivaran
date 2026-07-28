@@ -9,3 +9,13 @@
 - Result: Complete. The pre-submit flow no longer claims a server-generated AI result before submission.
 - Remaining work: Other P0 tasks are not started.
 - Date/time: 2026-07-29.
+
+## P0-2 — Remove fabricated pre-submit community match
+
+- Objective: Remove the hard-coded nearby-report count and accurately describe post-submission clustering.
+- Files modified: `frontend/src/features/reporting/components/CommunityMatchStep.tsx`, `progress.md`.
+- Tests executed: Frontend typecheck, smoke tests, and production build; backend regression suite.
+- Manual verification completed: Confirmed `matchCount` is no longer defaulted to `2`; the existing `CommunityMatch` component renders its honest “checked on submission” state when no server result is provided.
+- Result: Complete and verified locally.
+- Remaining work: Other P0 tasks are not started.
+- Date/time: 2026-07-29.

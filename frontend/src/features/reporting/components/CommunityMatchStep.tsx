@@ -11,7 +11,7 @@ export interface CommunityMatchStepProps {
 
 export const CommunityMatchStep: React.FC<CommunityMatchStepProps> = ({
   locality,
-  matchCount = 2,
+  matchCount,
   selectedChoice = 'join',
   onSelectOption,
 }) => {
@@ -37,13 +37,13 @@ export const CommunityMatchStep: React.FC<CommunityMatchStepProps> = ({
         options={[
           {
             value: 'join',
-            label: 'Join Nearby Community Case Group (Recommended)',
-            description: 'Appends your evidence photo to the active community case cluster for higher SLA urgency.',
+            label: 'Check for a Nearby Community Case (Recommended)',
+            description: 'Nivaran will check for a matching case after submission and merge the evidence only when the reports are sufficiently similar.',
           },
           {
             value: 'new',
-            label: 'Submit as New Independent Case',
-            description: 'Creates a distinct tracking ID for your specific evidence photo and location without clustering.',
+            label: 'Keep This as an Independent Case',
+            description: 'Creates a distinct case and skips community clustering for this submission.',
           },
         ]}
       />
