@@ -1,0 +1,14 @@
+{
+  "name": "nivaran-root",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Nivaran AI-Powered Civic Governance Platform Release Verification Scripts",
+  "scripts": {
+    "verify": "npm run verify:frontend && npm run verify:backend",
+    "verify:frontend": "cmd /c \"cd /d frontend && npm run lint && npm run typecheck && npm test && npm run build\"",
+    "verify:backend": "cmd /c \"cd /d backend && python -m pytest\"",
+    "verify:roles": "cmd /c \"cd /d backend && python -m pytest tests/test_auth.py\"",
+    "verify:maps": "cmd /c \"cd /d backend && python -m pytest tests/test_issues_get.py\"",
+    "verify:deployment": "cmd /c \"cd /d backend && python -m pytest tests/test_production_remediation.py\""
+  }
+}

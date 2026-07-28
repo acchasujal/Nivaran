@@ -38,7 +38,7 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({
     }
   };
 
-  const handleApprove = async () => {
+  const handleApprove = React.useCallback(async () => {
     setError(null);
     try {
       await approveDraftMutation.mutateAsync({
@@ -51,7 +51,7 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({
       const errMsg = err?.response?.data?.detail || err?.message || 'Failed to approve draft. Please try again.';
       setError(errMsg);
     }
-  };
+  }, [approveDraftMutation, draftId, onSuccess, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -118,9 +118,7 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, approveDraftMutation.isPending, draftId]);
-
-  if (!isOpen) return null;
+  }, [isOpen, approveDraftMutation.isPending, handleApprove, onClose]);
 
   const isSubmitting = approveDraftMutation.isPending;
 

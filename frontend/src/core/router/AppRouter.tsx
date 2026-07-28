@@ -108,7 +108,7 @@ const router = createBrowserRouter([
   {
     path: '/government',
     element: (
-      <ProtectedRoute allowedRoles={['officer', 'auditor', 'admin']}>
+      <ProtectedRoute allowedRoles={['officer', 'department_admin', 'auditor', 'admin']}>
         <GovernmentShell />
       </ProtectedRoute>
     ),
@@ -126,7 +126,7 @@ const router = createBrowserRouter([
   {
     path: '/internal',
     element: (
-      <ProtectedRoute allowedRoles={['officer', 'auditor', 'admin']}>
+      <ProtectedRoute allowedRoles={['officer', 'department_admin', 'auditor', 'admin']}>
         <InternalShell />
       </ProtectedRoute>
     ),

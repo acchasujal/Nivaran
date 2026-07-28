@@ -118,7 +118,8 @@ export const IssueMap: React.FC<IssueMapProps> = ({
   useEffect(() => {
     console.log('[MapLibre Debug] Component mounted');
 
-    if (typeof (maplibregl as any).supported === 'function' && !(maplibregl as any).supported()) {
+    const isSupported = typeof (maplibregl as any).supported === 'function' ? (maplibregl as any).supported() : true;
+    if (!isSupported) {
       console.warn('[MapLibre Debug] WebGL is not supported in this browser environment');
       setWebGlSupported(false);
       return;
@@ -131,7 +132,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
     const rect = container.getBoundingClientRect();
     console.log('[MapLibre Debug] Host element:', container);
     console.log('[MapLibre Debug] Host size:', { width: rect.width, height: rect.height, rect });
-    console.log('[MapLibre Debug] Supported WebGL:', (maplibregl as any).supported());
+    console.log('[MapLibre Debug] Supported WebGL:', isSupported);
     console.log('[MapLibre Debug] Constructing MapLibre map instance...');
 
     try {

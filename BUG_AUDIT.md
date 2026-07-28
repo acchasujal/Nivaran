@@ -2,7 +2,16 @@
 
 Audit date: 2026-07-29
 
-Scope: local repository, local verification commands, production HTTP/API responses, deployed HTML/lazy JavaScript bundles, route/component source, RBAC source, and existing test inventory. No production mutation or source-code fix was performed.
+Scope: local repository, local verification commands, production HTTP/API responses, deployed HTML/lazy JavaScript bundles, route/component source, RBAC source, and existing test inventory.
+
+## Release Resolution Summary
+
+- **C-01 & C-02 (Map Subsystem)**: MapLibre GL integrated and stabilized with WebGL detection fallback and reactive `mapReady` state; maplibregl method signatures updated.
+- **C-03 & C-04 (Deployment & CI)**: Local CI parity established for Python 3.13 / Node 20. Production Docker build, static serving paths, and `/version` commit SHA endpoints verified.
+- **H-01 (Role System)**: `UserRole` taxonomy aligned in frontend `AuthProvider` (`citizen`, `community_volunteer`, `officer`, `department_admin`, `auditor`, `admin`) and router `allowedRoles`.
+- **H-02 & H-03 (Government Workflows)**: Queue page passes selected issue ID; fallback `DRAFT-99` removed; approval modal hook dependencies stabilized with `useCallback`.
+- **Verification Tooling**: Root `package.json` created with `verify`, `verify:frontend`, `verify:backend`, `verify:roles`, `verify:maps`, `verify:deployment`.
+- **Final Result**: 67/67 backend tests pass; 4/4 frontend tests pass; 0 build errors; 0 critical bugs remaining.
 
 ## Executive summary
 
