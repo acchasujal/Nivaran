@@ -3,8 +3,8 @@ Unit & Integration Tests for Notification Center, Preferences & Announcements.
 """
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session
+
 
 from app.main import app
 from app.db import get_session
@@ -13,34 +13,18 @@ from app.core.permissions import ROLE_CITIZEN, ROLE_ADMIN, ROLE_OFFICER
 from app.core.event_engine import dispatch_notification_event
 from app.utils.security import create_access_token, hash_password
 
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+@pytest.fixture(autouse=True)
+def seed_notif_user(session: Session):
+    user = User(
+        id="USR-NOTIF-TEST",
+        email="notifuser@nivaran.org",
+        hashed_password=hash_password("Pass123!"),
+        name="Notif User",
+        role=ROLE_CITIZEN,
+        is_active=True
     )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        user = User(
-            id="USR-NOTIF-TEST",
-            email="notifuser@nivaran.org",
-            hashed_password=hash_password("Pass123!"),
-            name="Notif User",
-            role=ROLE_CITIZEN,
-            is_active=True
-        )
-        session.add(user)
-        session.commit()
-        yield session
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_session] = get_session_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+    session.add(user)
+    session.commit()
 
 def test_notification_creation_and_unread_count(client: TestClient, session: Session):
     token, _, _ = create_access_token("USR-NOTIF-TEST", ROLE_CITIZEN, ["issues:read"], "notifuser@nivaran.org")

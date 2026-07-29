@@ -3,8 +3,8 @@ Authentication and Session Management Unit & Integration Tests.
 """
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session
+
 
 from app.main import app
 from app.db import get_session
@@ -14,36 +14,19 @@ from app.models.user import User, RefreshToken, DeviceSession as UserSession
 from app.services.auth_service import AuthService
 from app.core.permissions import ROLE_ADMIN, ROLE_OFFICER, ROLE_CITIZEN, ROLE_ANONYMOUS
 
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+@pytest.fixture(autouse=True)
+def seed_auth_user(session: Session):
+    test_user = User(
+        id="USR-TEST01",
+        email="testuser@nivaran.org",
+        hashed_password=hash_password("Secret123!"),
+        name="Test User",
+        role=ROLE_CITIZEN,
+        is_active=True,
+        is_verified=True
     )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        # Seed test user
-        test_user = User(
-            id="USR-TEST01",
-            email="testuser@nivaran.org",
-            hashed_password=hash_password("Secret123!"),
-            name="Test User",
-            role=ROLE_CITIZEN,
-            is_active=True,
-            is_verified=True
-        )
-        session.add(test_user)
-        session.commit()
-        yield session
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_session] = get_session_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+    session.add(test_user)
+    session.commit()
 
 def test_jwt_token_generation_and_decoding():
     token, jti, expire = create_access_token(

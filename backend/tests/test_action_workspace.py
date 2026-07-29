@@ -2,58 +2,31 @@ import pytest
 import os
 import io
 import json
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
-from sqlmodel import SQLModel, create_engine, Session, select
+from sqlmodel import Session, select
 from pydantic import BaseModel
 
-from app.db import get_session
-from app.main import app
 from app.models.cluster import Cluster
 from app.models.action_draft import ActionDraft
 
-test_sqlite_file = "test_workspace_nivaran.db"
-test_engine = create_engine(f"sqlite:///{test_sqlite_file}", connect_args={"check_same_thread": False})
-
-def override_get_session():
-    with Session(test_engine) as session:
-        yield session
-
-@pytest.fixture(autouse=True)
-def setup_db():
-    app.dependency_overrides[get_session] = override_get_session
-    SQLModel.metadata.create_all(test_engine)
-    with patch("app.db.engine", test_engine):
-        yield
-    SQLModel.metadata.drop_all(test_engine)
-    test_engine.dispose()
-    app.dependency_overrides.pop(get_session, None)
-    if os.path.exists(test_sqlite_file):
-        try:
-            os.remove(test_sqlite_file)
-        except Exception:
-            pass
-
-def test_patch_draft_content_and_status():
+def test_patch_draft_content_and_status(client: TestClient, session: Session):
     # 1. Seed database with action draft
-    with Session(test_engine) as session:
-        cluster = Cluster(area_label="Workspace St", center_lat=19.0760, center_lng=72.8777, report_count=1)
-        session.add(cluster)
-        session.commit()
-        session.refresh(cluster)
+    cluster = Cluster(area_label="Workspace St", center_lat=19.0760, center_lng=72.8777, report_count=1)
+    session.add(cluster)
+    session.commit()
+    session.refresh(cluster)
 
-        draft = ActionDraft(
-            cluster_id=cluster.id,
-            draft_type="complaint",
-            content="Original Complaint Body text",
-            status="pending_review"
-        )
-        session.add(draft)
-        session.commit()
-        session.refresh(draft)
-        draft_id = draft.id
-
-    client = TestClient(app)
+    draft = ActionDraft(
+        cluster_id=cluster.id,
+        draft_type="complaint",
+        content="Original Complaint Body text",
+        status="pending_review"
+    )
+    session.add(draft)
+    session.commit()
+    session.refresh(draft)
+    draft_id = draft.id
 
     # 2. Patch both status and content
     response = client.patch(
@@ -66,39 +39,34 @@ def test_patch_draft_content_and_status():
     assert res_data["content"] == "Updated Complaint Body content text"
 
     # 3. Verify in Database
-    with Session(test_engine) as session:
-        db_draft = session.get(ActionDraft, draft_id)
-        assert db_draft is not None
-        assert db_draft.status == "approved"
-        assert db_draft.content == "Updated Complaint Body content text"
+    db_draft = session.get(ActionDraft, draft_id)
+    assert db_draft is not None
+    assert db_draft.status == "approved"
+    assert db_draft.content == "Updated Complaint Body content text"
 
-def test_improve_draft_gemini():
+def test_improve_draft_gemini(client: TestClient, session: Session):
     # 1. Seed database with action draft
-    with Session(test_engine) as session:
-        cluster = Cluster(area_label="Workspace St", center_lat=19.0760, center_lng=72.8777, report_count=1)
-        session.add(cluster)
-        session.commit()
-        session.refresh(cluster)
+    cluster = Cluster(area_label="Workspace St", center_lat=19.0760, center_lng=72.8777, report_count=1)
+    session.add(cluster)
+    session.commit()
+    session.refresh(cluster)
 
-        draft = ActionDraft(
-            cluster_id=cluster.id,
-            draft_type="complaint",
-            content="Unrefined Text",
-            status="pending_review"
-        )
-        session.add(draft)
-        session.commit()
-        session.refresh(draft)
-        draft_id = draft.id
+    draft = ActionDraft(
+        cluster_id=cluster.id,
+        draft_type="complaint",
+        content="Unrefined Text",
+        status="pending_review"
+    )
+    session.add(draft)
+    session.commit()
+    session.refresh(draft)
+    draft_id = draft.id
 
-    # Mock GeminiClient generate_structured_output
     class RefinedDraftSchema(BaseModel):
         refined_text: str
 
     mock_refined_data = MagicMock()
     mock_refined_data.refined_text = "Refined and polished content."
-
-    client = TestClient(app)
 
     with patch("app.services.gemini_client.GeminiClient.generate_structured_output", return_value=mock_refined_data):
         response = client.post(

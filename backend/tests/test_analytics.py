@@ -3,8 +3,7 @@ Unit & Integration Tests for Analytics, Cursor Pagination, Audit Search & Observ
 """
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session, SQLModel
 
 from app.main import app
 from app.db import get_session
@@ -12,48 +11,32 @@ from app.utils.pagination import encode_cursor, decode_cursor
 from app.models.issue import Issue
 from app.models.case import CaseTransition
 
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+@pytest.fixture(autouse=True)
+def seed_analytics_data(session: Session):
+    issue = Issue(
+        id="iss-analytics-1",
+        photo_url="/static/uploads/demo_pothole1.jpg",
+        latitude=19.1196,
+        longitude=72.8791,
+        user_note="Test analytics issue",
+        issue_type="road_damage",
+        severity=4,
+        description="Deep pothole",
+        credibility_score=0.9,
+        status="resolved",
+        created_at="2026-07-20T10:00:00Z"
     )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        issue = Issue(
-            id="iss-analytics-1",
-            photo_url="/static/uploads/demo_pothole1.jpg",
-            latitude=19.1196,
-            longitude=72.8791,
-            user_note="Test analytics issue",
-            issue_type="road_damage",
-            severity=4,
-            description="Deep pothole",
-            credibility_score=0.9,
-            status="resolved",
-            created_at="2026-07-20T10:00:00Z"
-        )
-        transition = CaseTransition(
-            issue_id="iss-analytics-1",
-            actor_role="officer",
-            previous_state="work_in_progress",
-            new_state="resolved",
-            action="resolve",
-            reason="Pothole repaired"
-        )
-        session.add(issue)
-        session.add(transition)
-        session.commit()
-        yield session
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_session] = get_session_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+    transition = CaseTransition(
+        issue_id="iss-analytics-1",
+        actor_role="officer",
+        previous_state="work_in_progress",
+        new_state="resolved",
+        action="resolve",
+        reason="Pothole repaired"
+    )
+    session.add(issue)
+    session.add(transition)
+    session.commit()
 
 def test_cursor_token_encoding_and_decoding():
     ts = "2026-07-22T12:00:00Z"

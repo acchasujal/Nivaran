@@ -52,11 +52,12 @@ class IssueValidationError(Exception):
 # Background task (shared by both channels)
 # ---------------------------------------------------------------------------
 
-async def _run_agent_3_background(cluster_id: str) -> None:
+async def _run_agent_3_background(cluster_id: str, engine_override=None) -> None:
     """Run Agent 3 → Agent 4 as a background task after threshold is crossed."""
-    from app.db import engine  # local import avoids circular dependency
+    from app.db import engine as default_engine
+    target_engine = engine_override or default_engine
 
-    with Session(engine) as session:
+    with Session(target_engine) as session:
         try:
             logger.info(f"agent_3_background_trigger | cluster_id={cluster_id}")
             await analyze_cluster_impact(cluster_id=cluster_id, session=session)
@@ -240,7 +241,7 @@ async def create_issue_from_bytes(
     if db_issue.cluster_id:
         cluster = session.get(Cluster, db_issue.cluster_id)
         if cluster and cluster.report_count >= settings.threshold:
-            background_tasks.add_task(_run_agent_3_background, cluster.id)
+            background_tasks.add_task(_run_agent_3_background, cluster.id, engine_override=session.get_bind())
 
     return db_issue
 

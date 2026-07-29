@@ -3,8 +3,8 @@ Unit & Integration Tests for Government Workflow, Case Lifecycle, Repair Verific
 """
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session
+
 
 from app.main import app
 from app.db import get_session
@@ -24,51 +24,34 @@ from app.core.workflow_engine import (
 )
 from app.utils.security import create_access_token, hash_password
 
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+@pytest.fixture(autouse=True)
+def seed_workflow_data(session: Session):
+    officer = User(
+        id="USR-OFFICER-TEST",
+        email="officer_test@mcgm.gov.in",
+        hashed_password=hash_password("Pass123!"),
+        name="Officer Test",
+        role=ROLE_OFFICER,
+        department="Roads & Infrastructure",
+        is_active=True
     )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        # Seed test officer and issue
-        officer = User(
-            id="USR-OFFICER-TEST",
-            email="officer_test@mcgm.gov.in",
-            hashed_password=hash_password("Pass123!"),
-            name="Officer Test",
-            role=ROLE_OFFICER,
-            department="Roads & Infrastructure",
-            is_active=True
-        )
-        issue = Issue(
-            id="iss-workflow-001",
-            photo_url="/static/uploads/demo_pothole1.jpg",
-            latitude=19.1196,
-            longitude=72.8791,
-            user_note="Dangerous pothole",
-            issue_type="road_damage",
-            severity=5, # SLA target 48h
-            description="Deep pothole near Andheri Metro pillar",
-            credibility_score=0.94,
-            status="classified",
-            created_at="2026-07-20T10:00:00Z"
-        )
+    issue = Issue(
+        id="iss-workflow-001",
+        photo_url="/static/uploads/demo_pothole1.jpg",
+        latitude=19.1196,
+        longitude=72.8791,
+        user_note="Dangerous pothole",
+        issue_type="road_damage",
+        severity=5,
+        description="Deep pothole near Andheri Metro pillar",
+        credibility_score=0.94,
+        status="classified",
+        created_at="2026-07-20T10:00:00Z"
+    )
 
-        session.add(officer)
-        session.add(issue)
-        session.commit()
-        yield session
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
-        return session
-
-    app.dependency_overrides[get_session] = get_session_override
-    client = TestClient(app)
-    yield client
-    app.dependency_overrides.clear()
+    session.add(officer)
+    session.add(issue)
+    session.commit()
 
 def test_fsm_transition_validation():
     assert validate_transition("classified", "clustered") is True

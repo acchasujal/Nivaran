@@ -1,8 +1,8 @@
 import pytest
 import os
+import tempfile
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
 
 from app.main import app
 from app.db import get_session
@@ -36,14 +36,35 @@ def global_validator_override():
     yield
     app.dependency_overrides[get_evidence_validator] = lambda: override_validate_evidence_photo
 
+@pytest.fixture(name="engine", scope="session")
+def engine_fixture():
+    test_db_url = os.environ.get("TEST_DATABASE_URL")
+    temp_file = None
+    if not test_db_url:
+        temp_file = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        temp_file.close()
+        test_db_url = f"sqlite:///{temp_file.name}"
+
+    if test_db_url.startswith("sqlite"):
+        engine = create_engine(test_db_url, connect_args={"check_same_thread": False})
+    else:
+        engine = create_engine(test_db_url)
+
+    yield engine
+    engine.dispose()
+
+    if temp_file and os.path.exists(temp_file.name):
+        try:
+            os.remove(temp_file.name)
+        except Exception:
+            pass
+
 @pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
+def session_fixture(engine):
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
+    SQLModel.metadata.drop_all(engine)
 
 @pytest.fixture(name="client")
 def client_fixture(session: Session):
