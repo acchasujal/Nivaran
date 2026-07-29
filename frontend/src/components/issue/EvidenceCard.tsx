@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, MapPin, Sparkles } from 'lucide-react';
 import type { Issue } from '@/api/types';
-import { getImageUrl } from '@/utils/getImageUrl';
+import { getImageUrl, FALLBACK_PLACEHOLDER } from '@/utils/getImageUrl';
 import { getLocalityName } from '@/utils/getLocalityName';
 import {
   humanizeIssueType,
@@ -45,7 +45,10 @@ export const EvidenceCardComponent: React.FC<EvidenceCardProps> = ({
             loaded ? "opacity-100" : "opacity-0"
           )}
           onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
+          onError={(e) => {
+            setLoaded(true);
+            (e.target as HTMLImageElement).src = FALLBACK_PLACEHOLDER;
+          }}
           loading="lazy"
         />
       </div>
