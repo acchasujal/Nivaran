@@ -51,7 +51,8 @@ def setup_db():
 
     # Initialize tables
     SQLModel.metadata.create_all(test_engine)
-    yield
+    with patch("app.db.engine", test_engine):
+        yield
     SQLModel.metadata.drop_all(test_engine)
     app.dependency_overrides.pop(get_session, None)
     app.dependency_overrides.pop(get_evidence_validator, None)

@@ -28,7 +28,8 @@ def setup_db():
     os.makedirs("static/uploads", exist_ok=True)
     
     SQLModel.metadata.create_all(test_engine)
-    yield
+    with patch("app.db.engine", test_engine):
+        yield
     SQLModel.metadata.drop_all(test_engine)
     app.dependency_overrides.pop(get_session, None)
     

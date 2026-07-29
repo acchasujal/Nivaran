@@ -23,9 +23,8 @@ def override_get_session():
 def setup_db():
     app.dependency_overrides[get_session] = override_get_session
     SQLModel.metadata.create_all(test_engine)
-    
-    yield
-    
+    with patch("app.db.engine", test_engine):
+        yield
     SQLModel.metadata.drop_all(test_engine)
     app.dependency_overrides.pop(get_session, None)
     if os.path.exists(test_sqlite_file):
