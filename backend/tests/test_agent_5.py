@@ -53,6 +53,7 @@ def setup_db():
     settings.AGENT5_PDF_FALLBACK = orig_fallback
     
     SQLModel.metadata.drop_all(test_engine)
+    test_engine.dispose()
     app.dependency_overrides.pop(get_session, None)
     
     if os.path.exists(test_sqlite_file):

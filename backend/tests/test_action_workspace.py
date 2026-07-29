@@ -26,6 +26,7 @@ def setup_db():
     with patch("app.db.engine", test_engine):
         yield
     SQLModel.metadata.drop_all(test_engine)
+    test_engine.dispose()
     app.dependency_overrides.pop(get_session, None)
     if os.path.exists(test_sqlite_file):
         try:

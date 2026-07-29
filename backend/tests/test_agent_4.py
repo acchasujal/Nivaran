@@ -59,6 +59,7 @@ def setup_db():
     settings.DEMO_THRESHOLD_OVERRIDE = orig_override
     
     SQLModel.metadata.drop_all(test_engine)
+    test_engine.dispose()
     app.dependency_overrides.pop(get_session, None)
     app.dependency_overrides.pop(get_evidence_validator, None)
     
