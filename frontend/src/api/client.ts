@@ -35,8 +35,21 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    let message = 'An unexpected API communication error occurred.';
+    const detail = error.response?.data?.detail;
+    if (typeof detail === 'string') {
+      message = detail;
+    } else if (typeof detail === 'object' && detail !== null) {
+      message = detail.message || detail.error || JSON.stringify(detail);
+      if (detail.suggestion) {
+        message += ` ${detail.suggestion}`;
+      }
+    } else if (error.message) {
+      message = error.message;
+    }
+
     const normalizedError = new ApiError(
-      error.response?.data?.detail || error.message || 'An unexpected API communication error occurred.',
+      message,
       error.response?.status || 0,
       error.code || 'ERR_NETWORK',
     );

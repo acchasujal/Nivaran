@@ -128,8 +128,18 @@ async def _download_media(media_url: str) -> tuple[bytes, str]:
     if settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN:
         auth = (settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    logger.info(f"whatsapp_download_media_attempt | url={media_url} | auth_configured={bool(auth)}")
+
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
         resp = await client.get(media_url, auth=auth)
+        logger.info(
+            f"whatsapp_download_media_response | status_code={resp.status_code} | "
+            f"content_type={resp.headers.get('content-type')} | size={len(resp.content)} bytes"
+        )
+        if resp.status_code != 200:
+            logger.error(
+                f"whatsapp_download_media_failed | status_code={resp.status_code} | body={resp.text[:500]!r}"
+            )
         resp.raise_for_status()
         mime_type = resp.headers.get("content-type", "image/jpeg").split(";")[0].strip()
         return resp.content, mime_type

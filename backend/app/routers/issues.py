@@ -106,6 +106,12 @@ async def create_issue(
     photo_bytes = await photo.read()
     mime_type = photo.content_type or "image/jpeg"
 
+    logger.info(
+        f"create_issue_incoming | content_type={request.headers.get('content-type')} | "
+        f"filename={photo.filename} | mime_type={mime_type} | size={len(photo_bytes)} bytes | "
+        f"lat={latitude} | lng={longitude} | user_note={user_note!r} | community_choice={community_choice!r}"
+    )
+
     try:
         return await create_issue_from_bytes(
             photo_bytes=photo_bytes,
@@ -120,6 +126,10 @@ async def create_issue(
         )
     except IssueValidationError as exc:
         r = exc.stage0_result
+        logger.warning(
+            f"create_issue_stage0_rejected | failure={r.failure} | confidence={r.confidence} | "
+            f"detected_object={r.detected_object!r} | message={r.message!r} | suggestion={r.suggestion!r}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -139,6 +149,12 @@ async def create_issue(
                 "suggestion": r.suggestion,
             },
         ) from exc
+    except HTTPException as exc:
+        logger.warning(f"create_issue_http_exception | status_code={exc.status_code} | detail={exc.detail!r}")
+        raise exc
+    except Exception as exc:
+        logger.error(f"create_issue_unexpected_error | error={str(exc)}", exc_info=True)
+        raise exc
 
 
 @router.get("", response_model=IssuesListResponse)

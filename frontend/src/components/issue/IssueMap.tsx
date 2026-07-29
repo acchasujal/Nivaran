@@ -118,7 +118,7 @@ export const IssueMap: React.FC<IssueMapProps> = ({
   useEffect(() => {
     console.log('[MapLibre Debug] Component mounted');
 
-    const isSupported = typeof (maplibregl as any).supported === 'function' ? (maplibregl as any).supported() : true;
+    const isSupported = typeof window !== 'undefined' && (!!window.WebGLRenderingContext || !!(window as any).WebGL2RenderingContext);
     if (!isSupported) {
       console.warn('[MapLibre Debug] WebGL is not supported in this browser environment');
       setWebGlSupported(false);
