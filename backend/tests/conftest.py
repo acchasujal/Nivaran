@@ -32,6 +32,7 @@ async def override_validate_evidence_photo(photo_bytes: bytes, mime_type: str):
 
 @pytest.fixture(autouse=True)
 def global_validator_override():
+    os.environ.setdefault("GEMINI_API_KEY", "dummy_test_key_for_unit_tests")
     app.dependency_overrides[get_evidence_validator] = lambda: override_validate_evidence_photo
     yield
     app.dependency_overrides[get_evidence_validator] = lambda: override_validate_evidence_photo
