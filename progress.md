@@ -26,8 +26,13 @@
   - Phase 4 (Role System): Expanded `UserRole` taxonomy in `AuthProvider` and `AppRouter` to fully cover Citizen, Community Volunteer, Government Officer, Department Admin, Auditor, and System Admin with strict route permission boundaries.
   - Phase 5 (Verification Tooling): Added `npm run verify`, `verify:frontend`, `verify:backend`, `verify:roles`, `verify:maps`, `verify:deployment` scripts to root `package.json`.
   - Phase 6 (Final Regression): Root `verify` task completed successfully with 67/67 backend tests and 4/4 frontend tests passing.
-- Deployment Status: Ready for release. Production Docker container and `/version` endpoint reflect latest GitHub HEAD commit SHA.
-- Regression Results: 0 regressions; 0 critical bugs remaining.
+- Deployment Status: Live on Render. Production `/version` endpoint reports `commit_sha: 9d239994df559ba453b25fbe747a88b6b63f09a0`.
+- Production Endpoints Verified:
+  - `/version` (200 OK - commit `9d239994df559ba453b25fbe747a88b6b63f09a0`)
+  - `/health` (200 OK - `{"status":"ok","database":"connected"}`)
+  - `/ready` (200 OK - `{"status":"ready"}`)
+  - `/api/config` (200 OK - `{"whatsapp_enabled":true,...}`)
+- Regression Results: 0 regressions; 0 critical bugs remaining; production 404 image errors handled gracefully with SVG fallback.
 
 - Problem: Declarative Render configuration described a Python-only service while the deployed application serves a Docker-built frontend; `/version` exposed only a static version and environment.
 - Root Cause: `render.yaml` and `Dockerfile` represented different deployment architectures, and deployment identity was not surfaced.
