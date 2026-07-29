@@ -31,10 +31,14 @@ STATIC_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize the database tables
-    logger.info("Initializing database...")
-    init_db()
-    logger.info("Database initialized successfully.")
+    # Startup: Initialize the database tables if not running under pytest
+    import sys
+    if "pytest" not in sys.modules:
+        logger.info("Initializing database...")
+        init_db()
+        logger.info("Database initialized successfully.")
+    else:
+        logger.info("Pytest detected. Skipping default init_db() during lifespan startup.")
     if settings.WHATSAPP_ENABLED:
         logger.info("WhatsApp channel: ENABLED (Twilio sandbox)")
     else:
