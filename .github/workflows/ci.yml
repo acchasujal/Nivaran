@@ -25,9 +25,13 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-asyncio anyio
 
+      - name: Ensure backend files are writable
+        run: chmod -R u+rw backend || true
+
       - name: Run Backend Tests
         run: |
           cd backend
+          export TEST_DATABASE_URL="sqlite:///./test_ci.db"
           python -m pytest
 
   frontend-quality:
