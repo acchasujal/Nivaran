@@ -1,6 +1,6 @@
 import pytest
 import os
-import shutil
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, create_engine, Session, select
 from app.db import get_session
