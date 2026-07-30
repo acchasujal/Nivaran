@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../core/hooks/usePageTitle';
 import { useReportingFlowState } from '../../features/reporting/state/useReportingFlowStore';
-import { useCreateIssue } from '../../api/queries';
+import { useCreateIssue, useAnalyzeImage } from '../../api/queries';
 import { useConnectivity } from '../../core/providers/ConnectivityProvider';
 import { useOffline } from '../../core/providers/OfflineProvider';
 import { useFeedback } from '../../core/providers/FeedbackProvider';
@@ -35,6 +35,7 @@ export const IntakePage: React.FC = () => {
   const { showToast } = useFeedback();
   const { state, updateState, nextStep, prevStep } = useReportingFlowState();
   const createIssueMutation = useCreateIssue();
+  const analyzeImageMutation = useAnalyzeImage();
   const [submitting, setSubmitting] = useState(false);
 
   const handleNext = async () => {
@@ -120,9 +121,29 @@ export const IntakePage: React.FC = () => {
           />
           <CameraUploadStep
             previewUrl={state.photoPreviewUrl}
-            onImageCaptured={(file, alt) => {
+            onImageCaptured={async (file, alt) => {
               const url = URL.createObjectURL(file);
               updateState({ photoFile: file, photoPreviewUrl: url, altText: alt });
+
+              setSubmitting(true);
+              try {
+                const result = await analyzeImageMutation.mutateAsync({ photo: file });
+                updateState({ 
+                   latitude: state.latitude || (result.gps_coords ? result.gps_coords[0] : null),
+                   longitude: state.longitude || (result.gps_coords ? result.gps_coords[1] : null),
+                   issueType: (result.autofill?.category as any) || state.issueType
+                });
+                showToast('Image analyzed successfully.', 'success');
+              } catch (err: any) {
+                if (err.response?.status === 400 && err.response?.data?.detail?.error === 'validation_gate_failed') {
+                   showToast(err.response?.data?.detail?.message || 'Image rejected: Invalid evidence.', 'danger');
+                   updateState({ photoFile: null, photoPreviewUrl: null });
+                } else {
+                   showToast('Warning: AI analysis failed, but you can proceed manually.', 'warning');
+                }
+              } finally {
+                setSubmitting(false);
+              }
             }}
           />
         </div>
