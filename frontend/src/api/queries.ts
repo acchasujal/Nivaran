@@ -210,3 +210,53 @@ export const useSubmitVerificationVote = () => {
     },
   });
 };
+
+export interface AnalyzeImageResult {
+  ai_available: boolean;
+  photo_url: string;
+  gps_coords: [number, number] | null;
+  autofill: {
+    category: string;
+    title: string;
+    description: string;
+    severity: string;
+    department: string;
+    confidence: number;
+    hazards: string[];
+    tags: string[];
+    risk_level: string;
+    duplicate_probability: number;
+  };
+}
+
+// Analyze image and return auto-fill structured data
+export const useAnalyzeImage = () => {
+  return useMutation<AnalyzeImageResult, Error, { photo: File }>({
+    mutationFn: async ({ photo }) => {
+      const formData = new FormData();
+      formData.append('photo', photo);
+      const response = await apiClient.post<AnalyzeImageResult>('/issues/analyze-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    },
+  });
+};
+
+// Fetch nearby issues within radius for duplicate warning
+export const useNearbyIssues = (lat?: number, lng?: number, radius: number = 200) => {
+  return useQuery<Issue[]>({
+    queryKey: ['nearbyIssues', { lat, lng, radius }],
+    queryFn: async () => {
+      if (!lat || !lng) return [];
+      const response = await apiClient.get<Issue[]>('/issues/nearby', {
+        params: { latitude: lat, longitude: lng, radius_meters: radius },
+      });
+      return response.data;
+    },
+    enabled: !!lat && !!lng,
+  });
+};
+

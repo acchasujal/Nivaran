@@ -119,3 +119,40 @@ async def test_timeout_enforcement():
     assert excinfo.value.status_code == 502
     assert excinfo.value.detail == {"error": "ai_unavailable", "retryable": True}
     assert mock_models.generate_content.call_count == 2
+
+def test_gemini_key_pool_parsing_and_rotation(monkeypatch):
+    from app.services.gemini_client import GeminiKeyPool
+    monkeypatch.setenv("GEMINI_API_KEYS", "key_alpha, key_beta, key_gamma")
+    
+    # Force cache refresh
+    keys = GeminiKeyPool.get_keys()
+    assert len(keys) == 3
+    assert keys[0].key == "key_alpha"
+    assert keys[1].key == "key_beta"
+    assert keys[2].key == "key_gamma"
+
+    # Test round robin
+    k1 = GeminiKeyPool.get_next_healthy_key()
+    k2 = GeminiKeyPool.get_next_healthy_key()
+    k3 = GeminiKeyPool.get_next_healthy_key()
+    k4 = GeminiKeyPool.get_next_healthy_key()
+
+    assert k1.key == "key_alpha"
+    assert k2.key == "key_beta"
+    assert k3.key == "key_gamma"
+    assert k4.key == "key_alpha"
+
+def test_gemini_key_cooldown_and_failover(monkeypatch):
+    from app.services.gemini_client import GeminiKeyPool
+    monkeypatch.setenv("GEMINI_API_KEYS", "k1, k2")
+    keys = GeminiKeyPool.get_keys()
+    
+    # Put k1 in cooldown
+    keys[0].mark_cooldown(60.0)
+    assert not keys[0].is_healthy
+    assert keys[1].is_healthy
+
+    # Next healthy key should skip k1 and return k2
+    next_k = GeminiKeyPool.get_next_healthy_key()
+    assert next_k.key == "k2"
+

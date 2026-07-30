@@ -8,8 +8,8 @@ import { LocationPicker } from '@/components/issue/LocationPicker';
 import { AgentTimeline } from '@/components/timeline/AgentTimeline';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { WhatsAppReportBanner } from '@/components/issue/WhatsAppReportBanner';
-import { useCreateIssue } from '@/api/queries';
-import { AlertCircle, FileText, CheckCircle2, ArrowRight, ArrowLeft, Send, Sparkles, MapPin, Landmark } from 'lucide-react';
+import { useCreateIssue, useAnalyzeImage, useNearbyIssues } from '@/api/queries';
+import { AlertCircle, FileText, CheckCircle2, ArrowRight, ArrowLeft, Send, Sparkles, MapPin, Landmark, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import { demoScenarios } from '@/data/demoScenarios';
 import type { DemoScenario } from '@/data/demoScenarios';
@@ -17,23 +17,61 @@ import { getLocalityName } from '@/utils/getLocalityName';
 import { cn } from '@/lib/utils';
 import { useTour } from '@/context/TourContext';
 
+const DRAFT_STORAGE_KEY = 'nivaran_report_draft_v1';
+
 export const IntakePage: React.FC = () => {
   const navigate = useNavigate();
   const createIssueMutation = useCreateIssue();
+  const analyzeImageMutation = useAnalyzeImage();
   const { registerTourTarget } = useTour();
 
   // Stepper state
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoSource, setPhotoSource] = useState<'camera' | 'gallery'>('gallery');
+  const [locationSource, setLocationSource] = useState<string>('manual_pin');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [userNote, setUserNote] = useState<string>('');
+  const [issueCategory, setIssueCategory] = useState<string>('road');
+  const [severity, setSeverity] = useState<string>('medium');
+  const [department, setDepartment] = useState<string>('Public Works');
+
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState<boolean>(false);
+  const [aiAnalysisComplete, setAiAnalysisComplete] = useState<boolean>(false);
+  const [aiAvailable, setAiAvailable] = useState<boolean>(true);
+  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [submittedIssueId, setSubmittedIssueId] = useState<string | null>(null);
   const [validationGateError, setValidationGateError] = useState<any>(null);
-
-  // Field validation errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [recoveredDraftNotice, setRecoveredDraftNotice] = useState<boolean>(false);
+
+  // Submission & Progress states
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start progress timer when submission begins
+  useEffect(() => {
+    if (isSubmitting && !submitError) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isSubmitting, submitError]);
 
   const handleSelectDemoScenario = async (scenarioId: string) => {
     if (!scenarioId) return;
@@ -56,7 +94,6 @@ export const IntakePage: React.FC = () => {
       setCoordinates({ lat: scenario.latitude, lng: scenario.longitude });
       setUserNote(scenario.description);
       setFieldErrors({});
-      // Auto-advance to step 3 so the judge sees the compiled case and can submit immediately
       setCurrentStep(3);
     } catch (err) {
       console.error('Failed to load demo scenario', err);
@@ -64,40 +101,92 @@ export const IntakePage: React.FC = () => {
       setIsDemoLoading(false);
     }
   };
-  
-  // Submission & Progress states
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Start progress timer when submission begins
+  // Fetch nearby issues for duplicate detection
+  const { data: nearbyIssues } = useNearbyIssues(coordinates?.lat, coordinates?.lng, 200);
+
+  // Auto-restore draft from localStorage on page mount
   useEffect(() => {
-    if (isSubmitting && !submitError) {
-      timerRef.current = setInterval(() => {
-        setElapsedSeconds((prev) => prev + 1);
-      }, 1000);
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+    try {
+      const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.userNote) setUserNote(parsed.userNote);
+        if (parsed.coordinates) setCoordinates(parsed.coordinates);
+        if (parsed.category) setIssueCategory(parsed.category);
+        if (parsed.severity) setSeverity(parsed.severity);
+        setRecoveredDraftNotice(true);
+      }
+    } catch (e) {
+      console.warn('Could not restore draft:', e);
+    }
+  }, []);
+
+  // Save draft state to localStorage on state changes
+  useEffect(() => {
+    if (userNote || coordinates) {
+      try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+          userNote,
+          coordinates,
+          category: issueCategory,
+          severity,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.warn('Could not save draft:', e);
       }
     }
+  }, [userNote, coordinates, issueCategory, severity]);
 
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isSubmitting, submitError]);
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    setRecoveredDraftNotice(false);
+  };
 
-
-
-  // NOTE: No tour event listener here. The guide never auto-selects scenarios.
-
-  const handlePhotoCapture = (file: File) => {
+  const handlePhotoCapture = async (file: File, source: 'camera' | 'gallery' = 'gallery') => {
     setPhoto(file);
+    setPhotoSource(source);
     setFieldErrors((prev) => ({ ...prev, photo: '' }));
+    setIsAiAnalyzing(true);
+    setAiAnalysisComplete(false);
+
+    // If source is camera, request live GPS automatically
+    if (source === 'camera' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCoordinates({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setLocationSource('gps_live');
+        },
+        (err) => console.warn('Camera GPS error:', err),
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
+
+    try {
+      const result = await analyzeImageMutation.mutateAsync({ photo: file });
+      if (result.autofill) {
+        setIssueCategory(result.autofill.category || 'road');
+        setSeverity(result.autofill.severity || 'medium');
+        setDepartment(result.autofill.department || 'Public Works');
+        setAiConfidence(result.autofill.confidence || 0.85);
+        if (result.autofill.description && !userNote) {
+          setUserNote(result.autofill.description);
+        }
+      }
+      if (result.gps_coords && !coordinates) {
+        setCoordinates({ lat: result.gps_coords[0], lng: result.gps_coords[1] });
+        setLocationSource('gallery_exif');
+      }
+      setAiAvailable(result.ai_available !== false);
+      setAiAnalysisComplete(true);
+    } catch (err) {
+      console.warn('AI analysis fallback:', err);
+      setAiAvailable(false);
+      setAiAnalysisComplete(true);
+    } finally {
+      setIsAiAnalyzing(false);
+    }
   };
 
   const handleLocationLocate = (coords: { lat: number; lng: number } | null) => {
@@ -524,14 +613,36 @@ export const IntakePage: React.FC = () => {
       ) : (
         /* Form stepper intake flow view */
         <div id="intake-form-container" className="max-w-3xl mx-auto w-full py-6 space-y-8">
+          {/* Draft Restored Banner */}
+          {recoveredDraftNotice && (
+            <div className="border border-blue-200 bg-blue-50/70 rounded-medium p-4 flex items-center justify-between text-xs text-blue-900 animate-fade">
+              <div className="flex items-center gap-2">
+                <Sparkles size={16} className="text-blue-600 shrink-0" />
+                <span><strong>Draft Restored:</strong> Restored your unsaved report details from your previous session.</span>
+              </div>
+              <button
+                type="button"
+                onClick={clearDraft}
+                className="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline cursor-pointer ml-3 shrink-0"
+              >
+                Clear Draft
+              </button>
+            </div>
+          )}
+
           {/* Quick value proposition (First 30 seconds check) */}
           <div className="border border-slate-200 bg-white rounded-medium p-5 shadow-subtle flex items-start gap-4 select-none">
             <span className="p-2.5 rounded bg-teal-50 text-primary border border-teal-200 shrink-0">
               <Landmark size={20} />
             </span>
             <div className="space-y-1">
-              <h3 className="text-xs font-bold text-slate-800 tracking-tight uppercase">
-                AI Civic Operations Intake Portal
+              <h3 className="text-xs font-bold text-slate-800 tracking-tight uppercase flex items-center gap-2">
+                <span>AI Civic Operations Intake Portal</span>
+                {locationSource && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 font-mono text-slate-600 border border-slate-200">
+                    Source: {photoSource} / {locationSource}
+                  </span>
+                )}
               </h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 Provide verifiable visual evidence of municipal infrastructure problems. nivaran translates citizen reports into compiled audit trails and sendable legal briefs, bypassing administrative delays.
@@ -614,6 +725,20 @@ export const IntakePage: React.FC = () => {
             {currentStep === 2 && (
               <div className="space-y-4 animate-fade">
                 <LocationPicker value={coordinates} onLocate={handleLocationLocate} />
+
+                {nearbyIssues && nearbyIssues.length > 0 && (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-medium space-y-2 text-amber-900 text-xs animate-fade">
+                    <div className="flex items-center gap-2 font-bold text-amber-800">
+                      <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                      <span>{nearbyIssues.length} Nearby Incident Report(s) Detected</span>
+                    </div>
+                    <p className="text-[11px] text-amber-700 leading-normal">
+                      A report was already submitted within 200m: <strong>"{nearbyIssues[0].description || nearbyIssues[0].issue_type}"</strong> ({nearbyIssues[0].status}).
+                      Submitting your report will automatically bolster evidence and increase the community priority score!
+                    </p>
+                  </div>
+                )}
+
                 {fieldErrors.coordinates && (
                   <div className="flex items-center gap-1.5 text-xs text-rose-700 font-bold px-2 select-none">
                     <AlertCircle size={14} />
@@ -671,7 +796,25 @@ export const IntakePage: React.FC = () => {
                       <div className="leading-tight">
                         <span className="font-bold text-slate-700 block">{localityName || 'Coordinates Loaded'}</span>
                         <span className="text-[10px] text-slate-400 block font-mono mt-0.5">
-                          GPS: {coordinates?.lat.toFixed(6)}, {coordinates?.lng.toFixed(6)}
+                          GPS: {coordinates?.lat.toFixed(6)}, {coordinates?.lng.toFixed(6)} ({locationSource})
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* AI Structured Auto-fill Details */}
+                    <div className="pt-3 border-t border-slate-100 space-y-1.5 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Department:</span>
+                        <span className="font-bold text-slate-700">{department}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Category / Severity:</span>
+                        <span className="font-bold text-slate-700 capitalize">{issueCategory} ({severity})</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">AI Confidence:</span>
+                        <span className="font-bold text-emerald-600">
+                          {isAiAnalyzing ? 'Analyzing...' : aiAnalysisComplete && aiConfidence ? `${(aiConfidence * 100).toFixed(0)}%` : aiAvailable ? 'High' : 'Manual'}
                         </span>
                       </div>
                     </div>

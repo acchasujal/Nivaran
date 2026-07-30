@@ -143,26 +143,13 @@ async def create_issue_from_bytes(
         )
 
     # ------------------------------------------------------------------
-    # 2. Save photo to disk
+    # 2. Save photo via StorageProvider (compressed, optimized, persistent)
     # ------------------------------------------------------------------
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
     ext = ".png" if mime_type == "image/png" else ".jpg"
     unique_filename = f"{uuid.uuid4()}{ext}"
-    photo_path = os.path.join(UPLOAD_DIR, unique_filename)
-
-    from PIL import Image
-    import io
-
-    try:
-        img = Image.open(io.BytesIO(photo_bytes))
-        # Discard EXIF metadata by copying pixel data into a new Image object
-        clean_img = Image.new(img.mode, img.size)
-        clean_img.paste(img)
-        clean_img.save(photo_path, format=img.format)
-    except Exception as e:
-        logger.warning(f"exif_stripping_failed | error={str(e)} | falling back to raw save")
-        with open(photo_path, "wb") as f:
-            f.write(photo_bytes)
+    from app.services.storage_service import storage_service
+    photo_url, _ = storage_service.save_bytes(photo_bytes, unique_filename, mime_type)
+    photo_path = storage_service.get_local_path(photo_url) or os.path.join(UPLOAD_DIR, unique_filename)
 
     # ------------------------------------------------------------------
     # 3. Pipeline execution with transaction safety
@@ -193,7 +180,7 @@ async def create_issue_from_bytes(
 
         # 3.3 DB write
         db_issue = Issue(
-            photo_url=f"/static/uploads/{unique_filename}",
+            photo_url=photo_url,
             latitude=latitude,
             longitude=longitude,
             user_note=user_note,

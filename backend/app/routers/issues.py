@@ -75,6 +75,110 @@ class IssueDetailResponse(BaseModel):
 
 from fastapi import Request
 from app.utils.rate_limit import upload_limiter
+from app.services.storage_service import storage_service
+from app.services.gemini_client import GeminiClient
+import uuid
+
+class GeminiAutoFillResult(BaseModel):
+    category: str = "road"
+    title: str = "Civic Issue"
+    description: str = "Civic issue detected from uploaded photo."
+    severity: str = "medium"
+    department: str = "Public Works"
+    confidence: float = 0.85
+    hazards: List[str] = []
+    tags: List[str] = []
+    risk_level: str = "medium"
+    duplicate_probability: float = 0.0
+
+class AnalyzeImageResponse(BaseModel):
+    ai_available: bool = True
+    photo_url: str
+    gps_coords: Optional[List[float]] = None
+    autofill: GeminiAutoFillResult
+
+@router.post("/analyze-image", response_model=AnalyzeImageResponse)
+async def analyze_image_endpoint(
+    photo: UploadFile = File(...),
+):
+    """
+    Independent Media Asset Upload & AI Auto-fill Endpoint.
+    1. Saves image permanently via StorageProvider (stripping camera EXIF, optimizing bytes).
+    2. Runs Gemini Vision ONE time to generate structured auto-fill JSON.
+    3. If Gemini fails or times out, returns ai_available=False without failing the upload or blocking user.
+    """
+    photo_bytes = await photo.read()
+    ext = ".png" if photo.content_type == "image/png" else ".jpg"
+    unique_filename = f"{uuid.uuid4()}{ext}"
+
+    photo_url, extracted_gps = storage_service.save_bytes(
+        photo_bytes, unique_filename, photo.content_type or "image/jpeg"
+    )
+
+    gps_list = list(extracted_gps) if extracted_gps else None
+
+    # Default fallback structured data if AI fails
+    default_autofill = GeminiAutoFillResult(
+        category="road",
+        title="Civic Issue Report",
+        description="Issue reported via Nivaran mobile web.",
+        severity="medium",
+        department="Public Works",
+        confidence=0.7,
+        hazards=["general hazard"],
+        tags=["reported"],
+        risk_level="medium",
+        duplicate_probability=0.0
+    )
+
+    try:
+        client = GeminiClient()
+        prompt = (
+            "Analyze this civic infrastructure issue photo. "
+            "Return JSON matching: category (road, garbage, water, street_lighting, drain, hazards, other), "
+            "title (short descriptive title under 6 words), description (detailed clear summary), "
+            "severity (low, medium, high, critical), department (Municipal Corporation, Public Works, Water Board, Electrical), "
+            "confidence (0.0-1.0), hazards (array of strings), tags (array of strings), risk_level (low, medium, high), duplicate_probability (0.0-1.0)."
+        )
+        ai_data = await client.generate_structured_output(
+            prompt=prompt,
+            response_schema=GeminiAutoFillResult,
+            image_data=photo_bytes,
+            image_mime_type=photo.content_type or "image/jpeg",
+            timeout=20.0
+        )
+        return AnalyzeImageResponse(
+            ai_available=True,
+            photo_url=photo_url,
+            gps_coords=gps_list,
+            autofill=ai_data
+        )
+    except Exception as e:
+        logger.warning(f"analyze_image_ai_fallback | error={e} | returning manual auto-fill fallback")
+        return AnalyzeImageResponse(
+            ai_available=False,
+            photo_url=photo_url,
+            gps_coords=gps_list,
+            autofill=default_autofill
+        )
+
+@router.get("/nearby", response_model=List[Issue])
+def get_nearby_issues(
+    latitude: float,
+    longitude: float,
+    radius_meters: float = 200.0,
+    session: Session = Depends(get_session)
+):
+    """Returns issues within radius_meters for duplicate warning UI."""
+    from app.services.geo_service import haversine_distance
+    all_issues = session.exec(select(Issue)).all()
+    nearby = []
+    for issue in all_issues:
+        dist = haversine_distance(latitude, longitude, issue.latitude, issue.longitude)
+        if dist <= radius_meters:
+            nearby.append(issue)
+    return nearby
+
 
 @router.post("", response_model=Issue, status_code=status.HTTP_201_CREATED)
 async def create_issue(
