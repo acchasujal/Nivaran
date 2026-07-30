@@ -8,7 +8,7 @@ import { UserRoleManager } from '../../features/admin/components/UserRoleManager
 import { FeatureFlagDashboard } from '../../features/admin/components/FeatureFlagDashboard';
 
 export const AdminPage: React.FC = () => {
-  usePageTitle('Platform Administration & Governance Console — nivaran');
+  usePageTitle('Platform Administration & Governance Console — Nivaran');
 
   return (
     <div className="space-y-6 font-sans py-2">

@@ -31,7 +31,7 @@ export const GovernmentQueuePage: React.FC = () => {
     return (
       <ErrorState
         title="Failed to load executive queue"
-        description="Could not connect to nivaran municipal backend services."
+        description="Could not connect to Nivaran municipal backend services."
         onRetry={() => refetch()}
       />
     );

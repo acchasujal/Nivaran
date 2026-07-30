@@ -11,11 +11,21 @@ import { Button } from '../../design-system/primitives/buttons/Button';
 import { ArrowLeft, FileText, ShieldCheck } from 'lucide-react';
 
 export const IssueDetailPage: React.FC = () => {
-  const { id = 'CP-2026-001' } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  usePageTitle(`Case #${id} Detail & Timeline — nivaran`);
-  const { data, isLoading, isError, refetch } = useIssueDetail(id);
+  usePageTitle(`Case #${id || ''} Detail & Timeline — Nivaran`);
+  const { data, isLoading, isError, refetch } = useIssueDetail(id || '');
   const { data: publicConfig } = usePublicConfig();
+
+  if (!id) {
+    return (
+      <ErrorState
+        title="No Case Specified"
+        description="Please select a valid case from the Discovery feed or Operations map."
+        onRetry={() => navigate('/discover')}
+      />
+    );
+  }
 
   if (isLoading) {
     return (

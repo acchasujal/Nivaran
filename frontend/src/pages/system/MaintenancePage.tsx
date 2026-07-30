@@ -3,7 +3,7 @@ import { Wrench } from 'lucide-react';
 import { usePageTitle } from '../../core/hooks/usePageTitle';
 
 export const MaintenancePage: React.FC = () => {
-  usePageTitle('Scheduled Maintenance — nivaran');
+  usePageTitle('Scheduled Maintenance — Nivaran');
 
   return (
     <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans text-center">
@@ -13,7 +13,7 @@ export const MaintenancePage: React.FC = () => {
         </div>
         <h1 className="text-2xl font-bold text-neutral-900">Scheduled System Maintenance</h1>
         <p className="text-sm text-neutral-700 leading-relaxed">
-          nivaran is undergoing scheduled database indexing and infrastructure updates. Please check back shortly.
+          Nivaran is undergoing scheduled database indexing and infrastructure updates. Please check back shortly.
         </p>
       </div>
     </div>

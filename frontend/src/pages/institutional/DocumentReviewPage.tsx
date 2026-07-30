@@ -10,7 +10,7 @@ import { Button } from '../../design-system/primitives/buttons/Button';
 import { ArrowLeft } from 'lucide-react';
 
 export const DocumentReviewPage: React.FC = () => {
-  usePageTitle('Officer Action & Document Review Workspace - nivaran');
+  usePageTitle('Officer Action & Document Review Workspace - Nivaran');
   const navigate = useNavigate();
   const { issueId } = useParams<{ issueId: string }>();
   const { data, isLoading, isError, refetch } = useIssueDetail(issueId || '');
@@ -24,7 +24,7 @@ export const DocumentReviewPage: React.FC = () => {
   }
 
   if (isError || !data?.issue) {
-    return <ErrorState title="Failed to load case workspace" description="Could not connect to nivaran backend services." onRetry={() => refetch()} />;
+    return <ErrorState title="Failed to load case workspace" description="Could not connect to Nivaran backend services." onRetry={() => refetch()} />;
   }
 
   const issue = data.issue;
