@@ -4,6 +4,7 @@ import { CitizenShellLayout } from '../design-system/layouts/CitizenShellLayout'
 import { useConnectivity } from '../core/providers/ConnectivityProvider';
 import { useAuth } from '../core/providers/AuthProvider';
 import { AuthModal } from '../components/auth/AuthModal';
+import { TourProvider } from '../context/TourContext';
 import { Shield } from 'lucide-react';
 
 export const CitizenShell: React.FC = () => {
@@ -12,23 +13,39 @@ export const CitizenShell: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('nivaran_sidebar_collapsed') === 'true';
+  });
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('nivaran_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   const getActiveTab = (): string => {
     const path = location.pathname;
     if (path.startsWith('/report')) return 'report';
-    if (path.startsWith('/tracker') || path.startsWith('/my-reports')) return 'my-reports';
-    if (path.startsWith('/government')) return 'government';
-    if (path.startsWith('/internal')) return 'internal';
+    if (path.startsWith('/tracker') || path.startsWith('/my-reports') || path.startsWith('/discover')) return 'my-reports';
+    if (path.startsWith('/government/queue')) return 'government';
+    if (path.startsWith('/internal/document-review')) return 'document-review';
+    if (path.startsWith('/internal/admin')) return 'admin';
+    if (path.startsWith('/internal/evaluate')) return 'evaluate';
+    if (path.startsWith('/community')) return 'community';
     return 'home';
   };
 
   const handleNavigate = (tab: string) => {
     if (tab === 'home') navigate('/');
     else if (tab === 'report') navigate('/report');
-    else if (tab === 'my-reports') navigate('/tracker');
+    else if (tab === 'my-reports') navigate('/discover');
     else if (tab === 'government') navigate('/government/queue');
-    else if (tab === 'internal') navigate('/government/queue');
+    else if (tab === 'document-review') navigate('/internal/document-review/CP-2026-001');
     else if (tab === 'admin') navigate('/internal/admin');
+    else if (tab === 'evaluate') navigate('/internal/evaluate');
+    else if (tab === 'community') navigate('/community');
   };
 
   const accountButton = (
@@ -54,8 +71,12 @@ export const CitizenShell: React.FC = () => {
         actions={accountButton}
         userProfile={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined}
         onProfileClick={() => setAuthModalOpen(true)}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={toggleSidebar}
       >
-        <Outlet />
+        <TourProvider>
+          <Outlet />
+        </TourProvider>
       </CitizenShellLayout>
 
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />

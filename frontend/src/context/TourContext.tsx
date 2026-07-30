@@ -248,42 +248,40 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Automatically check off checklist items when users naturally visit/validate them
   useEffect(() => {
     const checkInterval = setInterval(() => {
-      let updated = false;
-      const nextCompleted = { ...completedFeatures };
+      setCompletedFeatures(prev => {
+        let updated = false;
+        const nextCompleted = { ...prev };
 
-      explorerFeatures.forEach(item => {
-        if (nextCompleted[item.id]) return;
-        const stepToValidate = tourSteps.find(s => s.id === item.stepId);
-        if (stepToValidate) {
-          // If the feature requires a specific route, check it:
-          const isRouteMatch = stepToValidate.route.includes(':id')
-            ? location.pathname.startsWith('/issue/')
-            : location.pathname === stepToValidate.route;
+        explorerFeatures.forEach(item => {
+          if (nextCompleted[item.id]) return;
+          const stepToValidate = tourSteps.find(s => s.id === item.stepId);
+          if (stepToValidate) {
+            const isRouteMatch = stepToValidate.route.includes(':id')
+              ? location.pathname.startsWith('/issue/')
+              : location.pathname === stepToValidate.route;
 
-          if (isRouteMatch) {
-            if (stepToValidate.validation) {
-              try {
-                if (stepToValidate.validation()) {
-                  nextCompleted[item.id] = true;
-                  updated = true;
-                }
-              } catch {}
-            } else {
-              // Route match is sufficient validation if no validation function
-              nextCompleted[item.id] = true;
-              updated = true;
+            if (isRouteMatch) {
+              if (stepToValidate.validation) {
+                try {
+                  if (stepToValidate.validation()) {
+                    nextCompleted[item.id] = true;
+                    updated = true;
+                  }
+                } catch {}
+              } else {
+                nextCompleted[item.id] = true;
+                updated = true;
+              }
             }
           }
-        }
-      });
+        });
 
-      if (updated) {
-        setCompletedFeatures(nextCompleted);
-      }
-    }, 1000);
+        return updated ? nextCompleted : prev;
+      });
+    }, 2000);
 
     return () => clearInterval(checkInterval);
-  }, [completedFeatures, location.pathname]);
+  }, [location.pathname]);
 
   // ── isActive / showWelcome ─────────────────────────────────────────────────
   const isActive = status === 'active';
@@ -299,21 +297,27 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addEvent]);
 
   const nextStep = useCallback(() => {
-    if (currentStepIndex < tourSteps.length - 1) {
-      setCurrentStepIndex(prev => prev + 1);
-      addEvent('NEXT_STEP', `${currentStepIndex} → ${currentStepIndex + 1}`);
-    } else {
-      setStatus('completed');
-      addEvent('COMPLETED');
-    }
-  }, [currentStepIndex, addEvent]);
+    setCurrentStepIndex(prev => {
+      if (prev < tourSteps.length - 1) {
+        addEvent('NEXT_STEP', `${prev} → ${prev + 1}`);
+        return prev + 1;
+      } else {
+        setStatus('completed');
+        addEvent('COMPLETED');
+        return prev;
+      }
+    });
+  }, [addEvent]);
 
   const prevStep = useCallback(() => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex(prev => prev - 1);
-      addEvent('PREV_STEP');
-    }
-  }, [currentStepIndex, addEvent]);
+    setCurrentStepIndex(prev => {
+      if (prev > 0) {
+        addEvent('PREV_STEP', `${prev} → ${prev - 1}`);
+        return prev - 1;
+      }
+      return prev;
+    });
+  }, [addEvent]);
 
   const skipTour = useCallback(() => {
     setStatus('idle');
@@ -343,23 +347,6 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addEvent('JUMP', `→ ${index}`);
     }
   }, [status, addEvent]);
-
-  // ── Auto-advance after 700ms when validation passes ──────────────────────
-  useEffect(() => {
-    if (status !== 'active') return;
-    if (isValidated) {
-      const timer = setTimeout(() => {
-        // Automatically check off the corresponding explorer feature
-        const featureItem = explorerFeatures.find(f => f.stepId === step?.id);
-        if (featureItem) {
-          setCompletedFeatures(prev => ({ ...prev, [featureItem.id]: true }));
-        }
-
-        nextStep();
-      }, 700);
-      return () => clearTimeout(timer);
-    }
-  }, [isValidated, status, nextStep, step]);
 
   // ── Dev global API ─────────────────────────────────────────────────────────
   useEffect(() => {
