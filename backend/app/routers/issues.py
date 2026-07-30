@@ -100,19 +100,50 @@ class AnalyzeImageResponse(BaseModel):
 @router.post("/analyze-image", response_model=AnalyzeImageResponse)
 async def analyze_image_endpoint(
     photo: UploadFile = File(...),
+    validator = Depends(get_evidence_validator),
 ):
     """
     Independent Media Asset Upload & AI Auto-fill Endpoint.
-    1. Saves image permanently via StorageProvider (stripping camera EXIF, optimizing bytes).
-    2. Runs Gemini Vision ONE time to generate structured auto-fill JSON.
-    3. If Gemini fails or times out, returns ai_available=False without failing the upload or blocking user.
+    1. Validates image via Stage-0 gate.
+    2. Saves image permanently via StorageProvider (stripping camera EXIF, optimizing bytes).
+    3. Runs Gemini Vision ONE time to generate structured auto-fill JSON.
+    4. If Gemini fails or times out, returns ai_available=False without failing the upload or blocking user.
     """
     photo_bytes = await photo.read()
-    ext = ".png" if photo.content_type == "image/png" else ".jpg"
+    mime_type = photo.content_type or "image/jpeg"
+
+    # Stage 0 Validation
+    try:
+        stage0_result = await validator(photo_bytes=photo_bytes, mime_type=mime_type)
+        if not stage0_result.accepted:
+            raise IssueValidationError(stage0_result)
+    except IssueValidationError as exc:
+        r = exc.stage0_result
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "validation_gate_failed",
+                "accepted": False,
+                "failure": r.failure,
+                "confidence": r.confidence,
+                "detected_object": r.detected_object,
+                "checks": {
+                    "file": r.checks.file,
+                    "quality": r.checks.quality,
+                    "scene": r.checks.scene,
+                    "infrastructure": r.checks.infrastructure,
+                    "issue": r.checks.issue,
+                },
+                "message": r.message,
+                "suggestion": r.suggestion,
+            },
+        ) from exc
+
+    ext = ".png" if mime_type == "image/png" else ".jpg"
     unique_filename = f"{uuid.uuid4()}{ext}"
 
     photo_url, extracted_gps = storage_service.save_bytes(
-        photo_bytes, unique_filename, photo.content_type or "image/jpeg"
+        photo_bytes, unique_filename, mime_type
     )
 
     gps_list = list(extracted_gps) if extracted_gps else None

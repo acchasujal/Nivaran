@@ -181,6 +181,15 @@ export const IntakePage: React.FC = () => {
       setAiAvailable(result.ai_available !== false);
       setAiAnalysisComplete(true);
     } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        const data = err.response.data;
+        if (err.response.status === 400 && data.detail && data.detail.error === 'validation_gate_failed') {
+          setValidationGateError(data.detail);
+          setPhoto(null);
+          setIsAiAnalyzing(false);
+          return;
+        }
+      }
       console.warn('AI analysis fallback:', err);
       setAiAvailable(false);
       setAiAnalysisComplete(true);

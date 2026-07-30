@@ -50,18 +50,8 @@ def init_db():
 
 
 
-    
-    # Auto-seed database if empty (ensures production never appears empty)
-    with Session(engine) as session:
-        has_issues = session.exec(select(Issue)).first()
-        if not has_issues:
-            logger.info("Database is empty. Auto-seeding production demo records...")
-            try:
-                from app.utils.seeder import seed_data
-                seed_data(session)
-                logger.info("Database auto-seeded successfully.")
-            except Exception as e:
-                logger.error(f"Failed to auto-seed database: {e}")
+    # Auto-seeding removed to prevent demo data from masking real production data
+    pass
 
 def get_session():
     with Session(engine) as session:
